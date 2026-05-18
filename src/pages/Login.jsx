@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 
-const Login = () => {
+const Login = ({ mode: initialMode = 'login' }) => {
   const { login, register, authError, clearAuthError } = useStore();
-  const [mode, setMode]       = useState('login');
+  const [mode, setMode] = useState(initialMode === 'register' ? 'register' : 'login');
   const [loading, setLoading] = useState(false);
   const [form, setForm]       = useState({ email: '', businessName: '', password: '' });
 

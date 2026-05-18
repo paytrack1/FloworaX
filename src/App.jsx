@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useStore } from './store/useStore';
 import Login from './pages/Login';
+import Welcome from './pages/Welcome';
 import Home from './pages/Home';
 import NewSale from './pages/NewSale';
 import Reports from './pages/Reports';
@@ -11,6 +12,7 @@ import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 
 const App = () => {
+  const [screen, setScreen] = React.useState('welcome');
   const { isAuthenticated, activeTab, isSaleModalOpen, setSaleModal, init, syncPending, user } = useStore();
 
   useEffect(() => {
@@ -23,7 +25,13 @@ const App = () => {
     }
   }, [isAuthenticated, init]);
 
-  if (!isAuthenticated) return <Login />;
+  // ── Auth screens ──
+  if (!isAuthenticated) {
+    if (screen === 'welcome') {
+      return <Welcome onGetStarted={() => setScreen('register')} onSignIn={() => setScreen('login')} />;
+    }
+    return <Login mode={screen} />;
+  }
 
   const renderContent = () => {
     if (isSaleModalOpen) return <NewSale onBack={() => setSaleModal(false)} />;
