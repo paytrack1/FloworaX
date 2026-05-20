@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Floworax — Business tools built for Nigerian small businesses</title>
+<meta name="description" content="Flowora gives small businesses, freelancers, and service providers one place to record sales, receive payments, and track what matters.">
+<meta property="og:title" content="Floworax — Run your business. Get paid faster.">
+<meta property="og:description" content="Business tools built for Nigerian small businesses. Simple, honest, and built to work.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://floworax.com">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#185FA5;--blue-dark:#0C447C;--blue-light:#E6F1FB;--text:#0F172A;--text-muted:#64748B;--text-hint:#94A3B8;--border:#E2E8F0;--bg:#ffffff;--bg-secondary:#F8FAFC;--green-bg:#EAF3DE;--green-text:#3B6D11;--amber-bg:#FAEEDA;--gray-bg:#F1F5F9;--gray-text:#5F5E5A}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 2rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);z-index:100}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:13px}
+.logo-text{font-size:17px;font-weight:600;color:var(--text)}
+.nav-links{display:flex;align-items:center;gap:2rem}
+.nav-links a{font-size:14px;color:var(--text-muted)}
+.nav-links a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 20px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all 0.15s}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue-dark)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{background:var(--bg-secondary)}
+.hero{max-width:720px;margin:0 auto;text-align:center;padding:6rem 2rem 5rem}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue-light);color:var(--blue);font-size:12px;font-weight:500;padding:5px 14px;border-radius:20px;margin-bottom:1.5rem}
+.badge-dot{width:6px;height:6px;background:var(--blue);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.hero h1{font-size:52px;font-weight:700;line-height:1.1;color:var(--text);margin-bottom:1.25rem;letter-spacing:-1.5px}
+.hero h1 span{color:var(--blue)}
+.hero p{font-size:18px;color:var(--text-muted);line-height:1.7;margin-bottom:2.5rem;max-width:480px;margin-left:auto;margin-right:auto}
+.hero-actions{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:1rem}
+.hero-note{font-size:12px;color:var(--text-hint)}
+.section{padding:5rem 2rem}
+.section-inner{max-width:900px;margin:0 auto}
+.section-label{font-size:11px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:0.75rem;text-align:center}
+.section-title{font-size:34px;font-weight:700;text-align:center;color:var(--text);margin-bottom:0.75rem;letter-spacing:-0.75px}
+.section-sub{font-size:16px;color:var(--text-muted);text-align:center;margin-bottom:3rem;max-width:480px;margin-left:auto;margin-right:auto}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
+.product-card{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:1.75rem;transition:border-color 0.15s,transform 0.15s}
+.product-card:hover{border-color:#B5D4F4;transform:translateY(-2px)}
+.product-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:1.1rem;font-size:20px}
+.product-card h3{font-size:17px;font-weight:600;color:var(--text);margin-bottom:0.4rem}
+.product-card p{font-size:14px;color:var(--text-muted);line-height:1.65;margin-bottom:1.1rem}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.tag-live{background:var(--green-bg);color:var(--green-text)}
+.tag-soon{background:var(--gray-bg);color:var(--gray-text)}
+.features-bg{background:var(--bg-secondary);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+.feature-item{padding:1.25rem;background:var(--bg);border:1px solid var(--border);border-radius:10px}
+.feature-item h4{font-size:15px;font-weight:600;margin-bottom:0.4rem;color:var(--text)}
+.feature-item p{font-size:13px;color:var(--text-muted);line-height:1.6}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+.plan-card{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:1.75rem}
+.plan-card.featured{border:2px solid var(--blue)}
+.plan-badge{font-size:11px;font-weight:600;background:var(--blue-light);color:var(--blue);padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:1rem}
+.plan-name{font-size:18px;font-weight:600;color:var(--text);margin-bottom:0.25rem}
+.plan-price{font-size:36px;font-weight:700;color:var(--text);letter-spacing:-1px;margin:0.75rem 0 0.25rem}
+.plan-price span{font-size:14px;font-weight:400;color:var(--text-muted)}
+.plan-desc{font-size:13px;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.5}
+.plan-divider{border:none;border-top:1px solid var(--border);margin:1rem 0}
+.plan-feature{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text-muted);margin-bottom:8px}
+.check{width:16px;height:16px;background:var(--green-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px;color:var(--green-text);margin-top:1px}
+.faq-item{border-bottom:1px solid var(--border);cursor:pointer}
+.faq-q{font-size:15px;font-weight:500;color:var(--text);display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1.25rem 0}
+.faq-icon{font-size:20px;color:var(--text-hint);flex-shrink:0;transition:transform 0.2s}
+.faq-a{font-size:14px;color:var(--text-muted);line-height:1.7;padding-bottom:1.25rem;display:none}
+.faq-a.open{display:block}
+.faq-icon.open{transform:rotate(45deg)}
+.cta-section{background:var(--bg-secondary);border-top:1px solid var(--border);border-bottom:1px solid var(--border);text-align:center;padding:5rem 2rem}
+.cta-section h2{font-size:36px;font-weight:700;color:var(--text);margin-bottom:0.75rem;letter-spacing:-0.75px}
+.cta-section p{font-size:16px;color:var(--text-muted);margin-bottom:2rem}
+.email-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;max-width:420px;margin:0 auto}
+.email-form input{flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);outline:none;background:var(--bg)}
+.email-form input:focus{border-color:var(--blue)}
+.success-msg{font-size:13px;color:var(--green-text);margin-top:0.75rem;display:none}
+.footer{padding:3.5rem 2rem 2rem;border-top:1px solid var(--border)}
+.footer-inner{max-width:900px;margin:0 auto}
+.footer-top{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:2rem;margin-bottom:2.5rem}
+.footer-brand p{font-size:13px;color:var(--text-muted);line-height:1.65;margin-top:0.75rem;max-width:200px}
+.footer-col h5{font-size:11px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:0.75rem}
+.footer-col a{display:block;font-size:13px;color:var(--text-muted);margin-bottom:0.5rem}
+.footer-col a:hover{color:var(--text)}
+.footer-bottom{border-top:1px solid var(--border);padding-top:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.footer-bottom p{font-size:12px;color:var(--text-hint)}
+@media(max-width:640px){
+  .hero h1{font-size:34px}
+  .nav-links{display:none}
+  .footer-top{grid-template-columns:1fr 1fr}
+  .hero{padding:4rem 1.5rem 3rem}
+  .section{padding:3.5rem 1.5rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="logo">
+    <div class="logo-mark">Fx</div>
+    <span class="logo-text">Floworax</span>
+  </div>
+  <div class="nav-links">
+    <a href="#products">Products</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+    <a href="mailto:hello@floworax.com">Contact</a>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a class="btn btn-outline" href="https://app.floworax.com">Sign in</a>
+    <a class="btn btn-primary" href="https://app.floworax.com">Get started free</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="badge">
+    <span class="badge-dot"></span>
+    Now in beta &middot; Built for Nigerian businesses
+  </div>
+  <h1>Run your business.<br><span>Get paid faster.</span></h1>
+  <p>Flowora gives small businesses, freelancers, and service providers one place to record sales, receive payments, and track what matters.</p>
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="https://app.floworax.com" style="padding:12px 28px;font-size:15px">Start for free</a>
+    <a class="btn btn-outline" href="https://app.floworax.com/pay" style="padding:12px 28px;font-size:15px">See Flowora Pay →</a>
+  </div>
+  <p class="hero-note">No credit card required &nbsp;·&nbsp; Works offline &nbsp;·&nbsp; Syncs automatically</p>
+</section>
+
+<section class="section" id="products">
+  <div class="section-inner">
+    <p class="section-label">Products</p>
+    <h2 class="section-title">Everything your business needs</h2>
+    <p class="section-sub">One platform, multiple tools — each solving a real problem for Nigerian small businesses.</p>
+    <div class="product-grid">
+      <div class="product-card">
+        <div class="product-icon" style="background:#E6F1FB">💳</div>
+        <h3>Flowora Pay</h3>
+        <p>Record sales offline, accept Paystack payments, sync when online. Built for traders and shop owners who need something that just works.</p>
+        <span class="tag tag-live">Live now</span>
+      </div>
+      <div class="product-card">
+        <div class="product-icon" style="background:#EAF3DE">📅</div>
+        <h3>Flowora Bookings</h3>
+        <p>Let clients book your services online. Automatic reminders, calendar sync, and payment collected at the time of booking.</p>
+        <span class="tag tag-soon">Coming soon</span>
+      </div>
+      <div class="product-card">
+        <div class="product-icon" style="background:#FAEEDA">📊</div>
+        <h3>Flowora Insights</h3>
+        <p>Know your numbers. Revenue trends, expense tracking, and profit reports — presented in plain language, not accounting jargon.</p>
+        <span class="tag tag-soon">Coming soon</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section features-bg">
+  <div class="section-inner">
+    <p class="section-label">Why Flowora</p>
+    <h2 class="section-title">Built for how Nigeria works</h2>
+    <p class="section-sub">Not a foreign tool adapted for Nigeria. Built here, for here, from the ground up.</p>
+    <div class="feature-grid">
+      <div class="feature-item">
+        <h4>Offline first</h4>
+        <p>Record sales even without internet. Everything syncs automatically when you reconnect.</p>
+      </div>
+      <div class="feature-item">
+        <h4>Paystack payments</h4>
+        <p>Accept cash, bank transfer, and card. Every transaction verified and recorded automatically.</p>
+      </div>
+      <div class="feature-item">
+        <h4>Multi-store support</h4>
+        <p>Manage more than one business from a single account. Each store has its own dashboard.</p>
+      </div>
+      <div class="feature-item">
+        <h4>Real-time sync</h4>
+        <p>Your data lives on your device and in the cloud. Switch phones without losing anything.</p>
+      </div>
+      <div class="feature-item">
+        <h4>Instant reports</h4>
+        <p>See today's revenue, net profit, and pending transactions the moment you open the app.</p>
+      </div>
+      <div class="feature-item">
+        <h4>Export your data</h4>
+        <p>Download your full sales history as CSV anytime. Your data is always yours to keep.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="pricing">
+  <div class="section-inner">
+    <p class="section-label">Pricing</p>
+    <h2 class="section-title">Simple, honest pricing</h2>
+    <p class="section-sub">Start free. Upgrade when your business grows. No hidden fees, ever.</p>
+    <div class="pricing-grid">
+      <div class="plan-card">
+        <p class="plan-name">Free</p>
+        <p class="plan-price">₦0 <span>/ month</span></p>
+        <p class="plan-desc">For businesses just getting started. No card required.</p>
+        <hr class="plan-divider">
+        <div class="plan-feature"><div class="check">✓</div> Up to 50 sales per month</div>
+        <div class="plan-feature"><div class="check">✓</div> Offline recording</div>
+        <div class="plan-feature"><div class="check">✓</div> Basic reports</div>
+        <div class="plan-feature"><div class="check">✓</div> CSV export</div>
+        <div style="margin-top:1.5rem">
+          <a class="btn btn-outline" href="https://app.floworax.com" style="width:100%">Get started free</a>
+        </div>
+      </div>
+      <div class="plan-card featured">
+        <span class="plan-badge">Most popular</span>
+        <p class="plan-name">Pro</p>
+        <p class="plan-price">₦2,000 <span>/ month</span></p>
+        <p class="plan-desc">For growing businesses that need more power and no limits.</p>
+        <hr class="plan-divider">
+        <div class="plan-feature"><div class="check">✓</div> Unlimited sales</div>
+        <div class="plan-feature"><div class="check">✓</div> Paystack payments</div>
+        <div class="plan-feature"><div class="check">✓</div> Cloud sync</div>
+        <div class="plan-feature"><div class="check">✓</div> Full analytics</div>
+        <div class="plan-feature"><div class="check">✓</div> Priority support</div>
+        <div style="margin-top:1.5rem">
+          <a class="btn btn-primary" href="https://app.floworax.com" style="width:100%">Start free for 14 days</a>
+        </div>
+      </div>
+      <div class="plan-card">
+        <p class="plan-name">Business</p>
+        <p class="plan-price">₦5,000 <span>/ month</span></p>
+        <p class="plan-desc">For established businesses with staff and multiple stores.</p>
+        <hr class="plan-divider">
+        <div class="plan-feature"><div class="check">✓</div> Everything in Pro</div>
+        <div class="plan-feature"><div class="check">✓</div> Staff accounts</div>
+        <div class="plan-feature"><div class="check">✓</div> Flowora Bookings</div>
+        <div class="plan-feature"><div class="check">✓</div> Flowora Insights</div>
+        <div class="plan-feature"><div class="check">✓</div> Dedicated support</div>
+        <div style="margin-top:1.5rem">
+          <a class="btn btn-outline" href="mailto:hello@floworax.com" style="width:100%">Contact us</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="faq" style="padding-bottom:2rem">
+  <div class="section-inner" style="max-width:680px">
+    <p class="section-label">FAQ</p>
+    <h2 class="section-title" style="margin-bottom:2.5rem">Common questions</h2>
+    <div class="faq-item" onclick="toggle(this)">
+      <div class="faq-q">What is Floworax? <span class="faq-icon">+</span></div>
+      <div class="faq-a">Floworax is the parent company behind Flowora — a suite of business tools built for Nigerian small businesses. Our first product, Flowora Pay, helps shop owners and traders record sales, accept payments, and track revenue, even without internet.</div>
+    </div>
+    <div class="faq-item" onclick="toggle(this)">
+      <div class="faq-q">Does it work without internet? <span class="faq-icon">+</span></div>
+      <div class="faq-a">Yes. Flowora Pay is built offline-first. You can record sales, view reports, and manage your store with no internet connection. Everything syncs automatically to the cloud when you come back online.</div>
+    </div>
+    <div class="faq-item" onclick="toggle(this)">
+      <div class="faq-q">How do payments work? <span class="faq-icon">+</span></div>
+      <div class="faq-a">Flowora uses Paystack to process payments. Your customers can pay by card, bank transfer, or USSD. Payments are verified automatically and settled directly to your bank account by Paystack — we never hold your money.</div>
+    </div>
+    <div class="faq-item" onclick="toggle(this)">
+      <div class="faq-q">Is my data safe? <span class="faq-icon">+</span></div>
+      <div class="faq-a">Yes. Your data is encrypted in transit and at rest. Passwords are hashed with bcrypt — we never store plain text passwords. Your sales data is backed up to secure cloud servers and you can export it anytime.</div>
+    </div>
+    <div class="faq-item" onclick="toggle(this)">
+      <div class="faq-q">Can I use it on my phone? <span class="faq-icon">+</span></div>
+      <div class="faq-a">Yes. Flowora is a Progressive Web App (PWA). You can install it on your Android or iPhone home screen and it works like a native app. No app store required.</div>
+    </div>
+    <div class="faq-item" onclick="toggle(this)">
+      <div class="faq-q">When is Flowora Bookings coming? <span class="faq-icon">+</span></div>
+      <div class="faq-a">Flowora Bookings is in development and will be available to Pro and Business plan users first. Join our waitlist below to be notified when it launches.</div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <h2>Start free today</h2>
+  <p>Join businesses already using Flowora to get paid and stay organised.</p>
+  <div class="email-form">
+    <input type="email" placeholder="Enter your email address" id="waitlist-email" />
+    <button class="btn btn-primary" onclick="joinWaitlist()">Join waitlist</button>
+  </div>
+  <p class="success-msg" id="waitlist-msg">You're on the list. We'll be in touch soon.</p>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="logo">
+          <div class="logo-mark">Fx</div>
+          <span class="logo-text">Floworax</span>
+        </div>
+        <p>Business tools built for Nigerian small businesses. Simple, honest, and built to work.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Products</h5>
+        <a href="https://app.floworax.com/pay">Flowora Pay</a>
+        <a href="#products">Flowora Bookings</a>
+        <a href="#products">Flowora Insights</a>
+        <a href="#pricing">Pricing</a>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <a href="#">About</a>
+        <a href="#">Blog</a>
+        <a href="#">Careers</a>
+        <a href="mailto:hello@floworax.com">Contact</a>
+      </div>
+      <div class="footer-col">
+        <h5>Legal</h5>
+        <a href="#">Privacy policy</a>
+        <a href="#">Terms of service</a>
+        <a href="#">Cookie policy</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 Floworax Technologies. All rights reserved.</p>
+      <p>Built in Nigeria 🇳🇬</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+function toggle(el){
+  const a=el.querySelector('.faq-a');
+  const icon=el.querySelector('.faq-icon');
+  const isOpen=a.classList.contains('open');
+  document.querySelectorAll('.faq-a').forEach(x=>x.classList.remove('open'));
+  document.querySelectorAll('.faq-icon').forEach(x=>{x.textContent='+';x.classList.remove('open')});
+  if(!isOpen){a.classList.add('open');icon.textContent='×';icon.classList.add('open')}
+}
+function joinWaitlist(){
+  const email=document.getElementById('waitlist-email').value.trim();
+  if(!email||!email.includes('@'))return;
+  const msg=document.getElementById('waitlist-msg');
+  msg.style.display='block';
+  document.getElementById('waitlist-email').value='';
+}
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const target=document.querySelector(a.getAttribute('href'));
+    if(target)target.scrollIntoView({behavior:'smooth'});
+  });
+});
+</script>
+</body>
+</html>
