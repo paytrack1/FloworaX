@@ -1,4 +1,6 @@
 require('dotenv').config();
+const serviceRoutes = require('./src/routes/services');
+const bookingRoutes = require('./src/routes/bookings');
 const express    = require('express');
 const cors       = require('cors');
 const crypto     = require('crypto');
@@ -383,6 +385,10 @@ app.post('/webhook/paystack', (req, res, next) => {
 // ════════════════════════════════════════
 //  START
 // ════════════════════════════════════════
+// ── Booking Routes ──
+app.use('/api/services', requireAuth, serviceRoutes);
+app.use('/api/bookings', bookingRoutes);
+
 app.listen(PORT, () => {
   console.log(`\n🚀 Flowora Backend v2.0 running on port ${PORT}`);
   console.log(`   Database : MongoDB`);
