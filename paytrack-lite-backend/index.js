@@ -20,6 +20,7 @@ app.use(cors({
     'https://app.floworax.com',
     'https://paytracklite.vercel.app',
     'https://flowora.vercel.app',
+    'https://floworax.vercel.app',
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
