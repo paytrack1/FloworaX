@@ -8,7 +8,6 @@ const tabs = [
   { id: 'reports',  label: 'Reports',  icon: FileText },
   { id: 'expenses', label: 'Expenses', icon: TrendingDown },
   { id: 'bookings', label: 'Bookings', icon: Calendar },
-  { id: 'bookings', label: 'Bookings', icon: Calendar },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
