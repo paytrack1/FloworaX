@@ -1,6 +1,7 @@
 require('dotenv').config();
 const serviceRoutes = require('./src/routes/services');
 const bookingRoutes = require('./src/routes/bookings');
+const Booking       = require('./src/models/Booking');
 const express    = require('express');
 const cors       = require('cors');
 const crypto     = require('crypto');
@@ -375,10 +376,18 @@ app.post('/webhook/paystack', (req, res, next) => {
   if (event === 'charge.success') {
     const { reference, amount, metadata } = data;
     console.log(`Payment confirmed ₦${amount / 100} ref: ${reference}`);
-    await Sale.findOneAndUpdate(
-      { id: reference },
-      { synced: 1, verified: true, status: 'completed', provider: 'paystack-webhook' }
-    );
+    if (metadata?.bookingId || (reference && reference.startsWith('booking-'))) {
+      const bookingId = metadata?.bookingId || reference.replace('booking-', '');
+      await Booking.findByIdAndUpdate(bookingId, {
+        paymentStatus: 'paid', status: 'confirmed', paymentRef: reference,
+      });
+      console.log('Booking confirmed via webhook:', bookingId);
+    } else {
+      await Sale.findOneAndUpdate(
+        { id: reference },
+        { synced: 1, verified: true, status: 'completed', provider: 'paystack-webhook' }
+      );
+    }
   }
 });
 
@@ -386,7 +395,7 @@ app.post('/webhook/paystack', (req, res, next) => {
 //  START
 // ════════════════════════════════════════
 // ── Booking Routes ──
-app.use('/api/services', requireAuth, serviceRoutes);
+app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);
 
 app.listen(PORT, () => {
