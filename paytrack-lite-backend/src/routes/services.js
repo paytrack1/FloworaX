@@ -61,4 +61,14 @@ router.get('/public/:userId', async (req, res) => {
   }
 });
 
+router.get('/single/:id', async (req, res) => {
+  try {
+    const service = await Service.findOne({ _id: req.params.id, isActive: true });
+    if (!service) return res.status(404).json({ error: 'Service not found' });
+    res.json({ success: true, service });
+  } catch {
+    res.status(500).json({ error: 'Failed to get service' });
+  }
+});
+
 module.exports = router;

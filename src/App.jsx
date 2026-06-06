@@ -11,6 +11,8 @@ import Expenses from './pages/Expenses';
 import Bookings from './pages/Bookings';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
+import LoadingScreen from './components/LoadingScreen';
+import PublicBooking from './pages/PublicBooking';
 
 const App = () => {
   const [screen, setScreen] = React.useState('welcome');
@@ -27,6 +29,11 @@ const App = () => {
   }, [isAuthenticated, init]);
 
   // ── Auth screens ──
+  const path = window.location.pathname;
+  if (path.startsWith('/book/') || path.startsWith('/booking/')) {
+    return <PublicBooking />;
+  }
+
   if (!isAuthenticated) {
     if (screen === 'welcome') {
       return <Welcome onGetStarted={() => setScreen('register')} onSignIn={() => setScreen('login')} />;
