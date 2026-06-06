@@ -189,3 +189,24 @@ const PublicBooking = () => {
 };
 
 export default PublicBooking;
+e="text-[#94A3B8] text-sm">Your booking is confirmed. Check your email for the details.</p>
+          </>
+        )}
+        {state === 'failed' && (
+          <>
+            <p className="text-[#0F172A] font-black text-lg mb-1">We could not confirm payment</p>
+            <p className="text-[#94A3B8] text-sm">If you were charged, contact the provider and they can confirm your booking.</p>
+          </>
+        )}
+      </div>
+    </Shell>
+  );
+};
+
+const PublicBooking = () => {
+  const path = window.location.pathname;
+  if (path.startsWith('/booking/')) return <BookingSuccess />;
+  return <BookingForm />;
+};
+
+export default PublicBooking;
