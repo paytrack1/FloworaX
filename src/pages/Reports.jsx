@@ -21,7 +21,6 @@ const Reports = () => {
   const avg       = count > 0 ? Math.round(total / count) : 0;
   const netProfit = sales.reduce((sum, s) => sum + (s.profit ?? s.total * 0.3), 0);
   const verified  = sales.filter((s) => s.verified).length;
-  const pending   = sales.filter((s) => s.synced !== 1).length;
 
   // Real chart data grouped by day of week
   const daySales  = Array(7).fill(0);
@@ -120,19 +119,6 @@ const Reports = () => {
             </div>
           </div>
         </div>
-
-        {/* Pending sync warning */}
-        {pending > 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3">
-            <span className="text-amber-500 text-lg">🔄</span>
-            <div>
-              <p className="text-amber-800 text-sm font-bold">
-                {pending} sale{pending !== 1 ? 's' : ''} pending sync
-              </p>
-              <p className="text-amber-600 text-xs font-medium">Go to Home and tap Sync when online</p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

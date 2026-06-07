@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { liveQuery } from 'dexie';
 import { db } from '../db/dexie';
-import { useOnline } from '../hooks/useOnline';
 import RevenueCard from '../components/RevenueCard';
 import TransactionItem from '../components/TransactionItem';
 
@@ -9,14 +8,12 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 const API_KEY     = import.meta.env.VITE_API_KEY     || 'flowora-dev-key';
 
 const Home = ({ onNavigateToSale }) => {
-  const isOnline = useOnline();
   const [sales, setSales]     = useState([]);
   const [stats, setStats]     = useState({ total: 0, count: 0, netProfit: 0 });
-  const [syncing, setSyncing] = useState(false);
   const [syncLog, setSyncLog] = useState([]);
   const [showLog, setShowLog] = useState(false);
 
-  // ── Live query from Dexie ──
+  // ── Live query from local store ──
   useEffect(() => {
     const subscription = liveQuery(() =>
       db.sales.orderBy('createdAt').reverse().toArray()
@@ -32,71 +29,15 @@ const Home = ({ onNavigateToSale }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Sync unsynced sales to backend ──
-  const handleSync = async () => {
-    if (!isOnline) {
-      setSyncLog(['⚠️ You are offline. Connect to the internet to sync.']);
-      setShowLog(true);
-      return;
-    }
-
-    const unsynced = sales.filter((s) => s.synced !== 1);
-    if (unsynced.length === 0) {
-      setSyncLog(['✅ All sales are already synced.']);
-      setShowLog(true);
-      return;
-    }
-
-    setSyncing(true);
-    const log = [`🔄 Syncing ${unsynced.length} sale(s) to server...`];
-    setSyncLog([...log]);
-    setShowLog(true);
-
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/sales/sync`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': API_KEY,
-        },
-        body: JSON.stringify({ sales: unsynced }),
-      });
-
-      const data = await res.json();
-
-      for (const result of data.results || []) {
-        if (result.status === 'synced') {
-          // Update Dexie local record
-          await db.sales.update(result.id, {
-            synced:   1,
-            verified: result.verified,
-            status:   result.verified ? 'completed' : 'pending',
-          });
-          log.push(`✅ Sale ${result.id.slice(0, 8)}… — ${result.verified ? 'Verified by Paystack' : 'Synced (unverified)'}`);
-        } else {
-          log.push(`⚠️ Sale ${result.id?.slice(0, 8)}… — ${result.reason}`);
-        }
-      }
-
-      log.push(`\n🎉 Sync complete.`);
-    } catch (err) {
-      log.push(`❌ Sync failed: ${err.message}`);
-      console.error('Sync error:', err);
-    }
-
-    setSyncLog([...log]);
-    setSyncing(false);
-  };
-
   // ── Verify a single sale payment on Paystack ──
   const handleVerifySale = async (sale) => {
     if (!sale.reference) {
-      setSyncLog([`⚠️ Sale ${sale.id.slice(0, 8)}… has no payment reference.`]);
+      setSyncLog([`Sale ${sale.id.slice(0, 8)} has no payment reference.`]);
       setShowLog(true);
       return;
     }
 
-    const log = [`🔍 Verifying payment on Paystack...`];
+    const log = [`Verifying payment on Paystack...`];
     setSyncLog([...log]);
     setShowLog(true);
 
@@ -111,18 +52,16 @@ const Home = ({ onNavigateToSale }) => {
         await db.sales.update(sale.id, {
           synced: 1, verified: true, status: 'completed',
         });
-        log.push(`✅ Sale ${sale.id.slice(0, 8)}… — Verified by Paystack ₦${data.amount?.toLocaleString()}`);
+        log.push(`Sale ${sale.id.slice(0, 8)} verified by Paystack ₦${data.amount?.toLocaleString()}`);
       } else {
-        log.push(`❌ Sale ${sale.id.slice(0, 8)}… — Not found on Paystack`);
+        log.push(`Sale ${sale.id.slice(0, 8)} not found on Paystack`);
       }
     } catch (err) {
-      log.push(`❌ Verification failed: ${err.message}`);
+      log.push(`Verification failed: ${err.message}`);
     }
 
     setSyncLog([...log]);
   };
-
-  const pendingCount = sales.filter((s) => s.synced !== 1).length;
 
   return (
     <div className="bg-[#F5F7FA] min-h-screen pb-32">
@@ -134,41 +73,16 @@ const Home = ({ onNavigateToSale }) => {
           </p>
           <h1 className="text-xl font-black text-[#0F172A]">Adeola Store</h1>
         </div>
-        <div className="flex items-center gap-3">
-          {/* Sync button */}
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="relative flex items-center gap-1.5 bg-[#F1F5F9] px-3 py-2 rounded-xl text-xs font-bold text-[#185FA5] disabled:opacity-50"
-          >
-            {syncing ? '⏳' : '🔄'} Sync
-            {pendingCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-black">
-                {pendingCount}
-              </span>
-            )}
-          </button>
-          <div className="w-10 h-10 bg-[#185FA5] rounded-xl flex items-center justify-center text-white font-bold text-sm">
-            AS
-          </div>
+        <div className="w-10 h-10 bg-[#185FA5] rounded-xl flex items-center justify-center text-white font-bold text-sm">
+          AS
         </div>
       </div>
 
-      {/* Online / Offline banner */}
-      {!isOnline && (
-        <div className="mx-6 mt-4 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2">
-          <span className="text-amber-500">📶</span>
-          <p className="text-amber-700 text-xs font-semibold">
-            Offline — sales are saved locally and will sync when you reconnect.
-          </p>
-        </div>
-      )}
-
-      {/* Sync Log Panel */}
+      {/* Verification Log Panel */}
       {showLog && syncLog.length > 0 && (
         <div className="mx-6 mt-4 bg-[#0F172A] rounded-2xl p-4">
           <div className="flex justify-between items-center mb-2">
-            <p className="text-white text-xs font-bold uppercase tracking-widest">Sync Log</p>
+            <p className="text-white text-xs font-bold uppercase tracking-widest">Verification</p>
             <button onClick={() => setShowLog(false)} className="text-[#64748B] text-xs">✕ Close</button>
           </div>
           {syncLog.map((line, i) => (
@@ -182,7 +96,6 @@ const Home = ({ onNavigateToSale }) => {
         totalAmount={stats.total}
         txCount={stats.count}
         netProfit={stats.netProfit}
-        isOnline={isOnline}
       />
 
       {/* Transactions */}
