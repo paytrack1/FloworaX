@@ -16,7 +16,7 @@ import PublicBooking from './pages/PublicBooking';
 
 const App = () => {
   const [screen, setScreen] = React.useState('welcome');
-  const { isAuthenticated, activeTab, isSaleModalOpen, setSaleModal, init, syncPending, user } = useStore();
+  const { isAuthenticated, activeTab, setActiveTab, isSaleModalOpen, setSaleModal, init, syncPending, user } = useStore();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -77,7 +77,7 @@ const App = () => {
             </div>
             <p className="text-xl font-black text-[#0F172A] tracking-tighter">{user?.businessName || 'Dashboard'}</p>
           </div>
-          <div className="w-9 h-9 rounded-xl bg-[#2F5FB3] flex items-center justify-center overflow-hidden">
+          <div onClick={() => setActiveTab('settings')} className="w-9 h-9 rounded-xl bg-[#2F5FB3] flex items-center justify-center overflow-hidden cursor-pointer active:scale-95 transition-transform">
             {user?.profileImage ? (
               <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
             ) : (
