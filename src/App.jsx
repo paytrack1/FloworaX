@@ -16,15 +16,11 @@ import PublicBooking from './pages/PublicBooking';
 
 const App = () => {
   const [screen, setScreen] = React.useState('welcome');
-  const { isAuthenticated, activeTab, setActiveTab, isSaleModalOpen, setSaleModal, init, syncPending, user } = useStore();
+  const { isAuthenticated, activeTab, setActiveTab, isSaleModalOpen, setSaleModal, init, user } = useStore();
 
   useEffect(() => {
     if (isAuthenticated) {
       init();
-      const syncInterval = setInterval(() => {
-        if (navigator.onLine) syncPending();
-      }, 30000);
-      return () => clearInterval(syncInterval);
     }
   }, [isAuthenticated, init]);
 
@@ -48,7 +44,6 @@ const App = () => {
       case 'sales':    return <SalesHistory />;
       case 'reports':  return <Reports />;
       case 'expenses': return <Expenses />;
-      case 'bookings': return <Bookings />;
       case 'bookings': return <Bookings />;
       case 'settings': return <Settings />;
       default:         return <Home />;

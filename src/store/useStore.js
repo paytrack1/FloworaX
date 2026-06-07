@@ -86,7 +86,7 @@ export const useStore = create(
         try {
           await db.sales.add(sale);
           set((state) => ({ sales: [sale, ...state.sales], transactions: [sale, ...state.transactions] }));
-          if (navigator.onLine && token) await syncSale(sale);
+          if (token) await syncSale(sale);
         } catch (err) { console.error('Failed to save sale:', err); throw err; }
       },
 
@@ -106,13 +106,6 @@ export const useStore = create(
             }
           }
         } catch (err) { console.warn('Sync failed:', err.message); }
-      },
-
-      syncPending: async () => {
-        const { sales, syncSale, token } = get();
-        if (!token) return;
-        const pending = sales.filter((s) => s.synced === 0);
-        for (const sale of pending) await syncSale(sale);
       },
 
       setVerificationStatus: async (id, verified, provider) => {
