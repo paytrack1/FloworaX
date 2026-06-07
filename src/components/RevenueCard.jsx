@@ -1,6 +1,6 @@
 import React from 'react';
 
-const RevenueCard = ({ totalAmount = 0, txCount = 0, netProfit = 0, isOnline = false }) => {
+const RevenueCard = ({ totalAmount = 0, txCount = 0, netProfit = 0 }) => {
   return (
     <div className="mx-6 mt-6 rounded-3xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #185FA5 0%, #0C447C 100%)' }}>
       {/* Decorative circles */}
@@ -21,20 +21,10 @@ const RevenueCard = ({ totalAmount = 0, txCount = 0, netProfit = 0, isOnline = f
         />
 
         {/* Top row */}
-        <div className="flex items-center justify-between mb-3 relative">
+        <div className="mb-3 relative">
           <p className="text-blue-200 text-[11px] font-semibold uppercase tracking-widest">
             Today's Revenue
           </p>
-          <span
-            className="text-[11px] font-semibold px-3 py-1 rounded-full"
-            style={{
-              background: isOnline ? 'rgba(29,158,117,0.25)' : 'rgba(255,255,255,0.12)',
-              color: isOnline ? '#9FE1CB' : 'rgba(255,255,255,0.6)',
-              border: `1px solid ${isOnline ? 'rgba(95,218,176,0.3)' : 'rgba(255,255,255,0.15)'}`,
-            }}
-          >
-            {isOnline ? '● Synced' : '○ Offline'}
-          </span>
         </div>
 
         {/* Revenue amount */}
