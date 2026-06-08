@@ -4,10 +4,9 @@ const Booking = require('../models/Booking');
 const Service = require('../models/Service');
 const axios   = require('axios');
 const requireAuth = require('../middleware/auth');
-
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_BASE_URL   = 'https://api.paystack.co';
-const FRONTEND_URL        = process.env.FRONTEND_URL || 'https://paytracklite.vercel.app';
+const FRONTEND_URL        = process.env.FRONTEND_URL || 'https://floworax.vercel.app';
 
 router.post('/public', async (req, res) => {
   const { serviceId, clientName, clientEmail, clientPhone, scheduledDate, scheduledTime, notes } = req.body;
@@ -41,6 +40,32 @@ router.post('/public', async (req, res) => {
     console.error('Booking error:', err.message);
     res.status(500).json({ error: 'Failed to create booking' });
   }
+});
+
+router.post('/webhook', async (req, res) => {
+  try {
+    const event = req.body;
+    if (event && event.event === 'charge.success') {
+      const reference = event.data && event.data.reference;
+      if (reference) {
+        const { data } = await axios.get(
+          `${PAYSTACK_BASE_URL}/transaction/verify/${reference}`,
+          { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
+        );
+        if (data && data.data && data.data.status === 'success') {
+          const bookingId = data.data.metadata && data.data.metadata.bookingId;
+          if (bookingId) {
+            await Booking.findByIdAndUpdate(bookingId, {
+              paymentStatus: 'paid', status: 'confirmed', paymentRef: reference,
+            });
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Webhook error:', err.message);
+  }
+  res.sendStatus(200);
 });
 
 router.get('/', requireAuth, async (req, res) => {
