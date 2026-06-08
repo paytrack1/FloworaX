@@ -53,6 +53,15 @@ function reminderHtml(booking) {
   </div>`;
 }
 
+function followupHtml(booking) {
+  return `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#0F172A">
+    <h2 style="color:#2F5FB3;margin:0 0 12px">Thanks for your booking</h2>
+    <p style="margin:0 0 16px">Hi ${booking.clientName}, thank you for your recent booking on ${booking.scheduledDate}. We hope it went well.</p>
+    <p style="margin:0 0 16px">We would love to see you again, book another time whenever you are ready.</p>
+    <p style="margin:0;color:#64748B;font-size:13px">Powered by Flowora</p>
+  </div>`;
+}
+
 router.post('/public', async (req, res) => {
   const { serviceId, clientName, clientEmail, clientPhone, scheduledDate, scheduledTime, notes } = req.body;
   if (!serviceId || !clientName || !clientEmail || !scheduledDate || !scheduledTime)
@@ -178,6 +187,23 @@ router.get('/run-reminders', async (req, res) => {
   } catch (err) {
     console.error('Reminder error:', err.message);
     res.status(500).json({ error: 'Failed to run reminders' });
+  }
+});
+
+router.get('/run-followups', async (req, res) => {
+  if (!REMINDER_SECRET || req.query.key !== REMINDER_SECRET) return res.sendStatus(403);
+  try {
+    const t = new Date();
+    t.setUTCDate(t.getUTCDate() - 1);
+    const yesterday = t.toISOString().slice(0, 10);
+    const bookings = await Booking.find({ scheduledDate: yesterday, status: 'confirmed' });
+    for (const b of bookings) {
+      await sendEmail(b.clientEmail, 'Thanks for your booking', followupHtml(b));
+    }
+    res.json({ success: true, sent: bookings.length, date: yesterday });
+  } catch (err) {
+    console.error('Follow-up error:', err.message);
+    res.status(500).json({ error: 'Failed to run follow-ups' });
   }
 });
 
