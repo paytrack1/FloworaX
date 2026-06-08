@@ -7,6 +7,37 @@ const requireAuth = require('../middleware/auth');
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_BASE_URL   = 'https://api.paystack.co';
 const FRONTEND_URL        = process.env.FRONTEND_URL || 'https://floworax.vercel.app';
+const RESEND_API_KEY      = process.env.RESEND_API_KEY;
+const EMAIL_FROM          = process.env.EMAIL_FROM || 'Flowora <onboarding@resend.dev>';
+
+async function sendEmail(to, subject, html) {
+  if (!RESEND_API_KEY) return;
+  try {
+    await axios.post(
+      'https://api.resend.com/emails',
+      { from: EMAIL_FROM, to, subject, html },
+      { headers: { Authorization: `Bearer ${RESEND_API_KEY}` } }
+    );
+  } catch (err) {
+    console.error('Email error:', (err.response && err.response.data) || err.message);
+  }
+}
+
+function confirmationHtml(booking) {
+  const amountLine = booking.amount
+    ? `<p style="margin:4px 0"><strong>Amount paid:</strong> &#8358;${booking.amount}</p>`
+    : '';
+  return `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#0F172A">
+    <h2 style="color:#2F5FB3;margin:0 0 12px">Booking confirmed</h2>
+    <p style="margin:0 0 16px">Hi ${booking.clientName}, your booking is confirmed. Here are the details:</p>
+    <div style="background:#F0F4FF;border-radius:12px;padding:16px;margin:0 0 16px">
+      <p style="margin:4px 0"><strong>Date:</strong> ${booking.scheduledDate}</p>
+      <p style="margin:4px 0"><strong>Time:</strong> ${booking.scheduledTime}</p>
+      ${amountLine}
+    </div>
+    <p style="margin:0;color:#64748B;font-size:13px">Powered by Flowora</p>
+  </div>`;
+}
 
 router.post('/public', async (req, res) => {
   const { serviceId, clientName, clientEmail, clientPhone, scheduledDate, scheduledTime, notes } = req.body;
@@ -21,7 +52,10 @@ router.post('/public', async (req, res) => {
       paymentStatus: service.isFree ? 'free' : 'pending',
       status: service.isFree ? 'confirmed' : 'pending', notes,
     });
-    if (service.isFree) return res.status(201).json({ success: true, booking, paymentRequired: false });
+    if (service.isFree) {
+      await sendEmail(clientEmail, 'Your booking is confirmed', confirmationHtml(booking));
+      return res.status(201).json({ success: true, booking, paymentRequired: false });
+    }
     const { data } = await axios.post(
       `${PAYSTACK_BASE_URL}/transaction/initialize`,
       {
@@ -42,6 +76,18 @@ router.post('/public', async (req, res) => {
   }
 });
 
+async function confirmPaidBooking(bookingId, reference) {
+  const booking = await Booking.findOneAndUpdate(
+    { _id: bookingId, paymentStatus: { $ne: 'paid' } },
+    { paymentStatus: 'paid', status: 'confirmed', paymentRef: reference },
+    { new: true }
+  );
+  if (booking) {
+    await sendEmail(booking.clientEmail, 'Your booking is confirmed', confirmationHtml(booking));
+  }
+  return booking;
+}
+
 router.post('/webhook', async (req, res) => {
   try {
     const event = req.body;
@@ -54,11 +100,7 @@ router.post('/webhook', async (req, res) => {
         );
         if (data && data.data && data.data.status === 'success') {
           const bookingId = data.data.metadata && data.data.metadata.bookingId;
-          if (bookingId) {
-            await Booking.findByIdAndUpdate(bookingId, {
-              paymentStatus: 'paid', status: 'confirmed', paymentRef: reference,
-            });
-          }
+          if (bookingId) await confirmPaidBooking(bookingId, reference);
         }
       }
     }
@@ -98,11 +140,7 @@ router.get('/verify/:reference', async (req, res) => {
     );
     if (data?.data?.status === 'success') {
       const bookingId = data.data.metadata?.bookingId;
-      if (bookingId) {
-        await Booking.findByIdAndUpdate(bookingId, {
-          paymentStatus: 'paid', status: 'confirmed', paymentRef: req.params.reference,
-        });
-      }
+      if (bookingId) await confirmPaidBooking(bookingId, req.params.reference);
       res.json({ success: true, message: 'Payment verified and booking confirmed' });
     } else {
       res.json({ success: false, message: 'Payment not verified' });
