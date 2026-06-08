@@ -9,6 +9,7 @@ const PAYSTACK_BASE_URL   = 'https://api.paystack.co';
 const FRONTEND_URL        = process.env.FRONTEND_URL || 'https://floworax.vercel.app';
 const RESEND_API_KEY      = process.env.RESEND_API_KEY;
 const EMAIL_FROM          = process.env.EMAIL_FROM || 'Flowora <onboarding@resend.dev>';
+const REMINDER_SECRET     = process.env.REMINDER_SECRET;
 
 async function sendEmail(to, subject, html) {
   if (!RESEND_API_KEY) return;
@@ -34,6 +35,19 @@ function confirmationHtml(booking) {
       <p style="margin:4px 0"><strong>Date:</strong> ${booking.scheduledDate}</p>
       <p style="margin:4px 0"><strong>Time:</strong> ${booking.scheduledTime}</p>
       ${amountLine}
+    </div>
+    <p style="margin:0;color:#64748B;font-size:13px">Powered by Flowora</p>
+  </div>`;
+}
+
+
+function reminderHtml(booking) {
+  return `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#0F172A">
+    <h2 style="color:#2F5FB3;margin:0 0 12px">Reminder: your booking is tomorrow</h2>
+    <p style="margin:0 0 16px">Hi ${booking.clientName}, this is a friendly reminder about your upcoming booking.</p>
+    <div style="background:#F0F4FF;border-radius:12px;padding:16px;margin:0 0 16px">
+      <p style="margin:4px 0"><strong>Date:</strong> ${booking.scheduledDate}</p>
+      <p style="margin:4px 0"><strong>Time:</strong> ${booking.scheduledTime}</p>
     </div>
     <p style="margin:0;color:#64748B;font-size:13px">Powered by Flowora</p>
   </div>`;
@@ -147,6 +161,23 @@ router.get('/verify/:reference', async (req, res) => {
     }
   } catch {
     res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
+router.get('/run-reminders', async (req, res) => {
+  if (!REMINDER_SECRET || req.query.key !== REMINDER_SECRET) return res.sendStatus(403);
+  try {
+    const t = new Date();
+    t.setUTCDate(t.getUTCDate() + 1);
+    const tomorrow = t.toISOString().slice(0, 10);
+    const bookings = await Booking.find({ scheduledDate: tomorrow, status: 'confirmed' });
+    for (const b of bookings) {
+      await sendEmail(b.clientEmail, 'Reminder: your booking is tomorrow', reminderHtml(b));
+    }
+    res.json({ success: true, sent: bookings.length, date: tomorrow });
+  } catch (err) {
+    console.error('Reminder error:', err.message);
+    res.status(500).json({ error: 'Failed to run reminders' });
   }
 });
 
