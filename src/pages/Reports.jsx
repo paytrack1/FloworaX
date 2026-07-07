@@ -1,25 +1,43 @@
 import React, { useEffect, useState } from 'react';
-import { liveQuery } from 'dexie';
-import { db } from '../db/dexie';
+import { useStore } from '../store/useStore';
+import { fetchFinancialSummary } from '../api/financial';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const Reports = () => {
-  const [sales, setSales] = useState([]);
+  const { token, sales, fetchSales } = useStore();
+  const [summary, setSummary] = useState({
+    totalRevenue: 0,
+    totalExpenses: 0,
+    netProfit: 0,
+    cashFlow: 0,
+    transactionCount: 0,
+    invoiceTotals: { total: 0, paid: 0, outstanding: 0 },
+  });
 
   useEffect(() => {
-    const subscription = liveQuery(() => db.sales.toArray()).subscribe({
-      next: setSales,
-      error: (err) => console.error('liveQuery error:', err),
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+    if (!token) return;
+    fetchSales();
+  }, [token, fetchSales]);
+
+  useEffect(() => {
+    if (!token) return;
+    const loadSummary = async () => {
+      try {
+        const summaryData = await fetchFinancialSummary(token);
+        setSummary(summaryData);
+      } catch (err) {
+        console.error('Failed to load financial summary:', err);
+      }
+    };
+    loadSummary();
+  }, [token]);
 
   // Derived stats
-  const total     = sales.reduce((sum, s) => sum + s.total, 0);
-  const count     = sales.length;
+  const total     = summary.totalRevenue;
+  const count     = summary.transactionCount;
   const avg       = count > 0 ? Math.round(total / count) : 0;
-  const netProfit = sales.reduce((sum, s) => sum + (s.profit ?? s.total * 0.3), 0);
+  const netProfit = summary.netProfit;
   const verified  = sales.filter((s) => s.verified).length;
 
   // Real chart data grouped by day of week

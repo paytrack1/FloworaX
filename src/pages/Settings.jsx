@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
-import { db } from '../db/dexie';
 import { Camera } from 'lucide-react';
 
 const ChevronRight = () => (
@@ -10,7 +9,7 @@ const ChevronRight = () => (
 );
 
 const Settings = () => {
-  const { logout, user, setProfileImage } = useStore();
+  const { logout, user, setProfileImage, sales } = useStore();
   const [exportStatus, setExportStatus] = useState('');
   const [showSupport, setShowSupport] = useState(false);
   const fileInputRef = useRef(null);
@@ -27,8 +26,7 @@ const Settings = () => {
 
   const handleExportCSV = async () => {
     try {
-      const sales = await db.sales.toArray();
-      if (sales.length === 0) {
+      if (!sales || sales.length === 0) {
         setExportStatus('No sales to export yet.');
         setTimeout(() => setExportStatus(''), 3000);
         return;

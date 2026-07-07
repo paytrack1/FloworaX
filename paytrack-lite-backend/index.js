@@ -1,3 +1,6 @@
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 require('dotenv').config();
 const serviceRoutes = require('./src/routes/services');
 const bookingRoutes = require('./src/routes/bookings');
@@ -37,9 +40,21 @@ const MONGODB_URI         = process.env.MONGODB_URI;
 const PAYSTACK_BASE_URL   = 'https://api.paystack.co';
 
 // ── Connect to MongoDB ──
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+const connectToDatabase = async () => {
+  if (!MONGODB_URI) {
+    console.error('MongoDB connection error: MONGODB_URI is not set');
+    return false;
+  }
+
+  try {
+    await mongoose.connect(MONGODB_URI);
+    console.log('MongoDB connected');
+    return true;
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    return false;
+  }
+};
 
 // ── Mongoose Schemas ──
 const userSchema = new mongoose.Schema({
@@ -47,6 +62,7 @@ const userSchema = new mongoose.Schema({
   businessName: { type: String, required: true, trim: true },
   passwordHash: { type: String, required: true },
   profileImage: { type: String, default: null },
+  businessType: { type: String, default: null },
   createdAt:    { type: Date, default: Date.now },
 });
 
@@ -157,10 +173,15 @@ app.post('/api/auth/register', async (req, res) => {
     res.status(201).json({
       success: true,
       token,
-      user: { id: user._id.toString(), email: user.email, businessName: user.businessName },
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        businessName: user.businessName,
+        businessType: user.businessType || null,
+      },
     });
   } catch (err) {
-    console.error('Register error:', err);
+    console.error('Register error:', err.stack || err);
     res.status(500).json({ error: 'Registration failed' });
   }
 });
@@ -188,9 +209,15 @@ app.post('/api/auth/login', async (req, res) => {
     res.json({
       success: true,
       token,
-      user: { id: user._id.toString(), email: user.email, businessName: user.businessName },
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        businessName: user.businessName,
+        businessType: user.businessType || null,
+      },
     });
   } catch (err) {
+    console.error('Login error:', err.stack || err);
     res.status(500).json({ error: 'Login failed' });
   }
 });
@@ -202,21 +229,28 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json({
       success: true,
-      user: { id: user._id.toString(), email: user.email, businessName: user.businessName },
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        businessName: user.businessName,
+        businessType: user.businessType || null,
+      },
     });
-  } catch {
+  } catch (err) {
+    console.error('Get me error:', err.stack || err);
     res.status(500).json({ error: 'Failed to get user' });
   }
 });
 
 // ── UPDATE PROFILE ──
 app.patch('/api/auth/profile', requireAuth, async (req, res) => {
-  const { businessName, currentPassword, newPassword } = req.body;
+  const { businessName, businessType, currentPassword, newPassword } = req.body;
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (businessName) user.businessName = businessName.trim();
+    if (businessType) user.businessType = businessType.trim();
 
     if (newPassword) {
       if (!currentPassword) return res.status(400).json({ error: 'Current password required' });
@@ -228,9 +262,15 @@ app.patch('/api/auth/profile', requireAuth, async (req, res) => {
     await user.save();
     res.json({
       success: true,
-      user: { id: user._id.toString(), email: user.email, businessName: user.businessName },
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        businessName: user.businessName,
+        businessType: user.businessType || null,
+      },
     });
-  } catch {
+  } catch (err) {
+    console.error('Profile update error:', err.stack || err);
     res.status(500).json({ error: 'Profile update failed' });
   }
 });
@@ -238,6 +278,35 @@ app.patch('/api/auth/profile', requireAuth, async (req, res) => {
 // ════════════════════════════════════════
 //  SALES ROUTES
 // ════════════════════════════════════════
+
+// ── CREATE SALE ──
+app.post('/api/sales', requireAuth, async (req, res) => {
+  const { items, itemName, total, paymentMethod, reference, status, profit } = req.body;
+  if (typeof total !== 'number' || total < 0) return res.status(400).json({ error: 'total is required and must be a number' });
+
+  try {
+    const sale = await Sale.create({
+      id: `sale-${Date.now()}`,
+      userId: req.user.id,
+      items: items || [],
+      itemName: itemName || 'General Sale',
+      total,
+      paymentMethod: paymentMethod || 'cash',
+      reference: reference || null,
+      status: status || (reference ? 'pending' : 'completed'),
+      synced: reference ? 0 : 1,
+      verified: !!(reference && status === 'completed'),
+      provider: reference ? 'paystack' : 'cash',
+      profit: profit || Math.round(total * 0.3),
+      createdAt: new Date().toISOString(),
+      syncedAt: reference ? null : new Date().toISOString(),
+    });
+    res.status(201).json({ success: true, sale });
+  } catch (err) {
+    console.error('Create sale error:', err);
+    res.status(500).json({ error: 'Failed to create sale' });
+  }
+});
 
 // ── SYNC SALES ──
 app.post('/api/sales/sync', requireAuth, async (req, res) => {
@@ -281,6 +350,38 @@ app.get('/api/sales', requireAuth, async (req, res) => {
   }
 });
 
+// ── CREATE EXPENSE ──
+app.post('/api/expenses', requireAuth, async (req, res) => {
+  const { description, amount, category } = req.body;
+  if (typeof amount !== 'number' || amount <= 0) return res.status(400).json({ error: 'amount is required and must be a number' });
+
+  try {
+    const expense = await Expense.create({
+      id: `expense-${Date.now()}`,
+      userId: req.user.id,
+      description: description || 'Expense',
+      amount,
+      category: category || 'Other',
+      synced: 1,
+      createdAt: new Date().toISOString(),
+    });
+    res.status(201).json({ success: true, expense });
+  } catch (err) {
+    console.error('Create expense error:', err);
+    res.status(500).json({ error: 'Failed to create expense' });
+  }
+});
+
+// ── DELETE EXPENSE ──
+app.delete('/api/expenses/:id', requireAuth, async (req, res) => {
+  try {
+    await Expense.deleteOne({ id: req.params.id, userId: req.user.id });
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: 'Failed to delete expense' });
+  }
+});
+
 // ── SYNC EXPENSES ──
 app.post('/api/expenses/sync', requireAuth, async (req, res) => {
   const { expenses } = req.body;
@@ -312,6 +413,65 @@ app.get('/api/expenses', requireAuth, async (req, res) => {
     res.json({ success: true, count: expenses.length, expenses });
   } catch {
     res.status(500).json({ error: 'Failed to get expenses' });
+  }
+});
+
+app.get('/api/finance/summary', requireAuth, async (req, res) => {
+  try {
+    const summary = await buildFinancialSummary(req.user.id);
+    res.json({ success: true, summary });
+  } catch (err) {
+    console.error('Failed to fetch finance summary:', err);
+    res.status(500).json({ error: 'Failed to fetch finance summary' });
+  }
+});
+
+app.get('/api/dashboard', requireAuth, async (req, res) => {
+  try {
+    const summary = await buildFinancialSummary(req.user.id);
+    const recentTransactions = await Sale.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(10);
+    const upcomingAppointments = [];
+    const upcomingEvents = [];
+    const latestInvoices = [];
+    const topServices = [];
+    res.json({ success: true, dashboard: { summary, recentTransactions, upcomingAppointments, upcomingEvents, latestInvoices, topServices } });
+  } catch (err) {
+    console.error('Failed to fetch dashboard:', err);
+    res.status(500).json({ error: 'Failed to fetch dashboard' });
+  }
+});
+
+const buildFinancialSummary = async (userId) => {
+  const completedSales = await Sale.find({ userId, status: 'completed', verified: true });
+  const totalRevenue = completedSales.reduce((sum, sale) => sum + (sale.total || 0), 0);
+
+  const expenses = await Expense.find({ userId });
+  const totalExpenses = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+
+  const netProfit = totalRevenue - totalExpenses;
+  const cashFlow = netProfit;
+
+  return {
+    totalRevenue,
+    totalExpenses,
+    netProfit,
+    cashFlow,
+    transactionCount: completedSales.length,
+    invoiceTotals: {
+      total: 0,
+      paid: 0,
+      outstanding: 0,
+    },
+  };
+};
+
+app.get('/api/financial-summary', requireAuth, async (req, res) => {
+  try {
+    const summary = await buildFinancialSummary(req.user.id);
+    res.json({ success: true, summary });
+  } catch (err) {
+    console.error('Failed to fetch financial summary:', err);
+    res.status(500).json({ error: 'Failed to fetch financial summary' });
   }
 });
 
@@ -398,9 +558,19 @@ app.post('/webhook/paystack', (req, res, next) => {
 app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 Flowora Backend v2.0 running on port ${PORT}`);
-  console.log(`   Database : MongoDB`);
-  console.log(`   Auth     : JWT (bcrypt + 7d expiry)`);
-  console.log(`   Mode     : ${PAYSTACK_SECRET_KEY?.startsWith('sk_live') ? 'LIVE 🔴' : 'TEST 🟡'}\n`);
-});
+const startServer = async () => {
+  const dbConnected = await connectToDatabase();
+  if (!dbConnected) {
+    console.error('Server startup aborted due to MongoDB connection failure.');
+    process.exit(1);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`\n🚀 Flowora Backend v2.0 running on port ${PORT}`);
+    console.log(`   Database : MongoDB`);
+    console.log(`   Auth     : JWT (bcrypt + 7d expiry)`);
+    console.log(`   Mode     : ${PAYSTACK_SECRET_KEY?.startsWith('sk_live') ? 'LIVE 🔴' : 'TEST 🟡'}\n`);
+  });
+};
+
+startServer();

@@ -1,33 +1,48 @@
 import React, { useEffect, useState } from 'react';
-import { liveQuery } from 'dexie';
-import { db } from '../db/dexie';
 import RevenueCard from '../components/RevenueCard';
 import TransactionItem from '../components/TransactionItem';
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-const API_KEY     = import.meta.env.VITE_API_KEY     || 'flowora-dev-key';
+import { useStore } from '../store/useStore';
+import { fetchFinancialSummary } from '../api/financial';
+import { verifySale } from '../api/sales';
 
 const Home = ({ onNavigateToSale }) => {
-  const [sales, setSales]     = useState([]);
-  const [stats, setStats]     = useState({ total: 0, count: 0, netProfit: 0 });
+  const { token, sales, fetchSales } = useStore();
+  const [summary, setSummary]       = useState({
+    totalRevenue: 0,
+    totalExpenses: 0,
+    netProfit: 0,
+    cashFlow: 0,
+    transactionCount: 0,
+    invoiceTotals: { total: 0, paid: 0, outstanding: 0 },
+  });
+  const [loadingSummary, setLoadingSummary] = useState(false);
+  const [summaryError, setSummaryError] = useState('');
   const [syncLog, setSyncLog] = useState([]);
   const [showLog, setShowLog] = useState(false);
 
-  // ── Live query from local store ──
   useEffect(() => {
-    const subscription = liveQuery(() =>
-      db.sales.orderBy('createdAt').reverse().toArray()
-    ).subscribe({
-      next: (allSales) => {
-        const total     = allSales.reduce((sum, s) => sum + s.total, 0);
-        const netProfit = allSales.reduce((sum, s) => sum + (s.profit ?? s.total * 0.3), 0);
-        setSales(allSales);
-        setStats({ total, count: allSales.length, netProfit });
-      },
-      error: (err) => console.error('liveQuery error:', err),
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+    if (!token) return;
+    fetchSales();
+  }, [token, fetchSales]);
+
+  const loadFinancialSummary = async () => {
+    if (!token) return;
+    setLoadingSummary(true);
+    try {
+      const summaryData = await fetchFinancialSummary(token);
+      setSummary(summaryData);
+      setSummaryError('');
+    } catch (err) {
+      console.error('Failed to load financial summary:', err);
+      setSummaryError(err.message || 'Unable to load financial summary');
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
+  useEffect(() => {
+    loadFinancialSummary();
+  }, [token]);
 
   // ── Verify a single sale payment on Paystack ──
   const handleVerifySale = async (sale) => {
@@ -42,16 +57,9 @@ const Home = ({ onNavigateToSale }) => {
     setShowLog(true);
 
     try {
-      const res = await fetch(
-        `${BACKEND_URL}/api/payments/verify/${sale.reference}`,
-        { headers: { 'x-api-key': API_KEY } }
-      );
-      const data = await res.json();
-
+        const data = await verifySale(token, sale.reference);
       if (data.verified) {
-        await db.sales.update(sale.id, {
-          synced: 1, verified: true, status: 'completed',
-        });
+        await fetchSales();
         log.push(`Sale ${sale.id.slice(0, 8)} verified by Paystack ₦${data.amount?.toLocaleString()}`);
       } else {
         log.push(`Sale ${sale.id.slice(0, 8)} not found on Paystack`);
@@ -93,10 +101,16 @@ const Home = ({ onNavigateToSale }) => {
 
       {/* Revenue Card */}
       <RevenueCard
-        totalAmount={stats.total}
-        txCount={stats.count}
-        netProfit={stats.netProfit}
+        totalAmount={summary.totalRevenue}
+        txCount={summary.transactionCount}
+        netProfit={summary.netProfit}
       />
+
+      {summaryError && (
+        <div className="mx-6 mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {summaryError}
+        </div>
+      )}
 
       {/* Transactions */}
       <div className="px-6 mt-4">

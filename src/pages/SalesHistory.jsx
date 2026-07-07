@@ -1,13 +1,35 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { TrendingUp, ShoppingBag, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { fetchFinancialSummary } from '../api/financial';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const SalesHistory = () => {
-  const { sales, user } = useStore();
+  const { sales, user, token } = useStore();
+  const [summary, setSummary] = useState({
+    totalRevenue: 0,
+    totalExpenses: 0,
+    netProfit: 0,
+    cashFlow: 0,
+    transactionCount: 0,
+    invoiceTotals: { total: 0, paid: 0, outstanding: 0 },
+  });
+
+  useEffect(() => {
+    if (!token) return;
+    const loadSummary = async () => {
+      try {
+        const summaryData = await fetchFinancialSummary(token);
+        setSummary(summaryData);
+      } catch (err) {
+        console.error('Failed to load financial summary:', err);
+      }
+    };
+    loadSummary();
+  }, [token]);
 
   const chartData = useMemo(() => {
     const today = new Date();
@@ -51,14 +73,13 @@ const SalesHistory = () => {
     doc.setFont('helvetica', 'bold');
     doc.text('Summary', 14, 50);
 
-    const totalRevenue = sales.reduce((a, s) => a + (s.total || 0), 0);
     const verifiedCount = sales.filter((s) => s.verified).length;
     const pendingCount = sales.filter((s) => !s.verified).length;
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Total Sales: ${sales.length}`, 14, 60);
-    doc.text(`Total Revenue: N${totalRevenue.toLocaleString()}`, 14, 68);
+    doc.text(`Total Sales: ${summary.transactionCount}`, 14, 60);
+    doc.text(`Total Revenue: N${summary.totalRevenue.toLocaleString()}`, 14, 68);
     doc.text(`Verified: ${verifiedCount}`, 14, 76);
     doc.text(`Pending: ${pendingCount}`, 14, 84);
 
@@ -123,15 +144,15 @@ const SalesHistory = () => {
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-sm">
           <p className="text-[10px] font-black text-slate-400 uppercase">Total</p>
-          <p className="text-xl font-black text-[#0F172A]">{sales.length}</p>
+          <p className="text-xl font-black text-[#0F172A]">{summary.transactionCount}</p>
         </div>
         <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-sm">
-          <p className="text-[10px] font-black text-slate-400 uppercase">Verified</p>
-          <p className="text-xl font-black text-green-600">{sales.filter((s) => s.verified).length}</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase">Revenue</p>
+          <p className="text-xl font-black text-[#0F172A]">₦{summary.totalRevenue.toLocaleString()}</p>
         </div>
         <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-sm">
-          <p className="text-[10px] font-black text-slate-400 uppercase">Pending</p>
-          <p className="text-xl font-black text-amber-500">{sales.filter((s) => !s.verified).length}</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase">Profit</p>
+          <p className="text-xl font-black text-[#15803D]">₦{Math.round(summary.netProfit).toLocaleString()}</p>
         </div>
       </div>
 

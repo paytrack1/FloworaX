@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { liveQuery } from 'dexie';
-import { db } from '../db/dexie';
-import { v4 as uuidv4 } from 'uuid';
+import { useStore } from '../store/useStore';
+import { fetchFinancialSummary } from '../api/financial';
+import { fetchExpenses, createExpense, deleteExpense } from '../api/expenses';
 
 const CATEGORIES = [
   { label: 'Stock / Inventory', emoji: '📦' },
@@ -15,7 +15,9 @@ const CATEGORIES = [
 ];
 
 const Expenses = () => {
+  const { token } = useStore();
   const [expenses, setExpenses]       = useState([]);
+  const [summary, setSummary]         = useState({ totalExpenses: 0 });
   const [showForm, setShowForm]       = useState(false);
   const [saving, setSaving]           = useState(false);
   const [error, setError]             = useState('');
@@ -26,18 +28,33 @@ const Expenses = () => {
     date:        new Date().toISOString().slice(0, 10),
   });
 
-  // Live query from Dexie
   useEffect(() => {
-    const subscription = liveQuery(() =>
-      db.expenses.orderBy('createdAt').reverse().toArray()
-    ).subscribe({
-      next:  setExpenses,
-      error: (err) => console.error('liveQuery error:', err),
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+    const loadExpenses = async () => {
+      if (!token) return;
+      try {
+        const expensesData = await fetchExpenses(token);
+        setExpenses(expensesData);
+      } catch (err) {
+        console.error('Failed to load expenses:', err);
+      }
+    };
+    loadExpenses();
+  }, [token]);
 
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+  useEffect(() => {
+    if (!token) return;
+    const loadSummary = async () => {
+      try {
+        const summaryData = await fetchFinancialSummary(token);
+        setSummary(summaryData);
+      } catch (err) {
+        console.error('Failed to load financial summary:', err);
+      }
+    };
+    loadSummary();
+  }, [token]);
+
+  const totalExpenses = summary.totalExpenses;
 
   const todayExpenses = expenses
     .filter((e) => new Date(e.createdAt).toDateString() === new Date().toDateString())
@@ -57,15 +74,15 @@ const Expenses = () => {
     setSaving(true);
     try {
       const expense = {
-        id:          uuidv4(),
         description: form.description.trim() || form.category,
         amount:      parseFloat(form.amount),
         category:    form.category,
-        createdAt:   new Date(form.date).toISOString(),
-        synced:      0,
       };
-
-      await db.expenses.add(expense);
+      await createExpense(token, expense);
+      const expensesData = await fetchExpenses(token);
+      setExpenses(expensesData);
+      const summaryData = await fetchFinancialSummary(token);
+      setSummary(summaryData);
       setForm({
         description: '',
         amount:      '',
@@ -82,7 +99,15 @@ const Expenses = () => {
   };
 
   const handleDelete = async (id) => {
-    await db.expenses.delete(id);
+    try {
+      await deleteExpense(token, id);
+      const expensesData = await fetchExpenses(token);
+      setExpenses(expensesData);
+      const summaryData = await fetchFinancialSummary(token);
+      setSummary(summaryData);
+    } catch (err) {
+      console.error('Failed to delete expense:', err);
+    }
   };
 
   const getCategoryEmoji = (cat) => {
@@ -160,7 +185,7 @@ const Expenses = () => {
               value={form.amount}
               onChange={handleChange}
               placeholder="0.00"
-              className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm text-[#0F172A] outline-none focus:border-[#185FA5] font-bold text-lg"
+              className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-[#0F172A] outline-none focus:border-[#185FA5] font-bold text-lg"
             />
           </div>
 

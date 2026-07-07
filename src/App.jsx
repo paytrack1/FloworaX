@@ -13,6 +13,7 @@ import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import LoadingScreen from './components/LoadingScreen';
 import PublicBooking from './pages/PublicBooking';
+import BusinessTypeOnboarding from './pages/BusinessTypeOnboarding';
 
 const App = () => {
   const [screen, setScreen] = React.useState('welcome');
@@ -23,6 +24,14 @@ const App = () => {
       init();
     }
   }, [isAuthenticated, init]);
+
+  useEffect(() => {
+    if (isAuthenticated && user && !user.businessType && activeTab !== 'home') {
+      setActiveTab('home');
+    }
+  }, [isAuthenticated, user?.businessType, activeTab, setActiveTab]);
+
+  const showOnboarding = isAuthenticated && user && !user.businessType;
 
   // ── Auth screens ──
   const path = window.location.pathname;
@@ -35,6 +44,10 @@ const App = () => {
       return <Welcome onGetStarted={() => setScreen('register')} onSignIn={() => setScreen('login')} />;
     }
     return <Login mode={screen} />;
+  }
+
+  if (showOnboarding) {
+    return <BusinessTypeOnboarding />;
   }
 
   const renderContent = () => {

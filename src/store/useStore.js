@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { db } from '../db/dexie';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
@@ -65,33 +64,92 @@ export const useStore = create(
       setActiveTab: (tab) => set({ activeTab: tab }),
       setSaleModal: (open) => set({ isSaleModalOpen: open }),
 
-      init: async () => {
+      fetchUser: async () => {
+        const { token } = get();
+        if (!token) return null;
+
+        const res = await fetch(`${BACKEND_URL}/api/auth/me`, {
+          headers: authHeaders(token),
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.user) {
+          set({ user: data.user });
+          return data.user;
+        }
+
+        return null;
+      },
+
+      setBusinessType: async (businessType) => {
+        const { token } = get();
+        if (!token) throw new Error('Authentication required');
+
         try {
-          const allSales = await db.sales.orderBy('createdAt').reverse().toArray();
-          set({ sales: allSales, transactions: allSales });
-        } catch (err) { console.error('Failed to load sales:', err); }
+          const res = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+            method: 'PATCH',
+            headers: authHeaders(token),
+            body: JSON.stringify({ businessType }),
+          });
+
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            const errorMessage = data.error || `Failed to save business type (status ${res.status})`;
+            throw new Error(errorMessage);
+          }
+
+          set({ user: data.user });
+          return data;
+        } catch (err) {
+          if (err instanceof TypeError && err.message === 'Failed to fetch') {
+            throw new Error('Unable to reach the backend. Check your internet connection or start the backend server.');
+          }
+          throw err;
+        }
+      },
+
+      fetchSales: async () => {
+        const { token } = get();
+        if (!token) return;
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/sales`, {
+            headers: authHeaders(token),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            set({ sales: data.sales || [], transactions: data.sales || [] });
+          }
+        } catch (err) {
+          console.error('Failed to load sales:', err);
+        }
+      },
+
+      init: async () => {
+        await get().fetchUser();
+        await get().fetchSales();
       },
 
       addSale: async (saleData) => {
-        const { token, syncSale } = get();
-        const sale = {
-          ...saleData,
-          id: `sale-${Date.now()}`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          createdAt: new Date().toISOString(),
-          synced: 0,
-          verified: false,
-          provider: null,
-        };
+        const { token } = get();
+        if (!token) throw new Error('Authentication required');
         try {
-          await db.sales.add(sale);
-          set((state) => ({ sales: [sale, ...state.sales], transactions: [sale, ...state.transactions] }));
-          if (token) await syncSale(sale);
-        } catch (err) { console.error('Failed to save sale:', err); throw err; }
+          const res = await fetch(`${BACKEND_URL}/api/sales`, {
+            method: 'POST',
+            headers: authHeaders(token),
+            body: JSON.stringify(saleData),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Failed to create sale');
+          set((state) => ({ sales: [data.sale, ...state.sales], transactions: [data.sale, ...state.transactions] }));
+          return data.sale;
+        } catch (err) {
+          console.error('Failed to save sale:', err);
+          throw err;
+        }
       },
 
       syncSale: async (sale) => {
-        const { token, setVerificationStatus } = get();
+        const { token } = get();
         if (!token) return;
         try {
           const res = await fetch(`${BACKEND_URL}/api/sales/sync`, {
@@ -100,22 +158,18 @@ export const useStore = create(
             body: JSON.stringify({ sales: [sale] }),
           });
           if (res.ok) {
-            const data = await res.json();
-            for (const result of data.results || []) {
-              await setVerificationStatus(result.id, result.verified, result.provider || 'paystack');
-            }
+            await get().fetchSales();
           }
-        } catch (err) { console.warn('Sync failed:', err.message); }
+        } catch (err) {
+          console.warn('Sync failed:', err.message);
+        }
       },
 
       setVerificationStatus: async (id, verified, provider) => {
-        try {
-          await db.sales.update(id, { synced: 1, verified, provider });
-          set((state) => ({
-            sales: state.sales.map((s) => s.id === id ? { ...s, synced: 1, verified, provider } : s),
-            transactions: state.transactions.map((s) => s.id === id ? { ...s, synced: 1, verified, provider } : s),
-          }));
-        } catch (err) { console.error('Failed to update verification:', err); }
+        set((state) => ({
+          sales: state.sales.map((s) => s.id === id ? { ...s, synced: 1, verified, provider } : s),
+          transactions: state.transactions.map((s) => s.id === id ? { ...s, synced: 1, verified, provider } : s),
+        }));
       },
     }),
     {

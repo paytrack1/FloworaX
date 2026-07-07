@@ -13,6 +13,8 @@ const tabs = [
 
 const Sidebar = () => {
   const { activeTab, setActiveTab, setSaleModal, logout, user } = useStore();
+  const hasBookings = ['health_wellness', 'complete_business_os'].includes(user?.businessType);
+  const visibleTabs = tabs.filter(({ id }) => id !== 'bookings' || hasBookings);
 
   return (
     <aside className="hidden lg:flex fixed top-0 left-0 bottom-0 w-64 bg-[#0F172A] flex-col z-50">
@@ -54,7 +56,7 @@ const Sidebar = () => {
 
       {/* NAV LINKS */}
       <nav className="flex-1 px-3 space-y-1">
-        {tabs.map(({ id, label, icon: Icon }) => {
+        {visibleTabs.map(({ id, label, icon: Icon }) => {
           const isActive = activeTab === id;
           return (
             <button

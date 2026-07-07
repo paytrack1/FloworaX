@@ -12,12 +12,14 @@ const tabs = [
 ];
 
 const BottomNav = () => {
-  const { activeTab, setActiveTab } = useStore();
+  const { activeTab, setActiveTab, user } = useStore();
+  const hasBookings = ['health_wellness', 'complete_business_os'].includes(user?.businessType);
+  const visibleTabs = tabs.filter(({ id }) => id !== 'bookings' || hasBookings);
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#E2E8F0] z-40">
       <div className="flex justify-around items-center px-2 py-2 pb-6">
-        {tabs.map(({ id, label, icon: Icon }) => {
+        {visibleTabs.map(({ id, label, icon: Icon }) => {
           const isActive = activeTab === id;
           return (
             <button
