@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bookingSchema = new mongoose.Schema({
   serviceId:     { type: mongoose.Schema.Types.ObjectId, ref: 'Service', required: true },
+  type:          { type: String, enum: ['appointment', 'event'], default: 'appointment' },
   providerId:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   clientName:    { type: String, required: true, trim: true },
   clientEmail:   { type: String, required: true, trim: true },

@@ -4,6 +4,9 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 require('dotenv').config();
 const serviceRoutes = require('./src/routes/services');
 const bookingRoutes = require('./src/routes/bookings');
+const invoiceRoutes = require('./src/routes/invoices');
+const Invoice = require('./src/models/Invoice');
+const Service = require('./src/models/Service');
 const Booking       = require('./src/models/Booking');
 const express    = require('express');
 const cors       = require('cors');
@@ -427,10 +430,13 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
       buildSubscriptionSummary(req.user.id),
     ]);
     const recentTransactions = await Sale.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(10);
-    const upcomingAppointments = [];
-    const upcomingEvents = [];
-    const latestInvoices = [];
-    const topServices = [];
+
+    const today = new Date().toISOString().split('T')[0];
+    const upcomingAppointments = await Booking.find({ providerId: req.user.id, type: 'appointment', scheduledDate: { $gte: today }, status: { $in: ['pending', 'confirmed'] } }).sort({ scheduledDate: 1 }).limit(5);
+    const upcomingEvents = await Booking.find({ providerId: req.user.id, type: 'event', scheduledDate: { $gte: today }, status: { $in: ['pending', 'confirmed'] } }).sort({ scheduledDate: 1 }).limit(5);
+    const latestInvoices = await Invoice.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(5);
+    const topServices = await Service.find({ userId: req.user.id, isActive: true }).limit(5);
+
     res.json({ success: true, dashboard: { summary, subscription, recentTransactions, upcomingAppointments, upcomingEvents, latestInvoices, topServices } });
   } catch (err) {
     console.error('Failed to fetch dashboard:', err);
@@ -448,6 +454,11 @@ const buildFinancialSummary = async (userId) => {
   const netProfit = totalRevenue - totalExpenses;
   const cashFlow = netProfit;
 
+  const invoices = await Invoice.find({ userId });
+  const invoiceTotal = invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
+  const invoicePaid = invoices.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + (inv.amount || 0), 0);
+  const invoiceOutstanding = invoiceTotal - invoicePaid;
+
   return {
     totalRevenue,
     totalExpenses,
@@ -455,9 +466,9 @@ const buildFinancialSummary = async (userId) => {
     cashFlow,
     transactionCount: completedSales.length,
     invoiceTotals: {
-      total: 0,
-      paid: 0,
-      outstanding: 0,
+      total: invoiceTotal,
+      paid: invoicePaid,
+      outstanding: invoiceOutstanding,
     },
   };
 };
@@ -587,6 +598,7 @@ app.post('/webhook/paystack', (req, res, next) => {
 // ── Booking Routes ──
 app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 const startServer = async () => {
   const dbConnected = await connectToDatabase();
