@@ -1,0 +1,75 @@
+const express = require('express');
+const router  = express.Router();
+const Service = require('../models/Service');
+const requireAuth = require('../middleware/auth');
+const { requireFeature } = require('../middleware/plan');
+
+router.post('/', requireAuth, requireFeature('services'), async (req, res) => {
+  const { title, description, duration, price, isFree, category, location } = req.body;
+  if (!title || !duration) return res.status(400).json({ error: 'title and duration are required' });
+  try {
+    const service = await Service.create({
+      userId: req.user.id, title, description, duration,
+      price: isFree ? 0 : (price || 0),
+      isFree: isFree || false,
+      category: category || 'General',
+      location: location || 'Online',
+    });
+    res.status(201).json({ success: true, service });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create service' });
+  }
+});
+
+router.get('/', requireAuth, requireFeature('services'), async (req, res) => {
+  try {
+    const services = await Service.find({ userId: req.user.id, isActive: true }).sort({ createdAt: -1 });
+    res.json({ success: true, services });
+  } catch {
+    res.status(500).json({ error: 'Failed to get services' });
+  }
+});
+
+router.patch('/:id', requireAuth, requireFeature('services'), async (req, res) => {
+  try {
+    const service = await Service.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id }, req.body, { new: true }
+    );
+    if (!service) return res.status(404).json({ error: 'Service not found' });
+    res.json({ success: true, service });
+  } catch {
+    res.status(500).json({ error: 'Failed to update service' });
+  }
+});
+
+router.delete('/:id', requireAuth, requireFeature('services'), async (req, res) => {
+  try {
+    await Service.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id }, { isActive: false }
+    );
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: 'Failed to delete service' });
+  }
+});
+
+router.get('/public/:userId', async (req, res) => {
+  try {
+    const services = await Service.find({ userId: req.params.userId, isActive: true });
+    res.json({ success: true, services });
+  } catch {
+    res.status(500).json({ error: 'Failed to get services' });
+  }
+});
+
+router.get('/single/:id', async (req, res) => {
+  try {
+    const service = await Service.findOne({ _id: req.params.id, isActive: true });
+    if (!service) return res.status(404).json({ error: 'Service not found' });
+    res.json({ success: true, service });
+  } catch {
+    res.status(500).json({ error: 'Failed to get service' });
+  }
+});
+
+module.exports = router;

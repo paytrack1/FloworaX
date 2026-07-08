@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Floworax — Business tools built for Nigerian small businesses</title>
+<meta name="description" content="Flowora gives small businesses, freelancers, and service providers one place to record sales, receive payments, and track what matters.">
+<meta property="og:title" content="Floworax — Run your business. Get paid faster.">
+<meta property="og:description" content="Business tools built for Nigerian small businesses. Simple, honest, and built to work.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://floworax.com">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#185FA5;--blue-dark:#0C447C;--blue-light:#E6F1FB;--text:#0F172A;--text-muted:#64748B;--text-hint:#94A3B8;--border:#E2E8F0;--bg:#ffffff;--bg-secondary:#F8FAFC;--green-bg:#EAF3DE;--green-text:#3B6D11;--amber-bg:#FAEEDA;--gray-bg:#F1F5F9;--gray-text:#5F5E5A}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 2rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);z-index:100}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:13px}
+.logo-text{font-size:17px;font-weight:600;color:var(--text)}
+.nav-links{display:flex;align-items:center;gap:2rem}
+.nav-links a{font-size:14px;color:var(--text-muted)}
+.nav-links a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 20px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all 0.15s}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue-dark)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{background:var(--bg-secondary)}
+.hero{max-width:720px;margin:0 auto;text-align:center;padding:6rem 2rem 5rem}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue-light);color:var(--blue);font-size:12px;font-weight:500;padding:5px 14px;border-radius:20px;margin-bottom:1.5rem}
+.badge-dot{width:6px;height:6px;background:var(--blue);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.hero h1{font-size:52px;font-weight:700;line-height:1.1;color:var(--text);margin-bottom:1.25rem;letter-spacing:-1.5px}
+.hero h1 span{color:var(--blue)}
+.hero p{font-size:18px;color:var(--text-muted);line-height:1.7;margin-bottom:2.5rem;max-width:480px;margin-left:auto;margin-right:auto}
+.hero-actions{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:1rem}
+.hero-note{font-size:12px;color:var(--text-hint)}
+.section{padding:5rem 2rem}
+.section-inner{max-width:900px;margin:0 auto}
+.section-label{font-size:11px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:0.75rem;text-align:center}
+.section-title{font-size:34px;font-weight:700;text-align:center;color:var(--text);margin-bottom:0.75rem;letter-spacing:-0.75px}
+.section-sub{font-size:16px;color:var(--text-muted);text-align:center;margin-bottom:3rem;max-width:480px;margin-left:auto;margin-right:auto}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
+.product-card{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:1.75rem;transition:border-color 0.15s,transform 0.15s}
+.product-card:hover{border-color:#B5D4F4;transform:translateY(-2px)}
+.product-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:1.1rem;font-size:20px}
+.product-card h3{font-size:17px;font-weight:600;color:var(--text);margin-bottom:0.4rem}
+.product-card p{font-size:14px;color:var(--text-muted);line-height:1.65;margin-bottom:1.1rem}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.tag-live{background:var(--green-bg);color:var(--green-text)}
+.tag-soon{background:var(--gray-bg);color:var(--gray-text)}
+.features-bg{background:var(--bg-secondary);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+.feature-item{padding:1.25rem;background:var(--bg);border:1px solid var(--border);border-radius:10px}
+.feature-item h4{font-size:15px;font-weight:600;margin-bottom:0.4rem;color:var(--text)}
+.feature-item p{font-size:13px;color:var(--text-muted);line-height:1.6}
+.bookings-section{background:var(--blue);color:#fff;padding:5rem 2rem}
+.bookings-inner{max-width:900px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.bookings-content h2{font-size:34px;font-weight:700;margin-bottom:1rem;letter-spacing:-0.5px}
+.bookings-content p{font-size:16px;opacity:0.85;line-height:1.7;margin-bottom:1.5rem}
+.bookings-features{display:flex;flex-direction:column;gap:0.75rem;margin-bottom:2rem}
+.booking-feature{display:flex;align-items:center;gap:10px;font-size:14px;opacity:0.9}
+.booking-feature span{width:20px;height:20px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.bookings-card{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:16px;padding:2rem}
+.bookings-card h4{font-size:14px;font-weight:600;opacity:0.7;margin-bottom:1rem;text-transform:uppercase;letter-spacing:1px}
+.booking-item{background:rgba(255,255,255,0.15);border-radius:10px;padding:1rem;margin-bottom:0.75rem}
+.booking-item-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem}
+.booking-item-name{font-size:14px;font-weight:600}
+.booking-item-price{font-size:14px;font-weight:700;color:#9FE1CB}
+.booking-item-sub{font-size:12px;opacity:0.6}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+.plan-card{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:1.75rem}
+.plan-card.featured{border:2px solid var(--blue)}
+.plan-badge{font-size:11px;font-weight:600;background:var(--blue-light);color:var(--blue);padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:1rem}
+.plan-name{font-size:18px;font-weight:600;color:var(--text);margin-bottom:0.25rem}
+.plan-price{font-size:36px;font-weight:700;color:var(--text);letter-spacing:-1px;margin:0.75rem 0 0.25rem}
+.plan-price span{font-size:14px;font-weight:400;color:var(--text-muted)}
+.plan-desc{font-size:13px;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.5}
+.plan-divider{border:none;border-top:1px solid var(--border);margin:1rem 0}
+.plan-feature{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text-muted);margin-bottom:8px}
+.check{width:16px;height:16px;background:var(--green-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px;color:var(--green-text);margin-top:1px}
+.paystack-section{background:var(--bg-secondary);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:5rem 2rem;text-align:center}
+.paystack-inner{max-width:700px;margin:0 auto}
+.paystack-badges{display:flex;justify-content:center;flex-wrap:wrap;gap:1rem;margin-top:2rem}
+.paystack-badge{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:0.75rem 1.25rem;font-size:13px;font-weight:500;color:var(--text-muted);display:flex;align-items:center;gap:8px}
+.faq-item{border-bottom:1px solid var(--border);cursor:pointer}
+.faq-q{font-size:15px;font-weight:500;color:var(--text);display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1.25rem 0}
+.faq-icon{font-size:20px;color:var(--text-hint);flex-shrink:0;transition:transform 0.2s}
+.faq-a{font-size:14px;color:var(--text-muted);line-height:1.7;padding-bottom:1.25rem;display:none}
+.faq-a.open{display:block}
+.faq-icon.open{transform:rotate(45deg)}
+.legal-section{padding:5rem 2rem;border-top:1px solid var(--border)}
+.legal-inner{max-width:900px;margin:0 auto}
+.legal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin-top:3rem}
+.legal-card{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:1.75rem;cursor:pointer;transition:border-color 0.15s}
+.legal-card:hover{border-color:var(--blue)}
+.legal-card h3{font-size:16px;font-weight:600;color:var(--text);margin-bottom:0.5rem}
+.legal-card p{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:1rem}
+.legal-card a{font-size:13px;color:var(--blue);font-weight:500}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;overflow-y:auto;padding:2rem}
+.modal.open{display:flex;align-items:flex-start;justify-content:center}
+.modal-content{background:var(--bg);border-radius:16px;padding:2.5rem;max-width:680px;width:100%;margin:auto;position:relative}
+.modal-close{position:absolute;top:1rem;right:1rem;width:32px;height:32px;border-radius:50%;background:var(--bg-secondary);border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.modal-content h2{font-size:24px;font-weight:700;margin-bottom:0.5rem}
+.modal-content h3{font-size:16px;font-weight:600;margin:1.5rem 0 0.5rem;color:var(--text)}
+.modal-content p{font-size:14px;color:var(--text-muted);line-height:1.7;margin-bottom:0.75rem}
+.modal-content ul{padding-left:1.25rem;margin-bottom:0.75rem}
+.modal-content ul li{font-size:14px;color:var(--text-muted);line-height:1.7;margin-bottom:0.25rem}
+.modal-date{font-size:12px;color:var(--text-hint);margin-bottom:1.5rem}
+.cta-section{background:var(--bg-secondary);border-top:1px solid var(--border);border-bottom:1px solid var(--border);text-align:center;padding:5rem 2rem}
+.cta-section h2{font-size:36px;font-weight:700;color:var(--text);margin-bottom:0.75rem;letter-spacing:-0.75px}
+.cta-section p{font-size:16px;color:var(--text-muted);margin-bottom:2rem}
+.email-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;max-width:420px;margin:0 auto}
+.email-form input{flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);outline:none;background:var(--bg)}
+.email-form input:focus{border-color:var(--blue)}
+.success-msg{font-size:13px;color:var(--green-text);margin-top:0.75rem;display:none}
+.footer{padding:3.5rem 2rem 2rem;border-top:1px solid var(--border)}
+.footer-inner{max-width:900px;margin:0 auto}
+.footer-top{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:2rem;margin-bottom:2.5rem}
+.footer-brand p{font-size:13px;color:var(--text-muted);line-height:1.65;margin-top:0.75rem;max-width:200px}
+.footer-col h5{font-size:11px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:0.75rem}
+.footer-col a{display:block;font-size:13px;color:var(--text-muted);margin-bottom:0.5rem;cursor:pointer}
+.footer-col a:hover{color:var(--text)}
+.footer-bottom{border-top:1px solid var(--border);padding-top:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.footer-bottom p{font-size:12px;color:var(--text-hint)}
+@media(max-width:640px){
+  .hero h1{font-size:34px}
+  .nav-links{display:none}
+  .footer-top{grid-template-columns:1fr 1fr}
+  .hero{padding:4rem 1.5rem 3rem}
+  .section{padding:3.5rem 1.5rem}
+  .bookings-inner{grid-template-columns:1fr}
+  .bookings-card{display:none}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="logo">
+    <div class="logo-mark">Fx</div>
+    <span class="logo-text">Floworax</span>
+  </div>
+  <div class="nav-links">
+    <a href="#products">Products</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+    <a href="#legal">Legal</a>
+    <a href="mailto:hello@floworax.com">Contact</a>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a class="btn btn-outline" href="https://app.floworax.com">Sign in</a>
+    <a class="btn btn-primary" href="https://app.floworax.com">Get started free</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="badge"><span class="badge-dot"></span>Now in beta &middot; Built for Nigerian businesses</div>
+  <h1>Run your business.<br><span>Get paid faster.</span></h1>
+  <p>Flowora gives small businesses, freelancers, and service providers one place to record sales, receive payments, and track what matters.</p>
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="https://app.floworax.com" style="padding:12px 28px;font-size:15px">Start for free</a>
+    <a class="btn btn-outline" href="https://app.floworax.com/pay" style="padding:12px 28px;font-size:15px">See Flowora Pay →</a>
+  </div>
+  <p class="hero-note">No credit card required &nbsp;·&nbsp; Works offline &nbsp;·&nbsp; Syncs automatically</p>
+</section>
+
+<!-- PRODUCTS -->
+<section class="section" id="products">
+  <div class="section-inner">
+    <p class="section-label">Products</p>
+    <h2 class="section-title">Everything your business needs</h2>
+    <p class="section-sub">One platform, multiple tools — each solving a real problem for Nigerian small businesses.</p>
+    <div class="product-grid">
+      <div class="product-card">
+        <div class="product-icon" style="background:#E6F1FB">💳</div>
+        <h3>Flowora Pay</h3>
+        <p>Record sales offline, accept Paystack payments, sync when online. Built for traders and shop owners who need something that just works.</p>
+        <span class="tag tag-live">Live now</span>
+      </div>
+      <div class="product-card">
+        <div class="product-icon" style="background:#EAF3DE">📅</div>
+        <h3>Flowora Bookings</h3>
+        <p>Let clients book your services online. Automatic reminders, calendar sync, and payment collected at the time of booking.</p>
+        <span class="tag tag-soon">Coming soon</span>
+      </div>
+      <div class="product-card">
+        <div class="product-icon" style="background:#FAEEDA">📊</div>
+        <h3>Flowora Insights</h3>
+        <p>Know your numbers. Revenue trends, expense tracking, and profit reports — presented in plain language, not accounting jargon.</p>
+        <span class="tag tag-soon">Coming soon</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY FLOWORA -->
+<section class="section features-bg">
+  <div class="section-inner">
+    <p class="section-label">Why Flowora</p>
+    <h2 class="section-title">Built for how Nigeria works</h2>
+    <p class="section-sub">Not a foreign tool adapted for Nigeria. Built here, for here, from the ground up.</p>
+    <div class="feature-grid">
+      <div class="feature-item"><h4>Offline first</h4><p>Record sales even without internet. Everything syncs automatically when you reconnect.</p></div>
+      <div class="feature-item"><h4>Paystack payments</h4><p>Accept cash, bank transfer, and card. Every transaction verified and recorded automatically.</p></div>
+      <div class="feature-item"><h4>Multi-store support</h4><p>Manage more than one business from a single account. Each store has its own dashboard.</p></div>
+      <div class="feature-item"><h4>Real-time sync</h4><p>Your data lives on your device and in the cloud. Switch phones without losing anything.</p></div>
+      <div class="feature-item"><h4>Instant reports</h4><p>See today's revenue, net profit, and pending transactions the moment you open the app.</p></div>
+      <div class="feature-item"><h4>Export your data</h4><p>Download your full sales history as CSV anytime. Your data is always yours to keep.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- BOOKINGS -->
+<section class="bookings-section" id="bookings">
+  <div class="bookings-inner">
+    <div class="bookings-content">
+      <p style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:2px;opacity:0.6;margin-bottom:0.75rem">Coming Soon</p>
+      <h2>Flowora Bookings</h2>
+      <p>Let your clients book and pay for your services online — 24/7. Perfect for therapists, consultants, coaches, churches, and any service provider.</p>
+      <div class="bookings-features">
+        <div class="booking-feature"><span>✓</span> Public booking page with your services listed</div>
+        <div class="booking-feature"><span>✓</span> Clients pay via Paystack at time of booking</div>
+        <div class="booking-feature"><span>✓</span> Automatic confirmation and reminder emails</div>
+        <div class="booking-feature"><span>✓</span> Calendar view of all your appointments</div>
+        <div class="booking-feature"><span>✓</span> Cancellation and rescheduling management</div>
+        <div class="booking-feature"><span>✓</span> Revenue split via Paystack subaccounts</div>
+      </div>
+      <a href="#cta" class="btn btn-primary" style="background:white;color:#185FA5;font-weight:700">Join waitlist for early access</a>
+    </div>
+    <div class="bookings-card">
+      <h4>Your booking page</h4>
+      <div class="booking-item">
+        <div class="booking-item-top"><span class="booking-item-name">60min Therapy Session</span><span class="booking-item-price">₦15,000</span></div>
+        <div class="booking-item-sub">Dr. Grace Okafor · Next available: Tomorrow</div>
+      </div>
+      <div class="booking-item">
+        <div class="booking-item-top"><span class="booking-item-name">Business Consultation</span><span class="booking-item-price">₦25,000</span></div>
+        <div class="booking-item-sub">Adewale Consulting · 90 minutes</div>
+      </div>
+      <div class="booking-item">
+        <div class="booking-item-top"><span class="booking-item-name">Sunday Service Offering</span><span class="booking-item-price">Any amount</span></div>
+        <div class="booking-item-sub">Grace Chapel Lagos · Online giving</div>
+      </div>
+      <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.15);font-size:12px;opacity:0.6;text-align:center">Powered by Flowora Bookings + Paystack</div>
+    </div>
+  </div>
+</section>
+
+<!-- PAYSTACK PAYMENTS -->
+<section class="paystack-section">
+  <div class="paystack-inner">
+    <p class="section-label">Payments</p>
+    <h2 class="section-title">Powered by Paystack</h2>
+    <p style="font-size:16px;color:var(--text-muted);line-height:1.7;max-width:520px;margin:0 auto 1rem">All payments on Flowora are processed securely by Paystack — Nigeria's most trusted payment infrastructure. Your money goes directly to your bank account.</p>
+    <div class="paystack-badges">
+      <div class="paystack-badge">💳 Card payments</div>
+      <div class="paystack-badge">🏦 Bank transfer</div>
+      <div class="paystack-badge">📱 USSD payments</div>
+      <div class="paystack-badge">🔒 SSL encrypted</div>
+      <div class="paystack-badge">⚡ Instant settlement</div>
+      <div class="paystack-badge">🇳🇬 Nigerian banks supported</div>
+    </div>
+    <p style="font-size:13px;color:var(--text-hint);margin-top:1.5rem">Paystack charges 1.5% + ₦100 per transaction (capped at ₦2,000). Floworax does not take additional transaction fees on the Free plan.</p>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="section-inner">
+    <p class="section-label">Pricing</p>
+    <h2 class="section-title">Simple, honest pricing</h2>
+    <p class="section-sub">Start free. Upgrade when your business grows. No hidden fees, ever.</p>
+    <div class="pricing-grid">
+      <div class="plan-card">
+        <p class="plan-name">Free</p>
+        <p class="plan-price">₦0 <span>/ month</span></p>
+        <p class="plan-desc">For businesses just getting started. No card required.</p>
+        <hr class="plan-divider">
+        <div class="plan-feature"><div class="check">✓</div> Up to 50 sales per month</div>
+        <div class="plan-feature"><div class="check">✓</div> Offline recording</div>
+        <div class="plan-feature"><div class="check">✓</div> Basic reports</div>
+        <div class="plan-feature"><div class="check">✓</div> CSV export</div>
+        <div style="margin-top:1.5rem"><a class="btn btn-outline" href="https://app.floworax.com" style="width:100%">Get started free</a></div>
+      </div>
+      <div class="plan-card featured">
+        <span class="plan-badge">Most popular</span>
+        <p class="plan-name">Pro</p>
+        <p class="plan-price">₦2,000 <span>/ month</span></p>
+        <p class="plan-desc">For growing businesses that need more power and no limits.</p>
+        <hr class="plan-divider">
+        <div class="plan-feature"><div class="check">✓</div> Unlimited sales</div>
+        <div class="plan-feature"><div class="check">✓</div> Paystack payments</div>
+        <div class="plan-feature"><div class="check">✓</div> Cloud sync</div>
+        <div class="plan-feature"><div class="check">✓</div> Full analytics</div>
+        <div class="plan-feature"><div class="check">✓</div> Priority support</div>
+        <div style="margin-top:1.5rem"><a class="btn btn-primary" href="https://app.floworax.com" style="width:100%">Start free for 14 days</a></div>
+      </div>
+      <div class="plan-card">
+        <p class="plan-name">Business</p>
+        <p class="plan-price">₦5,000 <span>/ month</span></p>
+        <p class="plan-desc">For established businesses with staff and multiple stores.</p>
+        <hr class="plan-divider">
+        <div class="plan-feature"><div class="check">✓</div> Everything in Pro</div>
+        <div class="plan-feature"><div class="check">✓</div> Staff accounts</div>
+        <div class="plan-feature"><div class="check">✓</div> Flowora Bookings</div>
+        <div class="plan-feature"><div class="check">✓</div> Flowora Insights</div>
+        <div class="plan-feature"><div class="check">✓</div> Dedicated support</div>
+        <div style="margin-top:1.5rem"><a class="btn btn-outline" href="mailto:hello@floworax.com" style="width:100%">Contact us</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq" style="padding-bottom:2rem">
+  <div class="section-inner" style="max-width:680px">
+    <p class="section-label">FAQ</p>
+    <h2 class="section-title" style="margin-bottom:2.5rem">Common questions</h2>
+
+    <div class="faq-item" onclick="toggle(this)"><div class="faq-q">What is Floworax? <span class="faq-icon">+</span></div><div class="faq-a">Floworax is a Nigerian technology company building business tools for small businesses, freelancers, and service providers. Our first product, Flowora, helps you record sales, accept payments, track expenses, and manage bookings — all in one place.</div></div>
+
+    <div class="faq-item" onclick="toggle(this)"><div class="faq-q">Does it work without internet? <span class="faq-icon">+</span></div><div class="faq-a">Yes. Flowora Pay is built offline-first. You can record sales, view reports, and manage your store with no internet connection. Everything syncs automatically to the cloud when you reconnect. This means power cuts, bad network days, or travelling to areas with poor signal will never stop you from recording business activity.</div></div>
+
+    <div class="faq-item" onclick="toggle(this)"><div class="faq-q">How do payments work? <span class="faq-icon">+</span></div><div class="faq-a">Flowora uses Paystack to process payments. Your customers can pay by card, bank transfer, or USSD. Payments are verified automatically and settled directly to your bank account by Paystack — we never hold your money. Paystack typically settles funds within 24 hours on business days.</div></div>
+
+    <div class="faq-item" onclick="toggle(this)"><div class="faq-q">What does Paystack charge? <span class="faq-icon">+</span></div><div class="faq-a">Paystack charges 1.5% + ₦100 per transaction, capped at ₦2,000. This is Paystack's fee, not Floworax's. On the Free plan, Floworax does not add any additional transaction fees on top. On Pro and Business plans, there are no extra platform charges per transaction either.</div></div>
+
+    <div class="faq-item" onclick="toggle(this)"><div class="faq-q">Is my data safe? <span class="faq-icon">+</span></div><div class="faq-a">Yes. Your data is encrypted in transit using SSL and at rest in our cloud database. Passwords are hashed using bcrypt — we never store plain text passwords. Your sales data is backed up automatically and you can export it to CSV anytime. We do not sell your data to third parties.</div></div>
+
+    <div class="faq-item" onclick="toggle(this)"><div class="faq-q">Can I use it on my phone? <span class="faq-icon">+</span></div><div class="faq-a">Yes. Flowora is a Progressive Web App (PWA). You can install it on your Android or iPhone home screen directly from your browser — no app store required. It works like a native app, loads fast, and works offline.</div></div>
+
+    <div class="faq-item" onclick="toggle(this)"><div class="faq-q">Can I manage more than one business? <span class="faq-icon">+</span></div><div class="faq-a">Yes. Flowora supports multiple stores under one account. Each store has its own dashboard, sales history, and reports. This is useful if you run more than one business or manage a business with multiple locations.</div></div>
+
+    <div class="faq-item" onclick="toggle(this)"><div class="faq-q">Can churches and ministries use Flowora? <span class="faq-icon">+</span></div><div class="faq-a">Yes. Churches and ministries can use Flowora to collect offerings, track donations, manage bookings for events, and record expenses. Flowora Bookings (coming soon) will allow members to register and pay for events online.</div></div>
+
+    <div class="faq-item" onclick="toggle(this)"><div class="faq-q">How do I cancel my subscription? <span class="faq-icon">+</span></div><div class="faq-a">You can cancel your subscription anytime from your Settings page. When you cancel, you keep access to your plan until the end of the billing period. After that, your account moves to the Free plan automatically. Your data is never deleted when you downgrade.</div></div>
+
+    <div class="faq-item" onclick="toggle(this)"><div class="faq-q">What happens to my data if I stop paying? <span class="faq-icon">+</span></div><div class="faq-a">Your data is never deleted if you stop paying. You move to the Free plan which allows up to 50 sales per month. All your historical data remains accessible. You can export everything to CSV at any time regardless of your plan.</div></div>
+
+    <div class="faq-item" onclick="toggle(this)"><div class="faq-q">When is Flowora Bookings coming? <span class="faq-icon">+</span></div><div class="faq-a">Flowora Bookings is currently in development. It will be available to Pro and Business plan users first. Join our waitlist below to be notified as soon as it launches and to get early access.</div></div>
+
+    <div class="faq-item" onclick="toggle(this)"><div class="faq-q">Do you offer refunds? <span class="faq-icon">+</span></div><div class="faq-a">We offer a 14-day free trial on the Pro plan — no card required. If you subscribe and are unsatisfied within the first 7 days of a paid period, contact us at hello@floworax.com and we will review your request. Refunds are issued at our discretion based on usage.</div></div>
+
+    <div class="faq-item" onclick="toggle(this)"><div class="faq-q">How do I contact support? <span class="faq-icon">+</span></div><div class="faq-a">You can reach us at hello@floworax.com. Pro and Business plan users get priority support with faster response times. We typically respond within 24 hours on business days.</div></div>
+  </div>
+</section>
+
+<!-- LEGAL -->
+<section class="legal-section" id="legal">
+  <div class="legal-inner">
+    <p class="section-label" style="text-align:center">Legal</p>
+    <h2 class="section-title">Our policies</h2>
+    <p class="section-sub">We are committed to being transparent about how we handle your data and what you agree to when using Flowora.</p>
+    <div class="legal-grid">
+      <div class="legal-card" onclick="openModal('terms')">
+        <h3>📄 Terms of Service</h3>
+        <p>The rules that govern your use of Floworax products and services. Covers your rights, our responsibilities, and acceptable use.</p>
+        <a>Read Terms of Service →</a>
+      </div>
+      <div class="legal-card" onclick="openModal('privacy')">
+        <h3>🔒 Privacy Policy</h3>
+        <p>How we collect, store, and use your personal data. We comply with Nigerian Data Protection Regulation (NDPR).</p>
+        <a>Read Privacy Policy →</a>
+      </div>
+      <div class="legal-card" onclick="openModal('refund')">
+        <h3>💰 Refund Policy</h3>
+        <p>Our policy on subscription refunds, trial periods, and what happens when you cancel your plan.</p>
+        <a>Read Refund Policy →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TERMS MODAL -->
+<div class="modal" id="modal-terms">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('terms')">✕</button>
+    <h2>Terms of Service</h2>
+    <p class="modal-date">Last updated: May 2025</p>
+    <p>These Terms of Service govern your use of Floworax products and services. By creating an account or using Flowora, you agree to these terms.</p>
+    <h3>1. Acceptance of Terms</h3>
+    <p>By accessing or using any Floworax service, you confirm that you are at least 18 years old, have read and understood these terms, and agree to be bound by them.</p>
+    <h3>2. Use of Services</h3>
+    <p>You agree to use Flowora only for lawful business purposes. You must not use the platform to process fraudulent transactions, launder money, or engage in any activity that violates Nigerian law.</p>
+    <h3>3. Account Responsibility</h3>
+    <p>You are responsible for maintaining the security of your account credentials. Floworax is not liable for any loss resulting from unauthorized access to your account due to your failure to keep credentials secure.</p>
+    <h3>4. Payments and Billing</h3>
+    <p>Subscription fees are billed monthly. Payment processing is handled by Paystack and subject to Paystack's terms. Floworax reserves the right to change pricing with 30 days notice.</p>
+    <h3>5. Data Ownership</h3>
+    <p>You own your business data. Floworax does not claim ownership of your sales data, customer information, or any content you create using our platform. You can export your data at any time.</p>
+    <h3>6. Limitation of Liability</h3>
+    <p>Floworax is not liable for any indirect, incidental, or consequential damages arising from your use of the platform. Our total liability is limited to the amount you paid us in the 3 months preceding the claim.</p>
+    <h3>7. Termination</h3>
+    <p>We may suspend or terminate your account if you violate these terms. You may cancel your account at any time from your Settings page.</p>
+    <h3>8. Governing Law</h3>
+    <p>These terms are governed by the laws of the Federal Republic of Nigeria. Any disputes shall be resolved in Nigerian courts.</p>
+    <h3>9. Contact</h3>
+    <p>For questions about these terms, contact us at hello@floworax.com.</p>
+  </div>
+</div>
+
+<!-- PRIVACY MODAL -->
+<div class="modal" id="modal-privacy">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('privacy')">✕</button>
+    <h2>Privacy Policy</h2>
+    <p class="modal-date">Last updated: May 2025</p>
+    <p>Floworax Technologies is committed to protecting your privacy. This policy explains how we collect, use, and protect your personal information in compliance with the Nigerian Data Protection Regulation (NDPR).</p>
+    <h3>1. Information We Collect</h3>
+    <ul>
+      <li>Account information: name, email address, business name</li>
+      <li>Transaction data: sales records, expense records, payment references</li>
+      <li>Usage data: how you interact with the app</li>
+      <li>Device information: browser type, operating system</li>
+    </ul>
+    <h3>2. How We Use Your Information</h3>
+    <ul>
+      <li>To provide and improve our services</li>
+      <li>To process payments through Paystack</li>
+      <li>To send service-related communications</li>
+      <li>To detect and prevent fraud</li>
+    </ul>
+    <h3>3. Data Sharing</h3>
+    <p>We do not sell your personal data. We share data only with Paystack (for payment processing) and our cloud infrastructure providers. All third parties are bound by confidentiality agreements.</p>
+    <h3>4. Data Security</h3>
+    <p>Your data is encrypted in transit using SSL/TLS and at rest. Passwords are hashed using bcrypt. We conduct regular security reviews.</p>
+    <h3>5. Data Retention</h3>
+    <p>We retain your data for as long as your account is active. If you delete your account, we delete your personal data within 30 days, except where retention is required by law.</p>
+    <h3>6. Your Rights (NDPR)</h3>
+    <ul>
+      <li>Right to access your personal data</li>
+      <li>Right to correct inaccurate data</li>
+      <li>Right to request deletion of your data</li>
+      <li>Right to export your data (available via CSV export)</li>
+    </ul>
+    <h3>7. Cookies</h3>
+    <p>We use essential cookies only for authentication and session management. We do not use advertising or tracking cookies.</p>
+    <h3>8. Contact</h3>
+    <p>For privacy concerns or data requests, email hello@floworax.com.</p>
+  </div>
+</div>
+
+<!-- REFUND MODAL -->
+<div class="modal" id="modal-refund">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('refund')">✕</button>
+    <h2>Refund Policy</h2>
+    <p class="modal-date">Last updated: May 2025</p>
+    <h3>Free Trial</h3>
+    <p>The Pro plan includes a 14-day free trial. No credit card is required to start the trial. You will only be charged when the trial ends if you choose to continue.</p>
+    <h3>Subscription Refunds</h3>
+    <p>If you are charged for a subscription and contact us within 7 days of the charge at hello@floworax.com, we will review your request. Refunds are granted at our discretion based on usage during the period.</p>
+    <h3>No Refunds After 7 Days</h3>
+    <p>After 7 days from the billing date, we do not offer refunds for the current billing period. You can cancel at any time and you will retain access until the end of your paid period.</p>
+    <h3>Cancellation</h3>
+    <p>You can cancel your subscription at any time from Settings. Cancellation takes effect at the end of the current billing period. You will not be charged again after cancellation.</p>
+    <h3>Downgrade to Free</h3>
+    <p>When you cancel or downgrade, your account moves to the Free plan. All your data is retained. You can upgrade again at any time.</p>
+    <h3>Contact</h3>
+    <p>For refund requests, email hello@floworax.com with your account email and reason for the request.</p>
+  </div>
+</div>
+
+<!-- CTA -->
+<section class="cta-section" id="cta">
+  <h2>Start free today</h2>
+  <p>Join businesses already using Flowora to get paid and stay organised.</p>
+  <div class="email-form">
+    <input type="email" placeholder="Enter your email address" id="waitlist-email" />
+    <button class="btn btn-primary" onclick="joinWaitlist()">Join waitlist</button>
+  </div>
+  <p class="success-msg" id="waitlist-msg">You are on the list. We will be in touch soon.</p>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="logo"><div class="logo-mark">Fx</div><span class="logo-text">Floworax</span></div>
+        <p>Business tools built for Nigerian small businesses. Simple, honest, and built to work.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Products</h5>
+        <a href="https://app.floworax.com/pay">Flowora Pay</a>
+        <a href="#bookings">Flowora Bookings</a>
+        <a href="#products">Flowora Insights</a>
+        <a href="#pricing">Pricing</a>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <a href="#">About</a>
+        <a href="#">Blog</a>
+        <a href="#">Careers</a>
+        <a href="mailto:hello@floworax.com">Contact</a>
+      </div>
+      <div class="footer-col">
+        <h5>Legal</h5>
+        <a onclick="openModal('terms')">Terms of Service</a>
+        <a onclick="openModal('privacy')">Privacy Policy</a>
+        <a onclick="openModal('refund')">Refund Policy</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 Floworax Technologies. All rights reserved.</p>
+      <p>Built in Nigeria 🇳🇬</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+function toggle(el){
+  const a=el.querySelector('.faq-a'),icon=el.querySelector('.faq-icon'),isOpen=a.classList.contains('open');
+  document.querySelectorAll('.faq-a').forEach(x=>x.classList.remove('open'));
+  document.querySelectorAll('.faq-icon').forEach(x=>{x.textContent='+';x.classList.remove('open')});
+  if(!isOpen){a.classList.add('open');icon.textContent='×';icon.classList.add('open')}
+}
+function openModal(name){document.getElementById('modal-'+name).classList.add('open');document.body.style.overflow='hidden'}
+function closeModal(name){document.getElementById('modal-'+name).classList.remove('open');document.body.style.overflow=''}
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id.replace('modal-',''))}));
+function joinWaitlist(){
+  const email=document.getElementById('waitlist-email').value.trim();
+  if(!email||!email.includes('@'))return;
+  document.getElementById('waitlist-msg').style.display='block';
+  document.getElementById('waitlist-email').value='';
+}
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const target=document.querySelector(a.getAttribute('href'));
+    if(target)target.scrollIntoView({behavior:'smooth'});
+  });
+});
+</script>
+</body>
+</html>
