@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, BarChart2, FileText, Settings, TrendingDown, Calendar } from 'lucide-react';
+import { Home, BarChart2, FileText, Settings, TrendingDown, Calendar, Receipt } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
 const tabs = [
@@ -8,6 +8,7 @@ const tabs = [
   { id: 'reports',  label: 'Reports',  icon: FileText },
   { id: 'expenses', label: 'Expenses', icon: TrendingDown },
   { id: 'bookings', label: 'Bookings', icon: Calendar },
+  { id: 'invoices', label: 'Invoices', icon: Receipt },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 

@@ -51,6 +51,26 @@ router.patch('/:id/pay', requireAuth, async (req, res) => {
   }
 });
 
+router.patch('/:id', requireAuth, async (req, res) => {
+  try {
+    const updates = {};
+    if (req.body.status) updates.status = req.body.status;
+    if (req.body.dueDate) updates.dueDate = req.body.dueDate;
+    if (typeof req.body.notes === 'string') updates.notes = req.body.notes;
+    if (req.body.status === 'paid') updates.paidAt = new Date();
+
+    const invoice = await Invoice.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      updates,
+      { new: true }
+    );
+    if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
+    res.json({ success: true, invoice });
+  } catch {
+    res.status(500).json({ error: 'Failed to update invoice' });
+  }
+});
+
 router.delete('/:id', requireAuth, async (req, res) => {
   try {
     await Invoice.deleteOne({ _id: req.params.id, userId: req.user.id });

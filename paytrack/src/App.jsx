@@ -9,6 +9,7 @@ import Settings from './pages/Settings';
 import SalesHistory from './pages/SalesHistory';
 import Expenses from './pages/Expenses';
 import Bookings from './pages/Bookings';
+import Invoices from './pages/Invoices';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import LoadingScreen from './components/LoadingScreen';
@@ -65,6 +66,7 @@ const App = () => {
       case 'reports':  return <Reports />;
       case 'expenses': return <Expenses />;
       case 'bookings': return <Bookings />;
+      case 'invoices': return <Invoices />;
       case 'settings': return <Settings />;
       default:         return <Home />;
     }
