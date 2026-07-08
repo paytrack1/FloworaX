@@ -31,7 +31,14 @@ const App = () => {
     }
   }, [isAuthenticated, user?.businessType, activeTab, setActiveTab]);
 
-  const showOnboarding = isAuthenticated && user && !user.businessType;
+  const needsBusinessSetup = isAuthenticated && user && (
+    !user.businessType ||
+    !user.phone ||
+    !user.address ||
+    !user.bankAccount ||
+    !user.currency ||
+    !user.timezone
+  );
 
   // ── Auth screens ──
   const path = window.location.pathname;
@@ -46,7 +53,7 @@ const App = () => {
     return <Login mode={screen} />;
   }
 
-  if (showOnboarding) {
+  if (needsBusinessSetup) {
     return <BusinessTypeOnboarding />;
   }
 

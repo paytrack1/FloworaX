@@ -40,115 +40,232 @@ const options = [
 ];
 
 const BusinessTypeOnboarding = () => {
-  const { user, setBusinessType, setActiveTab } = useStore();
-  const [selected, setSelected] = useState(user?.businessType || '');
+  const { user, updateBusinessProfile, setActiveTab } = useStore();
+  const [form, setForm] = useState({
+    businessName: user?.businessName || '',
+    businessType: user?.businessType || '',
+    phone: user?.phone || '',
+    email: user?.email || '',
+    address: user?.address || '',
+    bankAccount: user?.bankAccount || '',
+    currency: user?.currency || 'NGN',
+    timezone: user?.timezone || '',
+    logo: user?.profileImage || '',
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [saved, setSaved] = useState(false);
+
+  const businessTypes = [
+    'Consultant',
+    'Church',
+    'Clinic',
+    'School',
+    'Agency',
+    'Freelancer',
+    'Other',
+  ];
+
+  const currencies = ['NGN', 'USD', 'EUR', 'GHS'];
+  const timezones = ['Africa/Lagos', 'Africa/Abidjan', 'Europe/London', 'America/New_York', 'Asia/Dubai'];
+
+  const handleChange = (field, value) => {
+    setError('');
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm((prev) => ({ ...prev, logo: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleContinue = async () => {
-    if (!selected) {
-      setError('Please choose your organization type.');
+    const requiredFields = ['businessName', 'businessType', 'phone', 'address', 'bankAccount', 'currency', 'timezone'];
+    const missing = requiredFields.filter((field) => !form[field]?.toString().trim());
+    if (missing.length > 0) {
+      setError('Please fill in all required fields before continuing.');
       return;
     }
 
-    setError('');
     setLoading(true);
     try {
-      const result = await setBusinessType(selected);
-      console.log('Business type saved:', result.user);
+      await updateBusinessProfile({
+        businessName: form.businessName,
+        businessType: form.businessType,
+        phone: form.phone,
+        address: form.address,
+        bankAccount: form.bankAccount,
+        currency: form.currency,
+        timezone: form.timezone,
+        profileImage: form.logo,
+      });
       setActiveTab('home');
-      setSaved(true);
     } catch (err) {
-      console.error('Business type save failed:', err);
-      setError(err.message || 'Unable to save your selection.');
+      console.error('Business profile save failed:', err);
+      setError(err.message || 'Unable to save your business profile.');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (saved) {
-      window.location.replace('/');
-    }
-  }, [saved]);
-
   return (
     <div className="min-h-screen bg-[#F8FAFF] flex flex-col">
-      <div className="mx-auto w-full max-w-4xl px-6 py-10">
+      <div className="mx-auto w-full max-w-5xl px-6 py-10">
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-[#185FA5] text-white text-3xl font-black mb-4">
             FL
           </div>
-          <p className="text-sm font-bold text-[#2F5FB3] uppercase tracking-[0.3em] mb-3">Welcome to FloworaX</p>
-          <h1 className="text-3xl lg:text-4xl font-black text-[#0F172A] mb-4">What type of organization are you managing?</h1>
+          <p className="text-sm font-bold text-[#2F5FB3] uppercase tracking-[0.3em] mb-3">Business Setup</p>
+          <h1 className="text-3xl lg:text-4xl font-black text-[#0F172A] mb-4">Complete your business profile</h1>
           <p className="max-w-2xl mx-auto text-[#64748B] text-sm leading-relaxed">
-            Pick the option that best matches your organization. We’ll enable the right modules and hide the rest.
+            Enter your business details now so the dashboard, invoices, and events are configured correctly.
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {options.map((option) => {
-            const active = selected === option.value;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => setSelected(option.value)}
-                className={`rounded-3xl border p-6 text-left transition-all focus:outline-none ${
-                  active
-                    ? 'border-[#2F5FB3] bg-white shadow-lg shadow-blue-200/40'
-                    : 'border-[#E2E8F0] bg-white hover:border-[#2F5FB3]'
-                }`}
+        <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+          <div className="space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Business Name</span>
+                <input
+                  value={form.businessName}
+                  onChange={(e) => handleChange('businessName', e.target.value)}
+                  className="mt-2 w-full rounded-3xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
+                  placeholder="My Business"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Business Type</span>
+                <select
+                  value={form.businessType}
+                  onChange={(e) => handleChange('businessType', e.target.value)}
+                  className="mt-2 w-full rounded-3xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
+                >
+                  <option value="">Select a type</option>
+                  {businessTypes.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Phone</span>
+                <input
+                  value={form.phone}
+                  onChange={(e) => handleChange('phone', e.target.value)}
+                  className="mt-2 w-full rounded-3xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
+                  placeholder="+234 800 000 0000"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Email</span>
+                <input
+                  value={form.email}
+                  disabled
+                  className="mt-2 w-full rounded-3xl border border-[#E2E8F0] bg-[#F8FAFF] px-4 py-3 text-sm text-slate-500 outline-none"
+                />
+              </label>
+            </div>
+
+            <label className="block">
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Address</span>
+              <textarea
+                value={form.address}
+                onChange={(e) => handleChange('address', e.target.value)}
+                rows={3}
+                className="mt-2 w-full rounded-3xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
+                placeholder="Street, city, state"
+              />
+            </label>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Bank Account</span>
+                <input
+                  value={form.bankAccount}
+                  onChange={(e) => handleChange('bankAccount', e.target.value)}
+                  className="mt-2 w-full rounded-3xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
+                  placeholder="Account name / number"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Currency</span>
+                <select
+                  value={form.currency}
+                  onChange={(e) => handleChange('currency', e.target.value)}
+                  className="mt-2 w-full rounded-3xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
+                >
+                  {currencies.map((currency) => (
+                    <option key={currency} value={currency}>{currency}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <label className="block">
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Timezone</span>
+              <select
+                value={form.timezone}
+                onChange={(e) => handleChange('timezone', e.target.value)}
+                className="mt-2 w-full rounded-3xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-3">
-                      <p className="text-lg font-black text-[#0F172A] mb-0">{option.title}</p>
-                      {option.recommended && (
-                        <span className="inline-flex items-center rounded-full bg-[#FDE68A] text-[#92400E] text-[11px] font-bold px-2.5 py-1">
-                          Recommended
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-[#64748B] leading-relaxed mb-4">{option.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {option.categories?.map((item) => (
-                        <span key={item} className="rounded-full border border-[#E2E8F0] bg-[#F8FAFF] px-3 py-1 text-[11px] font-semibold text-[#475569]">
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {option.features?.map((feature) => (
-                        <span key={feature} className="rounded-2xl bg-[#EFF6FF] text-[#1D4ED8] px-3 py-1 text-[12px] font-semibold">
-                          {feature}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  {active && <span className="inline-flex items-center justify-center rounded-full bg-[#2F5FB3] text-white w-9 h-9">✓</span>}
-                </div>
+                <option value="">Choose timezone</option>
+                {timezones.map((tz) => (
+                  <option key={tz} value={tz}>{tz}</option>
+                ))}
+              </select>
+            </label>
+
+            {error && (
+              <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between sm:items-center">
+              <p className="text-sm text-[#64748B]">You can update this later in settings.</p>
+              <button
+                onClick={handleContinue}
+                disabled={loading}
+                className="w-full sm:w-auto bg-[#185FA5] text-white px-6 py-3 rounded-2xl font-black text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+              >
+                {loading ? 'Saving...' : 'Continue'}
               </button>
-            );
-          })}
-        </div>
-
-        {error && (
-          <div className="mt-6 rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-            {error}
+            </div>
           </div>
-        )}
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
-          <div className="text-sm text-[#64748B]">You can change this later in settings.</div>
-          <button
-            onClick={handleContinue}
-            disabled={!selected || loading}
-            className="w-full sm:w-auto bg-[#185FA5] text-white px-6 py-3 rounded-2xl font-black text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
-          >
-            {loading ? 'Saving...' : 'Continue'}
-          </button>
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold mb-4">Logo</p>
+              <div className="flex items-center justify-center rounded-3xl border border-dashed border-[#CBD5E1] bg-[#F8FAFF] h-52">
+                {form.logo ? (
+                  <img src={form.logo} alt="Business logo" className="h-full object-contain" />
+                ) : (
+                  <div className="text-center text-sm text-slate-500">
+                    Upload a logo to personalize your dashboard.
+                  </div>
+                )}
+              </div>
+              <input type="file" accept="image/*" onChange={handleLogoUpload} className="mt-4 w-full text-sm text-slate-500" />
+            </div>
+
+            <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold mb-4">Why this matters</p>
+              <ul className="space-y-3 text-sm text-[#475569]">
+                <li>• Your business profile helps invoices and reports look professional.</li>
+                <li>• Currency and timezone ensure revenue and booking times are accurate.</li>
+                <li>• A bank account improves future payout flows and payment setup.</li>
+                <li>• Business type enables the right modules for your industry.</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>

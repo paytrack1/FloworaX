@@ -63,6 +63,10 @@ export const useStore = create(
       clearAuthError: () => set({ authError: null }),
       setActiveTab: (tab) => set({ activeTab: tab }),
       setSaleModal: (open) => set({ isSaleModalOpen: open }),
+      dashboard: null,
+      dashboardError: null,
+      plans: [],
+      planError: null,
 
       fetchUser: async () => {
         const { token } = get();
@@ -108,6 +112,31 @@ export const useStore = create(
         }
       },
 
+      updateBusinessProfile: async (profile) => {
+        const { token } = get();
+        if (!token) throw new Error('Authentication required');
+
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+            method: 'PATCH',
+            headers: authHeaders(token),
+            body: JSON.stringify(profile),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            const errorMessage = data.error || `Failed to save profile (status ${res.status})`;
+            throw new Error(errorMessage);
+          }
+          set({ user: data.user });
+          return data;
+        } catch (err) {
+          if (err instanceof TypeError && err.message === 'Failed to fetch') {
+            throw new Error('Unable to reach the backend. Check your internet connection or start the backend server.');
+          }
+          throw err;
+        }
+      },
+
       fetchSales: async () => {
         const { token } = get();
         if (!token) return;
@@ -124,9 +153,66 @@ export const useStore = create(
         }
       },
 
+      fetchDashboard: async () => {
+        const { token } = get();
+        if (!token) return;
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/dashboard`, {
+            headers: authHeaders(token),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            set({ dashboard: data.dashboard, dashboardError: null });
+          } else {
+            set({ dashboardError: data.error || 'Unable to load dashboard' });
+          }
+        } catch (err) {
+          console.error('Failed to load dashboard:', err);
+          set({ dashboardError: err.message || 'Dashboard fetch failed' });
+        }
+      },
+
+      fetchPlans: async () => {
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/plans`);
+          const data = await res.json();
+          if (res.ok) {
+            set({ plans: data.plans || [], planError: null });
+          } else {
+            set({ planError: data.error || 'Unable to load plans' });
+          }
+        } catch (err) {
+          console.error('Failed to load plans:', err);
+          set({ planError: err.message || 'Plan fetch failed' });
+        }
+      },
+
+      upgradePlan: async (planId) => {
+        const { token } = get();
+        if (!token) throw new Error('Authentication required');
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/subscription/upgrade`, {
+            method: 'POST',
+            headers: authHeaders(token),
+            body: JSON.stringify({ planId }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.error || 'Failed to upgrade plan');
+          }
+          set({ user: data.user, dashboard: { ...get().dashboard, subscription: data.subscription }, planError: null });
+          return data;
+        } catch (err) {
+          console.error('Failed to upgrade plan:', err);
+          set({ planError: err.message || 'Upgrade failed' });
+          throw err;
+        }
+      },
+
       init: async () => {
         await get().fetchUser();
         await get().fetchSales();
+        await get().fetchDashboard();
       },
 
       addSale: async (saleData) => {

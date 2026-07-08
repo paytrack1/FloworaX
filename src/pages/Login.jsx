@@ -72,7 +72,7 @@ const Login = ({ mode: initialMode = 'login' }) => {
         {mode === 'register' && (
           <div>
             <label className="text-[#0F172A] text-xs font-bold uppercase tracking-wide mb-1.5 block">Business Name</label>
-            <input name="businessName" type="text" value={form.businessName} onChange={handleChange} placeholder="e.g. Adeola Store"
+            <input name="businessName" type="text" value={form.businessName} onChange={handleChange} placeholder="Your store name"
               className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm text-[#0F172A] outline-none focus:border-[#185FA5] transition-colors" />
           </div>
         )}

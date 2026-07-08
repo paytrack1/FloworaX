@@ -9,9 +9,13 @@ const ChevronRight = () => (
 );
 
 const Settings = () => {
-  const { logout, user, setProfileImage, sales } = useStore();
+  const { logout, user, setProfileImage, sales, dashboard, plans, planError, fetchPlans, upgradePlan } = useStore();
   const [exportStatus, setExportStatus] = useState('');
   const [showSupport, setShowSupport] = useState(false);
+  const [showPlans, setShowPlans] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [planMessage, setPlanMessage] = useState('');
   const fileInputRef = useRef(null);
 
   const handleImageUpload = (e) => {
@@ -52,9 +56,39 @@ const Settings = () => {
       URL.revokeObjectURL(url);
       setExportStatus(`Exported ${sales.length} sales successfully!`);
       setTimeout(() => setExportStatus(''), 3000);
-    } catch (err) {
+    } catch {
       setExportStatus('Export failed. Try again.');
     }
+  };
+
+  const openConfirmUpgrade = (plan) => {
+    if (plan.id === user?.plan) {
+      setPlanMessage(`You are already on the ${plan.name} plan.`);
+      return;
+    }
+    setSelectedPlan(plan);
+    setPlanMessage('');
+  };
+
+  const confirmUpgrade = async () => {
+    if (!selectedPlan) return;
+    setIsUpgrading(true);
+    setPlanMessage('Upgrading plan...');
+    try {
+      await upgradePlan(selectedPlan.id);
+      setPlanMessage(`Upgraded to ${selectedPlan.name}`);
+      setSelectedPlan(null);
+      setShowPlans(false);
+    } catch (err) {
+      setPlanMessage(err.message || 'Upgrade failed');
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
+
+  const cancelUpgrade = () => {
+    setSelectedPlan(null);
+    setPlanMessage('');
   };
 
   const settingsOptions = [
@@ -64,6 +98,13 @@ const Settings = () => {
       iconBg: '#EEF4FF',
       action: 'profile',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#185FA5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+    },
+    {
+      label: 'Subscription',
+      sub: dashboard?.subscription?.plan?.name ? `${dashboard.subscription.plan.name} plan` : 'Free plan',
+      iconBg: '#FEF3C7',
+      action: 'plans',
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>,
     },
     {
       label: 'Sync Settings',
@@ -93,6 +134,10 @@ const Settings = () => {
     if (action === 'support') setShowSupport(!showSupport);
     if (action === 'profile') fileInputRef.current?.click();
     if (action === 'sync') alert('Auto-sync is enabled. Sales sync every 30 seconds when online.');
+    if (action === 'plans') {
+      setShowPlans(!showPlans);
+      if (!plans.length) fetchPlans();
+    }
   };
 
   return (
@@ -148,6 +193,75 @@ const Settings = () => {
           <a href="mailto:hello@floworax.com" className="bg-orange-500 text-white text-sm font-bold px-4 py-2 rounded-xl inline-block">
             hello@floworax.com
           </a>
+        </div>
+      )}
+
+      {showPlans && (
+        <div className="bg-white rounded-3xl border border-[#E2E8F0] p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Subscription plans</p>
+              <h2 className="text-lg font-black text-[#0F172A]">Choose a plan</h2>
+            </div>
+            <button onClick={() => setShowPlans(false)} className="text-sm text-[#64748B]">Close</button>
+          </div>
+          {planError && <p className="text-sm text-red-600 mb-4">{planError}</p>}
+          <div className="grid gap-4 sm:grid-cols-3">
+            {plans.map((plan) => (
+              <button key={plan.id} type="button" onClick={() => openConfirmUpgrade(plan)}
+                className={`rounded-3xl border p-4 text-left transition ${plan.id === user?.plan ? 'border-[#185FA5] bg-[#EFF6FF] cursor-default' : 'border-[#E2E8F0] bg-white hover:shadow-sm'}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-black text-[#0F172A]">{plan.name}</p>
+                    <p className="text-xs text-[#64748B] mt-1">{plan.description}</p>
+                  </div>
+                  {plan.id === user?.plan && <span className="text-xs font-bold text-[#0F57B3]">Current</span>}
+                </div>
+                <p className="text-2xl font-black text-[#0F172A] mt-4">₦{plan.price} / month</p>
+                <p className="text-xs text-[#94A3B8] mt-2">{plan.badge}</p>
+              </button>
+            ))}
+          </div>
+          {planMessage && <p className="text-sm text-[#475569] mt-4">{planMessage}</p>}
+        </div>
+      )}
+
+      {selectedPlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
+          <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl border border-slate-200">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Confirm plan upgrade</p>
+                <h2 className="text-xl font-black text-[#0F172A] mt-2">Upgrade to {selectedPlan.name}</h2>
+              </div>
+              <button type="button" onClick={cancelUpgrade} className="text-sm text-slate-500">Cancel</button>
+            </div>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-3xl border border-[#E2E8F0] p-4 bg-[#F8FAFF]">
+                <p className="text-xs text-slate-400 uppercase tracking-[0.3em] font-bold">New monthly limit</p>
+                <p className="mt-3 text-2xl font-black text-[#0F172A]">₦{selectedPlan.price}</p>
+                <p className="text-xs text-[#64748B] mt-2">Billed monthly</p>
+              </div>
+              <div className="rounded-3xl border border-[#E2E8F0] p-4">
+                <p className="text-xs text-slate-400 uppercase tracking-[0.3em] font-bold">Plan benefits</p>
+                <ul className="mt-3 space-y-2 text-sm text-[#475569]">
+                  {selectedPlan.features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-[#0F172A]" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <p className="text-sm text-[#475569] mt-5">You will immediately move to {selectedPlan.name}. Your current plan is {user?.plan === selectedPlan.id ? selectedPlan.name : user?.plan?.charAt(0).toUpperCase() + user?.plan?.slice(1)}.</p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button type="button" onClick={cancelUpgrade} className="rounded-3xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 transition">Cancel</button>
+              <button type="button" onClick={confirmUpgrade} disabled={isUpgrading} className="rounded-3xl bg-[#2F5FB3] px-5 py-3 text-sm font-bold text-white transition disabled:opacity-50">
+                {isUpgrading ? 'Upgrading…' : `Confirm upgrade to ${selectedPlan.name}`}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

@@ -12,6 +12,7 @@ const axios      = require('axios');
 const bcrypt     = require('bcryptjs');
 const jwt        = require('jsonwebtoken');
 const mongoose   = require('mongoose');
+const { getPlanList, buildSubscriptionSummary, requireFeature, requireProviderFeature } = require('./src/middleware/plan');
 const app        = express();
 const PORT       = process.env.PORT || 3000;
 
@@ -63,6 +64,12 @@ const userSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true },
   profileImage: { type: String, default: null },
   businessType: { type: String, default: null },
+  phone:        { type: String, default: null },
+  address:      { type: String, default: null },
+  bankAccount:  { type: String, default: null },
+  currency:     { type: String, default: null },
+  timezone:     { type: String, default: null },
+  plan:         { type: String, enum: ['free', 'pro', 'business'], default: 'free' },
   createdAt:    { type: Date, default: Date.now },
 });
 
@@ -79,8 +86,8 @@ const saleSchema = new mongoose.Schema({
   verified:    { type: Boolean, default: false },
   provider:    { type: String, default: null },
   profit:      { type: Number, default: 0 },
-  createdAt:   { type: String },
-  syncedAt:    { type: String },
+  createdAt:   { type: Date, default: Date.now },
+  syncedAt:    { type: Date, default: null },
 });
 
 const expenseSchema = new mongoose.Schema({
@@ -90,7 +97,7 @@ const expenseSchema = new mongoose.Schema({
   amount:      { type: Number, required: true },
   category:    { type: String, default: 'Other' },
   synced:      { type: Number, default: 0 },
-  createdAt:   { type: String },
+  createdAt:   { type: Date, default: Date.now },
 });
 
 const User    = mongoose.model('User', userSchema);
@@ -125,6 +132,20 @@ const verifyPaystackTransaction = async (reference) => {
     return { isVerified: false, amount: 0 };
   }
 };
+
+const formatUserResponse = (user) => ({
+  id: user._id.toString(),
+  email: user.email,
+  businessName: user.businessName,
+  businessType: user.businessType || null,
+  profileImage: user.profileImage || null,
+  phone: user.phone || null,
+  address: user.address || null,
+  bankAccount: user.bankAccount || null,
+  currency: user.currency || null,
+  timezone: user.timezone || null,
+  plan: user.plan || 'free',
+});
 
 // ════════════════════════════════════════
 //  HEALTH CHECK
@@ -161,6 +182,7 @@ app.post('/api/auth/register', async (req, res) => {
       email:        email.toLowerCase().trim(),
       businessName: businessName.trim(),
       passwordHash,
+      plan: 'free',
     });
 
     const token = jwt.sign(
@@ -170,16 +192,7 @@ app.post('/api/auth/register', async (req, res) => {
     );
 
     console.log(`Registered: ${user.email}`);
-    res.status(201).json({
-      success: true,
-      token,
-      user: {
-        id: user._id.toString(),
-        email: user.email,
-        businessName: user.businessName,
-        businessType: user.businessType || null,
-      },
-    });
+    res.status(201).json({ success: true, token, user: formatUserResponse(user) });
   } catch (err) {
     console.error('Register error:', err.stack || err);
     res.status(500).json({ error: 'Registration failed' });
@@ -206,16 +219,7 @@ app.post('/api/auth/login', async (req, res) => {
     );
 
     console.log(`Login: ${user.email}`);
-    res.json({
-      success: true,
-      token,
-      user: {
-        id: user._id.toString(),
-        email: user.email,
-        businessName: user.businessName,
-        businessType: user.businessType || null,
-      },
-    });
+    res.json({ success: true, token, user: formatUserResponse(user) });
   } catch (err) {
     console.error('Login error:', err.stack || err);
     res.status(500).json({ error: 'Login failed' });
@@ -227,15 +231,7 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({
-      success: true,
-      user: {
-        id: user._id.toString(),
-        email: user.email,
-        businessName: user.businessName,
-        businessType: user.businessType || null,
-      },
-    });
+    res.json({ success: true, user: formatUserResponse(user) });
   } catch (err) {
     console.error('Get me error:', err.stack || err);
     res.status(500).json({ error: 'Failed to get user' });
@@ -244,13 +240,19 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
 
 // ── UPDATE PROFILE ──
 app.patch('/api/auth/profile', requireAuth, async (req, res) => {
-  const { businessName, businessType, currentPassword, newPassword } = req.body;
+  const { businessName, businessType, phone, address, bankAccount, currency, timezone, profileImage, currentPassword, newPassword } = req.body;
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (businessName) user.businessName = businessName.trim();
     if (businessType) user.businessType = businessType.trim();
+    if (phone) user.phone = phone.trim();
+    if (address) user.address = address.trim();
+    if (bankAccount) user.bankAccount = bankAccount.trim();
+    if (currency) user.currency = currency.trim();
+    if (timezone) user.timezone = timezone.trim();
+    if (profileImage) user.profileImage = profileImage;
 
     if (newPassword) {
       if (!currentPassword) return res.status(400).json({ error: 'Current password required' });
@@ -260,15 +262,7 @@ app.patch('/api/auth/profile', requireAuth, async (req, res) => {
     }
 
     await user.save();
-    res.json({
-      success: true,
-      user: {
-        id: user._id.toString(),
-        email: user.email,
-        businessName: user.businessName,
-        businessType: user.businessType || null,
-      },
-    });
+    res.json({ success: true, user: formatUserResponse(user) });
   } catch (err) {
     console.error('Profile update error:', err.stack || err);
     res.status(500).json({ error: 'Profile update failed' });
@@ -280,7 +274,7 @@ app.patch('/api/auth/profile', requireAuth, async (req, res) => {
 // ════════════════════════════════════════
 
 // ── CREATE SALE ──
-app.post('/api/sales', requireAuth, async (req, res) => {
+app.post('/api/sales', requireAuth, requireFeature('sales'), async (req, res) => {
   const { items, itemName, total, paymentMethod, reference, status, profit } = req.body;
   if (typeof total !== 'number' || total < 0) return res.status(400).json({ error: 'total is required and must be a number' });
 
@@ -298,8 +292,8 @@ app.post('/api/sales', requireAuth, async (req, res) => {
       verified: !!(reference && status === 'completed'),
       provider: reference ? 'paystack' : 'cash',
       profit: profit || Math.round(total * 0.3),
-      createdAt: new Date().toISOString(),
-      syncedAt: reference ? null : new Date().toISOString(),
+      createdAt: new Date(),
+      syncedAt: reference ? null : new Date(),
     });
     res.status(201).json({ success: true, sale });
   } catch (err) {
@@ -309,7 +303,7 @@ app.post('/api/sales', requireAuth, async (req, res) => {
 });
 
 // ── SYNC SALES ──
-app.post('/api/sales/sync', requireAuth, async (req, res) => {
+app.post('/api/sales/sync', requireAuth, requireFeature('sales'), async (req, res) => {
   const { sales } = req.body;
   if (!Array.isArray(sales)) return res.status(400).json({ error: 'sales must be an array' });
 
@@ -330,7 +324,7 @@ app.post('/api/sales/sync', requireAuth, async (req, res) => {
 
     await Sale.findOneAndUpdate(
       { id: sale.id },
-      { ...sale, userId: req.user.id, verified, status, synced: 1, syncedAt: new Date().toISOString() },
+      { ...sale, userId: req.user.id, verified, status, synced: 1, syncedAt: new Date() },
       { upsert: true, new: true }
     );
 
@@ -428,13 +422,16 @@ app.get('/api/finance/summary', requireAuth, async (req, res) => {
 
 app.get('/api/dashboard', requireAuth, async (req, res) => {
   try {
-    const summary = await buildFinancialSummary(req.user.id);
+    const [summary, subscription] = await Promise.all([
+      buildFinancialSummary(req.user.id),
+      buildSubscriptionSummary(req.user.id),
+    ]);
     const recentTransactions = await Sale.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(10);
     const upcomingAppointments = [];
     const upcomingEvents = [];
     const latestInvoices = [];
     const topServices = [];
-    res.json({ success: true, dashboard: { summary, recentTransactions, upcomingAppointments, upcomingEvents, latestInvoices, topServices } });
+    res.json({ success: true, dashboard: { summary, subscription, recentTransactions, upcomingAppointments, upcomingEvents, latestInvoices, topServices } });
   } catch (err) {
     console.error('Failed to fetch dashboard:', err);
     res.status(500).json({ error: 'Failed to fetch dashboard' });
@@ -472,6 +469,39 @@ app.get('/api/financial-summary', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Failed to fetch financial summary:', err);
     res.status(500).json({ error: 'Failed to fetch financial summary' });
+  }
+});
+
+app.get('/api/plans', (req, res) => {
+  res.json({ success: true, plans: getPlanList() });
+});
+
+app.get('/api/subscription', requireAuth, async (req, res) => {
+  try {
+    const subscription = await buildSubscriptionSummary(req.user.id);
+    if (!subscription) return res.status(404).json({ error: 'Subscription summary unavailable' });
+    res.json({ success: true, subscription });
+  } catch (err) {
+    console.error('Failed to fetch subscription summary:', err);
+    res.status(500).json({ error: 'Failed to fetch subscription summary' });
+  }
+});
+
+app.post('/api/subscription/upgrade', requireAuth, async (req, res) => {
+  const { planId } = req.body;
+  if (!planId) return res.status(400).json({ error: 'planId is required' });
+  const plan = getPlanList().find((p) => p.id === planId);
+  if (!plan) return res.status(400).json({ error: 'Invalid plan selected' });
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    user.plan = planId;
+    await user.save();
+    res.json({ success: true, subscription: await buildSubscriptionSummary(req.user.id), user: formatUserResponse(user) });
+  } catch (err) {
+    console.error('Failed to upgrade subscription:', err);
+    res.status(500).json({ error: 'Failed to upgrade subscription' });
   }
 });
 

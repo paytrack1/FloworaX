@@ -2,8 +2,9 @@ const express = require('express');
 const router  = express.Router();
 const Service = require('../models/Service');
 const requireAuth = require('../middleware/auth');
+const { requireFeature } = require('../middleware/plan');
 
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireFeature('services'), async (req, res) => {
   const { title, description, duration, price, isFree, category, location } = req.body;
   if (!title || !duration) return res.status(400).json({ error: 'title and duration are required' });
   try {
@@ -20,7 +21,7 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, requireFeature('services'), async (req, res) => {
   try {
     const services = await Service.find({ userId: req.user.id, isActive: true }).sort({ createdAt: -1 });
     res.json({ success: true, services });
@@ -29,7 +30,7 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
-router.patch('/:id', requireAuth, async (req, res) => {
+router.patch('/:id', requireAuth, requireFeature('services'), async (req, res) => {
   try {
     const service = await Service.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id }, req.body, { new: true }
@@ -41,7 +42,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
   }
 });
 
-router.delete('/:id', requireAuth, async (req, res) => {
+router.delete('/:id', requireAuth, requireFeature('services'), async (req, res) => {
   try {
     await Service.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id }, { isActive: false }

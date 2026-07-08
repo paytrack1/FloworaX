@@ -4,6 +4,7 @@ const Booking = require('../models/Booking');
 const Service = require('../models/Service');
 const axios   = require('axios');
 const requireAuth = require('../middleware/auth');
+const { requireFeature, requireProviderFeature } = require('../middleware/plan');
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_BASE_URL   = 'https://api.paystack.co';
 const FRONTEND_URL        = process.env.FRONTEND_URL || 'https://floworax.vercel.app';
@@ -69,6 +70,10 @@ router.post('/public', async (req, res) => {
   try {
     const service = await Service.findById(serviceId);
     if (!service) return res.status(404).json({ error: 'Service not found' });
+
+    const providerAllowed = await requireProviderFeature(service.userId, 'bookings');
+    if (!providerAllowed.allowed) return res.status(providerAllowed.status).json({ error: providerAllowed.error });
+
     const booking = await Booking.create({
       serviceId, providerId: service.userId, clientName, clientEmail, clientPhone,
       scheduledDate, scheduledTime, amount: service.price,
@@ -133,7 +138,7 @@ router.post('/webhook', async (req, res) => {
   res.sendStatus(200);
 });
 
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, requireFeature('bookings'), async (req, res) => {
   try {
     const bookings = await Booking.find({ providerId: req.user.id })
       .populate('serviceId', 'title duration price isFree').sort({ createdAt: -1 });
@@ -143,7 +148,7 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
-router.patch('/:id', requireAuth, async (req, res) => {
+router.patch('/:id', requireAuth, requireFeature('bookings'), async (req, res) => {
   try {
     const booking = await Booking.findOneAndUpdate(
       { _id: req.params.id, providerId: req.user.id }, req.body, { new: true }
