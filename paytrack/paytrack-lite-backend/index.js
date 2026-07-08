@@ -11,6 +11,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const serviceRoutes = require('./src/routes/services');
 const bookingRoutes = require('./src/routes/bookings');
 const invoiceRoutes = require('./src/routes/invoices');
+const customerRoutes = require('./src/routes/customers');
 const Invoice  = require('./src/models/Invoice');
 const Service  = require('./src/models/Service');
 const Booking  = require('./src/models/Booking');
@@ -615,6 +616,7 @@ app.post('/webhook/paystack', (req, res, next) => {
 app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/customers', customerRoutes);
 
 // ── Global error handler ──
 app.use((err, req, res, next) => {

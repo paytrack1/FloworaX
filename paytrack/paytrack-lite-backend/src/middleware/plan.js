@@ -19,7 +19,7 @@ const PLAN_CATALOG = {
   },
   business: {
     name: 'Business',
-    price: 5000,
+    price: 4000,
     description: 'Unlimited access to all business tools, staff features, and premium support.',
     features: ['sales', 'services', 'bookings', 'finance', 'reports', 'invoices', 'events', 'staff'],
     limits: { monthlySales: null, monthlyBookings: null, services: null },
