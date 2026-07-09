@@ -16,6 +16,7 @@ import BottomNav from './components/BottomNav';
 import LoadingScreen from './components/LoadingScreen';
 import PublicBooking from './pages/PublicBooking';
 import BusinessTypeOnboarding from './pages/BusinessTypeOnboarding';
+import VerifyEmail from './pages/VerifyEmail';
 
 const App = () => {
   const [screen, setScreen] = React.useState('welcome');
@@ -52,6 +53,10 @@ const App = () => {
       return <Welcome onGetStarted={() => setScreen('register')} onSignIn={() => setScreen('login')} />;
     }
     return <Login mode={screen} />;
+  }
+
+  if (isAuthenticated && user && !user.emailVerified) {
+    return <VerifyEmail />;
   }
 
   if (needsBusinessSetup) {

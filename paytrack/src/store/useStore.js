@@ -52,6 +52,32 @@ export const useStore = create(
         } catch (err) { set({ authError: err.message }); throw err; }
       },
 
+      verifyEmail: async (otp) => {
+        const { token } = get();
+        if (!token) throw new Error('Authentication required');
+        const res = await fetch(`${BACKEND_URL}/api/auth/verify-email`, {
+          method: 'POST',
+          headers: authHeaders(token),
+          body: JSON.stringify({ otp }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Verification failed');
+        set((state) => ({ user: { ...state.user, emailVerified: true } }));
+        return data;
+      },
+
+      resendOtp: async () => {
+        const { token } = get();
+        if (!token) throw new Error('Authentication required');
+        const res = await fetch(`${BACKEND_URL}/api/auth/resend-otp`, {
+          method: 'POST',
+          headers: authHeaders(token),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Failed to resend code');
+        return data;
+      },
+
       logout: () => {
         set({ isAuthenticated: false, user: null, token: null, sales: [], transactions: [], activeTab: 'home', isSaleModalOpen: false, authError: null });
       },
@@ -264,4 +290,3 @@ export const useStore = create(
     }
   )
 );
-
