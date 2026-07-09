@@ -14,8 +14,15 @@ const tabs = [
 
 const BottomNav = () => {
   const { activeTab, setActiveTab, user } = useStore();
-  const hasBookings = ["health_wellness", "complete_business_os"].includes(user?.businessType);
-  const visibleTabs = tabs.filter(({ id }) => id !== "bookings" || hasBookings);
+  const hasBookings  = user?.modules?.includes('bookings');
+  const hasSales    = user?.modules?.includes('sales');
+  const hasInvoices = user?.modules?.includes('invoices');
+  const visibleTabs = tabs.filter(({ id }) => {
+    if (id === 'bookings') return hasBookings;
+    if (id === 'sales')    return hasSales;
+    if (id === 'invoices') return hasInvoices;
+    return true;
+  });
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#E2E8F0] z-40">

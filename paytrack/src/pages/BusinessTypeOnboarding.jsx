@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
 
+const MODULE_MAP = {
+  health_wellness:        ['bookings', 'customers', 'invoices', 'finance', 'reports'],
+  professional_services:  ['invoices', 'customers', 'finance', 'reports'],
+  education_nonprofits:   ['bookings', 'finance', 'reports'],
+  business_retail:        ['sales', 'invoices', 'customers', 'finance', 'reports'],
+  complete_business_os:   ['sales', 'bookings', 'invoices', 'customers', 'finance', 'reports'],
+};
+
 const options = [
   {
     value: 'health_wellness',
@@ -96,6 +104,7 @@ const BusinessTypeOnboarding = () => {
       await updateBusinessProfile({
         businessName: form.businessName,
         businessType: form.businessType,
+        modules: MODULE_MAP[form.businessType] || ['sales'],
         phone: form.phone,
         address: form.address,
         bankAccount: form.bankAccount,
