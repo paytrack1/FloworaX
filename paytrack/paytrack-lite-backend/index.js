@@ -117,6 +117,7 @@ const userSchema = new mongoose.Schema({
   currency:     { type: String, default: null },
   timezone:     { type: String, default: null },
   plan:         { type: String, enum: ['free', 'pro', 'business'], default: 'free' },
+  modules:      { type: [String], default: ['sales'] },
   createdAt:    { type: Date, default: Date.now },
 });
 
@@ -185,6 +186,7 @@ const formatUserResponse = (user) => ({
   email:        user.email,
   businessName: user.businessName,
   businessType: user.businessType || null,
+  modules:      user.modules || ['sales'],
   profileImage: user.profileImage || null,
   phone:        user.phone || null,
   address:      user.address || null,
@@ -272,8 +274,8 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
 
 // ── UPDATE PROFILE ──
 app.patch('/api/auth/profile', requireAuth, async (req, res) => {
-  const ALLOWED_FIELDS = ['businessName','businessType','phone','address','bankAccount','currency','timezone','profileImage','currentPassword','newPassword'];
-  const { businessName, businessType, phone, address, bankAccount, currency, timezone, profileImage, currentPassword, newPassword } = req.body;
+  const ALLOWED_FIELDS = ['businessName','businessType','modules','phone','address','bankAccount','currency','timezone','profileImage','currentPassword','newPassword'];
+  const { businessName, businessType, modules, phone, address, bankAccount, currency, timezone, profileImage, currentPassword, newPassword } = req.body;
 
   try {
     const user = await User.findById(req.user.id);
@@ -281,6 +283,7 @@ app.patch('/api/auth/profile', requireAuth, async (req, res) => {
 
     if (businessName) user.businessName = businessName.trim();
     if (businessType) user.businessType = businessType.trim();
+    if (Array.isArray(modules)) user.modules = modules;
     if (phone)        user.phone        = phone.trim();
     if (address)      user.address      = address.trim();
     if (bankAccount)  user.bankAccount  = bankAccount.trim();
