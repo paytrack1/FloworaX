@@ -345,13 +345,11 @@ app.post('/api/auth/verify-email', requireAuth, async (req, res) => {
     res.status(500).json({ error: 'Verification failed' });
   }
 });
-// ── RESEND OTP ──
-app.post('/api/auth/resend-otp', async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email is required' });
+// ── RESEND OTP (for logged-in, unverified user) ──
+app.post('/api/auth/resend-otp', requireAuth, async (req, res) => {
   try {
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
-    if (!user) return res.status(404).json({ error: 'No account found with this email' });
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
     if (user.emailVerified) return res.status(400).json({ error: 'This email is already verified' });
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpHash = await bcrypt.hash(otp, 10);
