@@ -65,6 +65,33 @@ export const useStore = create(
         set((state) => ({ user: { ...state.user, emailVerified: true } }));
         return data;
       },
+      forgotPassword: async (email) => {
+        set({ authError: null });
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) { set({ authError: data.error || 'Failed to send reset link' }); throw new Error(data.error); }
+          return data;
+        } catch (err) { set({ authError: err.message }); throw err; }
+      },
+
+      resetPassword: async (token, newPassword) => {
+        set({ authError: null });
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, newPassword }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) { set({ authError: data.error || 'Failed to reset password' }); throw new Error(data.error); }
+          return data;
+        } catch (err) { set({ authError: err.message }); throw err; }
+      },
 
       resendOtp: async () => {
         const { token } = get();

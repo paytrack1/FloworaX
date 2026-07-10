@@ -2,14 +2,28 @@ import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 
 const Login = ({ mode: initialMode = 'login' }) => {
-  const { login, register, authError, clearAuthError } = useStore();
+  const { login, register, forgotPassword, authError, clearAuthError } = useStore();
   const [mode, setMode] = useState(initialMode === 'register' ? 'register' : 'login');
   const [loading, setLoading] = useState(false);
   const [form, setForm]       = useState({ email: '', businessName: '', password: '' });
+  const [resetSent, setResetSent] = useState(false);
 
   const handleChange = (e) => {
     clearAuthError();
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleForgotPassword = async () => {
+    if (!form.email) return;
+    setLoading(true);
+    try {
+      await forgotPassword(form.email);
+      setResetSent(true);
+    } catch (err) {
+      // authError set in store
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -43,10 +57,11 @@ const Login = ({ mode: initialMode = 'login' }) => {
         </div>
         <h1 className="text-2xl font-black text-[#0F172A]">Flowora</h1>
         <p className="text-[#94A3B8] text-sm font-medium mt-1">
-          {mode === 'login' ? 'Sign in to your store' : 'Create your store account'}
+          {mode === 'login' ? 'Sign in to your store' : mode === 'register' ? 'Create your store account' : 'Reset your password'}
         </p>
       </div>
 
+      {mode === 'forgot' ? null : (
       <div className="flex bg-[#F1F5F9] rounded-2xl p-1 mb-6">
         <button
           onClick={() => { if (mode !== 'login') switchMode(); }}
@@ -61,6 +76,7 @@ const Login = ({ mode: initialMode = 'login' }) => {
           Create Account
         </button>
       </div>
+      )}
 
       <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm flex flex-col gap-4">
         <div>
@@ -68,6 +84,16 @@ const Login = ({ mode: initialMode = 'login' }) => {
           <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="you@store.com"
             className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm text-[#0F172A] outline-none focus:border-[#185FA5] transition-colors" />
         </div>
+
+        {mode === 'forgot' && (
+          resetSent ? (
+            <div className="px-4 py-3 bg-green-50 border border-green-200 rounded-xl">
+              <p className="text-green-700 text-sm font-medium">If an account exists for this email, a reset link has been sent. Check your inbox.</p>
+            </div>
+          ) : (
+            <p className="text-[#94A3B8] text-sm -mt-2 mb-1">Enter your email and we'll send you a reset link.</p>
+          )
+        )}
 
         {mode === 'register' && (
           <div>
@@ -77,12 +103,14 @@ const Login = ({ mode: initialMode = 'login' }) => {
           </div>
         )}
 
+        {mode !== 'forgot' && (
         <div>
           <label className="text-[#0F172A] text-xs font-bold uppercase tracking-wide mb-1.5 block">Password</label>
           <input name="password" type="password" value={form.password} onChange={handleChange} placeholder="••••••••"
             className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm text-[#0F172A] outline-none focus:border-[#185FA5] transition-colors" />
           {mode === 'register' && <p className="text-[#94A3B8] text-xs mt-1 ml-1">Minimum 4 characters</p>}
         </div>
+        )}
 
         {authError && (
           <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
@@ -90,13 +118,41 @@ const Login = ({ mode: initialMode = 'login' }) => {
           </div>
         )}
 
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !form.email || !form.password || (mode === 'register' && !form.businessName)}
-          className="w-full bg-[#185FA5] text-white py-4 rounded-2xl font-bold disabled:opacity-60 active:scale-95 transition-all mt-1"
-        >
-          {loading ? (mode === 'login' ? 'Signing in…' : 'Creating account…') : (mode === 'login' ? 'Sign In' : 'Create Account')}
-        </button>
+        {mode === 'forgot' ? (
+          <button
+            onClick={handleForgotPassword}
+            disabled={loading || !form.email || resetSent}
+            className="w-full bg-[#185FA5] text-white py-4 rounded-2xl font-bold disabled:opacity-60 active:scale-95 transition-all mt-1"
+          >
+            {loading ? 'Sending…' : resetSent ? 'Link Sent' : 'Send Reset Link'}
+          </button>
+        ) : (
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !form.email || !form.password || (mode === 'register' && !form.businessName)}
+            className="w-full bg-[#185FA5] text-white py-4 rounded-2xl font-bold disabled:opacity-60 active:scale-95 transition-all mt-1"
+          >
+            {loading ? (mode === 'login' ? 'Signing in…' : 'Creating account…') : (mode === 'login' ? 'Sign In' : 'Create Account')}
+          </button>
+        )}
+
+        {mode === 'login' && (
+          <button
+            onClick={() => { clearAuthError(); setResetSent(false); setMode('forgot'); }}
+            className="text-center text-[#185FA5] text-sm font-bold mt-1"
+          >
+            Forgot password?
+          </button>
+        )}
+
+        {mode === 'forgot' && (
+          <button
+            onClick={() => { clearAuthError(); setResetSent(false); setMode('login'); }}
+            className="text-center text-[#94A3B8] text-sm font-bold mt-1"
+          >
+            Back to Sign In
+          </button>
+        )}
       </div>
 
       <p className="text-center text-[#CBD5E1] text-[10px] font-bold uppercase tracking-widest mt-8">

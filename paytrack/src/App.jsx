@@ -17,6 +17,7 @@ import LoadingScreen from './components/LoadingScreen';
 import PublicBooking from './pages/PublicBooking';
 import BusinessTypeOnboarding from './pages/BusinessTypeOnboarding';
 import VerifyEmail from './pages/VerifyEmail';
+import ResetPassword from './pages/ResetPassword';
 
 const App = () => {
   const [screen, setScreen] = React.useState('welcome');
@@ -46,6 +47,14 @@ const App = () => {
   const path = window.location.pathname;
   if (path.startsWith('/book/') || path.startsWith('/booking/')) {
     return <PublicBooking />;
+  }
+
+  if (path === '/reset-password') {
+    const urlParams = new URLSearchParams(window.location.search);
+    const resetToken = urlParams.get('token');
+    if (resetToken) {
+      return <ResetPassword token={resetToken} />;
+    }
   }
 
   if (!isAuthenticated) {
