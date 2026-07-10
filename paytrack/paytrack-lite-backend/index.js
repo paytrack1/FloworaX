@@ -319,6 +319,32 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+   // ── VERIFY EMAIL ──
+app.post('/api/auth/verify-email', requireAuth, async (req, res) => {
+  const { otp } = req.body;
+  if (!otp) return res.status(400).json({ error: 'Verification code is required' });
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.emailVerified) return res.status(400).json({ error: 'Email is already verified' });
+    if (!user.otpHash || !user.otpExpiry) return res.status(400).json({ error: 'No verification code found. Please request a new one.' });
+    if (user.otpExpiry < new Date()) return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
+
+    const match = await bcrypt.compare(otp, user.otpHash);
+    if (!match) return res.status(400).json({ error: 'Invalid verification code' });
+
+    user.emailVerified = true;
+    user.otpHash = null;
+    user.otpExpiry = null;
+    await user.save();
+
+    console.log(`Email verified: ${user.email}`);
+    res.json({ success: true, user: formatUserResponse(user) });
+  } catch (err) {
+    console.error('Verify email error:', err.stack || err);
+    res.status(500).json({ error: 'Verification failed' });
+  }
+});
 // ── RESEND OTP ──
 app.post('/api/auth/resend-otp', async (req, res) => {
   const { email } = req.body;
