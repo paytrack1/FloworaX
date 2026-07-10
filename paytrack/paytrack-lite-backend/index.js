@@ -460,7 +460,7 @@ app.patch('/api/auth/profile', requireAuth, async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (businessName) user.businessName = businessName.trim();
-    if (businessType) user.businessType = businessType.trim();
+    if (businessType !== undefined) user.businessType = businessType.trim();
     if (Array.isArray(modules)) user.modules = modules;
     if (phone)        user.phone        = phone.trim();
     if (address)      user.address      = address.trim();
