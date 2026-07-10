@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
 
+// MODULE_MAP keys must match the values in `businessTypes` below exactly.
 const MODULE_MAP = {
-  health_wellness:        ['bookings', 'customers', 'invoices', 'finance', 'reports'],
-  professional_services:  ['invoices', 'customers', 'finance', 'reports'],
-  education_nonprofits:   ['bookings', 'finance', 'reports'],
-  business_retail:        ['sales', 'invoices', 'customers', 'finance', 'reports'],
-  complete_business_os:   ['sales', 'bookings', 'invoices', 'customers', 'finance', 'reports'],
+  Consultant:  ['bookings', 'customers', 'invoices', 'finance', 'reports'],
+  Church:      ['events', 'customers', 'invoices', 'finance', 'reports'],
+  Clinic:      ['bookings', 'customers', 'invoices', 'finance', 'reports'],
+  School:      ['events', 'customers', 'invoices', 'finance', 'reports'],
+  Agency:      ['sales', 'bookings', 'invoices', 'customers', 'finance', 'reports'],
+  Freelancer:  ['bookings', 'invoices', 'customers', 'finance', 'reports'],
+  Other:       ['sales', 'bookings', 'events', 'invoices', 'customers', 'finance', 'reports'],
 };
 
 const options = [
