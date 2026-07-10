@@ -32,6 +32,7 @@ const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
+app.set('trust proxy', 1);
 
 // ── Environment guards ──
 const JWT_SECRET = process.env.JWT_SECRET;
