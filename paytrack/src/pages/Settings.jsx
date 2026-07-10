@@ -9,13 +9,16 @@ const ChevronRight = () => (
 );
 
 const Settings = () => {
-  const { logout, user, setProfileImage, sales, dashboard, plans, planError, fetchPlans, upgradePlan } = useStore();
+  const { logout, user, setProfileImage, sales, dashboard, plans, planError, fetchPlans, upgradePlan, resetBusinessSetup } = useStore();
   const [exportStatus, setExportStatus] = useState('');
   const [showSupport, setShowSupport] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [planMessage, setPlanMessage] = useState('');
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetError, setResetError] = useState('');
   const fileInputRef = useRef(null);
 
   const handleImageUpload = (e) => {
@@ -91,41 +94,63 @@ const Settings = () => {
     setPlanMessage('');
   };
 
+  const handleResetBusinessSetup = async () => {
+    setIsResetting(true);
+    setResetError('');
+    try {
+      await resetBusinessSetup();
+      // App.jsx will automatically redirect to BusinessTypeOnboarding
+      // once user.businessType is empty.
+    } catch (err) {
+      setResetError(err.message || 'Failed to reset business setup');
+    } finally {
+      setIsResetting(false);
+      setShowResetConfirm(false);
+    }
+  };
+
   const settingsOptions = [
     {
       label: 'Store Profile',
       sub: user?.businessName || 'My Store',
       iconBg: '#EEF4FF',
       action: 'profile',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#185FA5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#185FA5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
+    },
+    {
+      label: 'Business Type & Modules',
+      sub: user?.businessType || 'Not set',
+      iconBg: '#EDE9FE',
+      action: 'resetBusiness',
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>,
     },
     {
       label: 'Subscription',
       sub: dashboard?.subscription?.plan?.name ? `${dashboard.subscription.plan.name} plan` : 'Free plan',
       iconBg: '#FEF3C7',
       action: 'plans',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>,
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5l7 7-7 7" /></svg>,
     },
     {
       label: 'Sync Settings',
       sub: 'Auto-sync every 30 seconds',
       iconBg: '#F0FDF4',
       action: 'sync',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>,
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></svg>,
     },
     {
       label: 'Export Data',
       sub: 'Download all sales as CSV',
       iconBg: '#F5F3FF',
       action: 'export',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>,
     },
     {
       label: 'Help & Support',
       sub: 'hello@floworax.com',
       iconBg: '#FFF7ED',
       action: 'support',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EA580C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EA580C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
     },
   ];
 
@@ -134,6 +159,7 @@ const Settings = () => {
     if (action === 'support') setShowSupport(!showSupport);
     if (action === 'profile') fileInputRef.current?.click();
     if (action === 'sync') alert('Auto-sync is enabled. Sales sync every 30 seconds when online.');
+    if (action === 'resetBusiness') setShowResetConfirm(true);
     if (action === 'plans') {
       setShowPlans(!showPlans);
       if (!plans.length) fetchPlans();
@@ -196,6 +222,34 @@ const Settings = () => {
         </div>
       )}
 
+      {showResetConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-slate-200">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Change business type</p>
+            <h2 className="text-xl font-black text-[#0F172A] mt-2">Redo business setup?</h2>
+            <p className="text-sm text-[#64748B] mt-3">
+              You'll be taken through business setup again so you can pick a new
+              business type and the modules that go with it. Your existing sales,
+              expenses, and other data will not be affected.
+            </p>
+            {resetError && (
+              <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 mt-4">
+                {resetError}
+              </div>
+            )}
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button type="button" onClick={() => setShowResetConfirm(false)} className="rounded-3xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 transition">
+                Cancel
+              </button>
+              <button type="button" onClick={handleResetBusinessSetup} disabled={isResetting}
+                className="rounded-3xl bg-[#6D28D9] px-5 py-3 text-sm font-bold text-white transition disabled:opacity-50">
+                {isResetting ? 'Resetting...' : 'Yes, redo setup'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showPlans && (
         <div className="bg-white rounded-3xl border border-[#E2E8F0] p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
@@ -254,7 +308,10 @@ const Settings = () => {
                 </ul>
               </div>
             </div>
-            <p className="text-sm text-[#475569] mt-5">You will immediately move to {selectedPlan.name}. Your current plan is {user?.plan === selectedPlan.id ? selectedPlan.name : user?.plan?.charAt(0).toUpperCase() + user?.plan?.slice(1)}.</p>
+            <p className="text-sm text-[#475569] mt-5">
+              You will immediately move to {selectedPlan.name}. Your current plan is{' '}
+              {user?.plan === selectedPlan.id ? selectedPlan.name : user?.plan?.charAt(0).toUpperCase() + user?.plan?.slice(1)}.
+            </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button type="button" onClick={cancelUpgrade} className="rounded-3xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 transition">Cancel</button>
               <button type="button" onClick={confirmUpgrade} disabled={isUpgrading} className="rounded-3xl bg-[#2F5FB3] px-5 py-3 text-sm font-bold text-white transition disabled:opacity-50">

@@ -137,6 +137,23 @@ export const useStore = create(
 
         return null;
       },
+      resetBusinessSetup: async () => {
+        const { token } = get();
+        if (!token) throw new Error('Authentication required');
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+            method: 'PATCH',
+            headers: authHeaders(token),
+            body: JSON.stringify({ businessType: '' }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || 'Failed to reset business setup');
+          set({ user: data.user });
+          return data;
+        } catch (err) {
+          throw err;
+        }
+      },
 
       setBusinessType: async (businessType) => {
         const { token } = get();
