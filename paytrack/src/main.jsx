@@ -6,6 +6,18 @@ import App from './App.jsx'
 
 const updateSW = registerSW({
   immediate: true,
+  onRegisteredSW(swUrl, registration) {
+    if (registration) {
+      // Check for a new service worker every 60 seconds while the app is open
+      setInterval(() => {
+        registration.update();
+      }, 60 * 1000);
+    }
+  },
+  onNeedRefresh() {
+    // A new version is available — activate it and reload immediately
+    updateSW(true);
+  },
 })
 
 createRoot(document.getElementById('root')).render(
@@ -13,4 +25,3 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>,
 )
-// rebuild Sat, May 30, 2026  2:38:54 PM
