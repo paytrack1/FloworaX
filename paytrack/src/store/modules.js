@@ -21,11 +21,14 @@ export const getModulesForBusinessType = (businessType) => {
     church:     [...base, 'sales'],
     ngo:        [...base, 'sales'],
 
+   clinic:     [...base, 'bookings', 'sales', 'invoices'],
+    school:     [...base, 'sales', 'invoices'],
+    other:      [...base, 'bookings', 'sales', 'invoices'],
     // Full Business
     shop:       [...base, 'sales', 'invoices'],
     event:      [...base, 'sales', 'invoices'],
     full:       [...base, 'bookings', 'sales', 'invoices'],
-  };
+  };																																																																			 
 
   return map[businessType?.toLowerCase()] || [...base, 'sales'];
 };
