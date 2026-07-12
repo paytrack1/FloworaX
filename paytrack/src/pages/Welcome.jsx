@@ -180,18 +180,36 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         </div>
       </section>
 
-      {/* ── WHO IT'S FOR ── */}
-      <section className="px-6 lg:px-10 py-4 max-w-6xl mx-auto">
-        <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-6">
-          Trusted by service businesses like
+      {/* ── WHO IT'S FOR (marquee) ── */}
+      <section className="py-4 max-w-6xl mx-auto overflow-hidden">
+        <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-6 px-6">
+          Built for service businesses like
         </p>
-        <div className="flex flex-wrap justify-center gap-2.5">
-          {['Therapists', 'Consultants', 'Coaches', 'Lawyers', 'Doctors', 'Tutors', 'Salons', 'Fitness Trainers', 'Agencies', 'Churches', 'NGOs', 'Contractors'].map((t) => (
-            <span key={t} className="bg-[#F1F5F9] text-[#475569] text-xs font-semibold px-3.5 py-2 rounded-full">
-              {t}
-            </span>
-          ))}
+        <div className="relative overflow-hidden">
+          <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white to-transparent z-10" />
+          <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white to-transparent z-10" />
+          <div className="flex gap-2.5 marquee-track">
+            {[...Array(2)].map((_, dupIndex) => (
+              <div key={dupIndex} className="flex gap-2.5 flex-shrink-0">
+                {['Therapists', 'Consultants', 'Coaches', 'Lawyers', 'Doctors', 'Tutors', 'Salons', 'Fitness Trainers', 'Agencies', 'Churches', 'NGOs', 'Contractors'].map((t) => (
+                  <span key={`${dupIndex}-${t}`} className="bg-[#F1F5F9] text-[#475569] text-xs font-semibold px-3.5 py-2 rounded-full whitespace-nowrap flex-shrink-0">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
+        <style>{`
+          .marquee-track {
+            width: max-content;
+            animation: marquee-scroll 28s linear infinite;
+          }
+          @keyframes marquee-scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+          }
+        `}</style>
       </section>
 
       {/* ── PROBLEMS ── */}
@@ -306,9 +324,8 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
             <button onClick={onGetStarted} className="w-full bg-[#185FA5] text-white py-3.5 rounded-2xl font-black text-sm active:scale-95 transition-all">
               Get Started
             </button>
+            <p className="text-center text-slate-500 text-[11px] font-medium mt-3">Starts on Free &middot; upgrade anytime from Settings</p>
           </div>
-
-          {/* Business */}
           <div className="bg-white rounded-3xl border border-[#E2E8F0] p-7 flex flex-col">
             <p className="text-xs font-black text-[#94A3B8] uppercase tracking-widest mb-2">Enterprise</p>
             <p className="font-black text-[#0F172A] text-xl mb-1">Business</p>
@@ -324,6 +341,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
             <button onClick={onGetStarted} className="w-full bg-[#F1F5F9] text-[#0F172A] py-3.5 rounded-2xl font-black text-sm active:scale-95 transition-all">
               Get Started
             </button>
+            <p className="text-center text-[#94A3B8] text-[11px] font-medium mt-3">Starts on Free &middot; upgrade anytime from Settings</p>
           </div>
         </div>
       </section>
