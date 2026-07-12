@@ -1,33 +1,56 @@
 import React, { useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
-import { Camera } from 'lucide-react';
-
-const ChevronRight = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="9 18 15 12 9 6" />
-  </svg>
-);
+import { Camera, ChevronRight } from 'lucide-react';
 
 const Settings = () => {
-  const { logout, user, setProfileImage, sales, dashboard, plans, planError, fetchPlans, upgradePlan, resetBusinessSetup } = useStore();
+  const { logout, user, setProfileImage, sales, dashboard, plans, planError, fetchPlans, upgradePlan, updateBusinessProfile } = useStore();
   const [exportStatus, setExportStatus] = useState('');
   const [showSupport, setShowSupport] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [planMessage, setPlanMessage] = useState('');
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const [resetError, setResetError] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileForm, setProfileForm] = useState({
+    businessName: user?.businessName || '',
+    businessType: user?.businessType || '',
+    phone: user?.phone || '',
+    address: user?.address || '',
+    bankAccount: user?.bankAccount || '',
+    currency: user?.currency || 'NGN',
+    timezone: user?.timezone || 'Africa/Lagos',
+  });
+  const businessTypes = ['Consultant', 'Church', 'Clinic', 'School', 'Agency', 'Freelancer', 'Other'];
   const fileInputRef = useRef(null);
+
+  const handleProfileFieldChange = (field, value) => {
+    setProfileError('');
+    setProfileForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveProfile = async () => {
+    if (!profileForm.businessName.trim() || !profileForm.businessType) {
+      setProfileError('Business name and business type are required.');
+      return;
+    }
+    setSavingProfile(true);
+    try {
+      await updateBusinessProfile(profileForm);
+      setShowEditProfile(false);
+    } catch (err) {
+      setProfileError(err.message || 'Failed to save changes.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setProfileImage(reader.result);
-    };
+    reader.onloadend = () => { setProfileImage(reader.result); };
     reader.readAsDataURL(file);
   };
 
@@ -89,80 +112,47 @@ const Settings = () => {
     }
   };
 
-  const cancelUpgrade = () => {
-    setSelectedPlan(null);
-    setPlanMessage('');
-  };
-
-  const handleResetBusinessSetup = async () => {
-    setIsResetting(true);
-    setResetError('');
-    try {
-      await resetBusinessSetup();
-      // App.jsx will automatically redirect to BusinessTypeOnboarding
-      // once user.businessType is empty.
-    } catch (err) {
-      setResetError(err.message || 'Failed to reset business setup');
-    } finally {
-      setIsResetting(false);
-      setShowResetConfirm(false);
-    }
-  };
-
   const settingsOptions = [
     {
       label: 'Store Profile',
       sub: user?.businessName || 'My Store',
       iconBg: '#EEF4FF',
       action: 'profile',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#185FA5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
-    },
-    {
-      label: 'Business Type & Modules',
-      sub: user?.businessType || 'Not set',
-      iconBg: '#EDE9FE',
-      action: 'resetBusiness',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>,
     },
     {
       label: 'Subscription',
       sub: dashboard?.subscription?.plan?.name ? `${dashboard.subscription.plan.name} plan` : 'Free plan',
       iconBg: '#FEF3C7',
       action: 'plans',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5l7 7-7 7" /></svg>,
     },
     {
       label: 'Sync Settings',
       sub: 'Auto-sync every 30 seconds',
       iconBg: '#F0FDF4',
       action: 'sync',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></svg>,
     },
     {
       label: 'Export Data',
       sub: 'Download all sales as CSV',
       iconBg: '#F5F3FF',
       action: 'export',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>,
     },
     {
       label: 'Help & Support',
       sub: 'hello@floworax.com',
       iconBg: '#FFF7ED',
       action: 'support',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EA580C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
     },
   ];
 
   const handleOption = (action) => {
     if (action === 'export') handleExportCSV();
     if (action === 'support') setShowSupport(!showSupport);
-    if (action === 'profile') fileInputRef.current?.click();
+    if (action === 'profile') setShowEditProfile(true);
     if (action === 'sync') alert('Auto-sync is enabled. Sales sync every 30 seconds when online.');
-    if (action === 'resetBusiness') setShowResetConfirm(true);
     if (action === 'plans') {
       setShowPlans(!showPlans);
-      if (!plans.length) fetchPlans();
+      if (!plans?.length) fetchPlans?.();
     }
   };
 
@@ -170,18 +160,24 @@ const Settings = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-black text-[#0F172A]">Settings</h2>
 
+      {/* PROFILE */}
       <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm">
         <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Profile</p>
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-16 h-16 rounded-2xl bg-[#2F5FB3] flex items-center justify-center overflow-hidden flex-shrink-0">
+            <div className="w-16 h-16 rounded-2xl bg-[#185FA5] flex items-center justify-center overflow-hidden flex-shrink-0">
               {user?.profileImage ? (
                 <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-white font-black text-2xl">{user?.businessName?.charAt(0).toUpperCase() || 'M'}</span>
+                <span className="text-white font-black text-2xl">
+                  {user?.businessName?.charAt(0).toUpperCase() || 'M'}
+                </span>
               )}
             </div>
-            <button onClick={() => fileInputRef.current?.click()} className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#2F5FB3] rounded-full flex items-center justify-center shadow-lg">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#185FA5] rounded-full flex items-center justify-center shadow-lg"
+            >
               <Camera size={12} className="text-white" />
             </button>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
@@ -189,29 +185,45 @@ const Settings = () => {
           <div>
             <p className="font-black text-[#0F172A] text-lg">{user?.businessName || 'My Store'}</p>
             <p className="text-slate-400 text-xs font-medium">{user?.email || ''}</p>
-            <button onClick={() => fileInputRef.current?.click()} className="text-[#2F5FB3] text-xs font-bold mt-1">
+            <button onClick={() => fileInputRef.current?.click()} className="text-[#185FA5] text-xs font-bold mt-1">
               Tap to change photo
             </button>
           </div>
         </div>
       </div>
 
+      {/* OPTIONS */}
       <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm">
         {settingsOptions.map((opt, i) => (
-          <button key={i} onClick={() => handleOption(opt.action)}
-            className={`w-full p-4 flex items-center justify-between active:bg-[#F8F9FB] transition-colors text-left ${i !== settingsOptions.length - 1 ? 'border-b border-[#F1F5F9]' : ''}`}>
+          <button
+            key={i}
+            onClick={() => handleOption(opt.action)}
+            className={`w-full p-4 flex items-center justify-between active:bg-[#F8F9FB] transition-colors text-left ${
+              i !== settingsOptions.length - 1 ? 'border-b border-[#F1F5F9]' : ''
+            }`}
+          >
             <div className="flex items-center gap-4">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: opt.iconBg }}>{opt.icon}</div>
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-black"
+                style={{ backgroundColor: opt.iconBg }}
+              >
+                {opt.action === 'profile' && '👤'}
+                {opt.action === 'plans' && '⭐'}
+                {opt.action === 'sync' && '🔄'}
+                {opt.action === 'export' && '📥'}
+                {opt.action === 'support' && '💬'}
+              </div>
               <div>
                 <p className="text-[#0F172A] font-bold text-sm">{opt.label}</p>
                 <p className="text-[#94A3B8] text-[11px] font-medium">{opt.sub}</p>
               </div>
             </div>
-            <ChevronRight />
+            <ChevronRight size={16} className="text-slate-300" />
           </button>
         ))}
       </div>
 
+      {/* SUPPORT */}
       {showSupport && (
         <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
           <p className="text-orange-800 font-bold text-sm mb-1">Contact Support</p>
@@ -222,34 +234,112 @@ const Settings = () => {
         </div>
       )}
 
-      {showResetConfirm && (
+      {/* EDIT PROFILE */}
+      {showEditProfile && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-slate-200">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Change business type</p>
-            <h2 className="text-xl font-black text-[#0F172A] mt-2">Redo business setup?</h2>
-            <p className="text-sm text-[#64748B] mt-3">
-              You'll be taken through business setup again so you can pick a new
-              business type and the modules that go with it. Your existing sales,
-              expenses, and other data will not be affected.
-            </p>
-            {resetError && (
-              <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 mt-4">
-                {resetError}
+          <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Store Profile</p>
+                <h2 className="text-xl font-black text-[#0F172A] mt-2">Edit business details</h2>
               </div>
-            )}
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button type="button" onClick={() => setShowResetConfirm(false)} className="rounded-3xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 transition">
-                Cancel
-              </button>
-              <button type="button" onClick={handleResetBusinessSetup} disabled={isResetting}
-                className="rounded-3xl bg-[#6D28D9] px-5 py-3 text-sm font-bold text-white transition disabled:opacity-50">
-                {isResetting ? 'Resetting...' : 'Yes, redo setup'}
-              </button>
+              <button type="button" onClick={() => setShowEditProfile(false)} className="text-sm text-slate-500">Close</button>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Business Name</span>
+                <input
+                  value={profileForm.businessName}
+                  onChange={(e) => handleProfileFieldChange('businessName', e.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Business Type</span>
+                <select
+                  value={profileForm.businessType}
+                  onChange={(e) => handleProfileFieldChange('businessType', e.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
+                >
+                  <option value="">Select a type</option>
+                  {businessTypes.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Phone</span>
+                <input
+                  value={profileForm.phone}
+                  onChange={(e) => handleProfileFieldChange('phone', e.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
+                  placeholder="+234 800 000 0000"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Address</span>
+                <textarea
+                  value={profileForm.address}
+                  onChange={(e) => handleProfileFieldChange('address', e.target.value)}
+                  rows={2}
+                  className="mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Bank Account</span>
+                <input
+                  value={profileForm.bankAccount}
+                  onChange={(e) => handleProfileFieldChange('bankAccount', e.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
+                  placeholder="Account name / number"
+                />
+              </label>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Currency</span>
+                  <p className="mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFF] px-4 py-3 text-sm text-slate-500">NGN &mdash; Nigerian Naira</p>
+                </div>
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Timezone</span>
+                  <p className="mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFF] px-4 py-3 text-sm text-slate-500">Africa/Lagos</p>
+                </div>
+              </div>
+
+              {profileError && (
+                <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-red-600 text-sm font-medium">{profileError}</p>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditProfile(false)}
+                  className="flex-1 py-3 border border-[#E2E8F0] rounded-2xl font-bold text-[#64748B] text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveProfile}
+                  disabled={savingProfile}
+                  className="flex-1 py-3 bg-[#185FA5] text-white rounded-2xl font-bold text-sm disabled:opacity-60"
+                >
+                  {savingProfile ? 'Saving…' : 'Save Changes'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* PLANS */}
       {showPlans && (
         <div className="bg-white rounded-3xl border border-[#E2E8F0] p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
@@ -261,17 +351,29 @@ const Settings = () => {
           </div>
           {planError && <p className="text-sm text-red-600 mb-4">{planError}</p>}
           <div className="grid gap-4 sm:grid-cols-3">
-            {plans.map((plan) => (
-              <button key={plan.id} type="button" onClick={() => openConfirmUpgrade(plan)}
-                className={`rounded-3xl border p-4 text-left transition ${plan.id === user?.plan ? 'border-[#185FA5] bg-[#EFF6FF] cursor-default' : 'border-[#E2E8F0] bg-white hover:shadow-sm'}`}>
+            {(plans || []).map((plan) => (
+              <button
+                key={plan.id}
+                type="button"
+                onClick={() => openConfirmUpgrade(plan)}
+                className={`rounded-3xl border p-4 text-left transition ${
+                  plan.id === user?.plan
+                    ? 'border-[#185FA5] bg-[#EFF6FF] cursor-default'
+                    : 'border-[#E2E8F0] bg-white hover:shadow-sm'
+                }`}
+              >
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <p className="text-sm font-black text-[#0F172A]">{plan.name}</p>
                     <p className="text-xs text-[#64748B] mt-1">{plan.description}</p>
                   </div>
-                  {plan.id === user?.plan && <span className="text-xs font-bold text-[#0F57B3]">Current</span>}
+                  {plan.id === user?.plan && (
+                    <span className="text-xs font-bold text-[#185FA5]">Current</span>
+                  )}
                 </div>
-                <p className="text-2xl font-black text-[#0F172A] mt-4">₦{plan.price} / month</p>
+                <p className="text-2xl font-black text-[#0F172A] mt-4">
+                  ₦{plan.price?.toLocaleString()} / month
+                </p>
                 <p className="text-xs text-[#94A3B8] mt-2">{plan.badge}</p>
               </button>
             ))}
@@ -280,6 +382,7 @@ const Settings = () => {
         </div>
       )}
 
+      {/* CONFIRM UPGRADE MODAL */}
       {selectedPlan && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
           <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl border border-slate-200">
@@ -288,33 +391,42 @@ const Settings = () => {
                 <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Confirm plan upgrade</p>
                 <h2 className="text-xl font-black text-[#0F172A] mt-2">Upgrade to {selectedPlan.name}</h2>
               </div>
-              <button type="button" onClick={cancelUpgrade} className="text-sm text-slate-500">Cancel</button>
+              <button type="button" onClick={() => setSelectedPlan(null)} className="text-sm text-slate-500">Cancel</button>
             </div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div className="rounded-3xl border border-[#E2E8F0] p-4 bg-[#F8FAFF]">
-                <p className="text-xs text-slate-400 uppercase tracking-[0.3em] font-bold">New monthly limit</p>
-                <p className="mt-3 text-2xl font-black text-[#0F172A]">₦{selectedPlan.price}</p>
+                <p className="text-xs text-slate-400 uppercase tracking-[0.3em] font-bold">Monthly cost</p>
+                <p className="mt-3 text-2xl font-black text-[#0F172A]">
+                  ₦{selectedPlan.price?.toLocaleString()}
+                </p>
                 <p className="text-xs text-[#64748B] mt-2">Billed monthly</p>
               </div>
               <div className="rounded-3xl border border-[#E2E8F0] p-4">
                 <p className="text-xs text-slate-400 uppercase tracking-[0.3em] font-bold">Plan benefits</p>
                 <ul className="mt-3 space-y-2 text-sm text-[#475569]">
-                  {selectedPlan.features.map((feature) => (
+                  {(selectedPlan.features || []).map((feature) => (
                     <li key={feature} className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-[#0F172A]" />
+                      <span className="h-2 w-2 rounded-full bg-[#185FA5] flex-shrink-0" />
                       {feature}
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
-            <p className="text-sm text-[#475569] mt-5">
-              You will immediately move to {selectedPlan.name}. Your current plan is{' '}
-              {user?.plan === selectedPlan.id ? selectedPlan.name : user?.plan?.charAt(0).toUpperCase() + user?.plan?.slice(1)}.
-            </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button type="button" onClick={cancelUpgrade} className="rounded-3xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 transition">Cancel</button>
-              <button type="button" onClick={confirmUpgrade} disabled={isUpgrading} className="rounded-3xl bg-[#2F5FB3] px-5 py-3 text-sm font-bold text-white transition disabled:opacity-50">
+              <button
+                type="button"
+                onClick={() => setSelectedPlan(null)}
+                className="rounded-3xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmUpgrade}
+                disabled={isUpgrading}
+                className="rounded-3xl bg-[#185FA5] px-5 py-3 text-sm font-bold text-white transition disabled:opacity-50"
+              >
                 {isUpgrading ? 'Upgrading…' : `Confirm upgrade to ${selectedPlan.name}`}
               </button>
             </div>
@@ -322,16 +434,22 @@ const Settings = () => {
         </div>
       )}
 
+      {/* EXPORT STATUS */}
       {exportStatus && (
         <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
           <p className="text-green-700 text-sm font-medium text-center">{exportStatus}</p>
         </div>
       )}
 
-      <button onClick={logout} className="w-full py-4 text-red-500 font-bold bg-red-50 rounded-2xl border border-red-100 active:scale-95 transition-transform">
+      <button
+        onClick={logout}
+        className="w-full py-4 text-red-500 font-bold bg-red-50 rounded-2xl border border-red-100 active:scale-95 transition-transform"
+      >
         Log Out
       </button>
-      <p className="text-center text-[#CBD5E1] text-[10px] font-bold uppercase tracking-widest">Flowora v1.0.4</p>
+      <p className="text-center text-[#CBD5E1] text-[10px] font-bold uppercase tracking-widest">
+        Flowora v1.0.4
+      </p>
     </div>
   );
 };

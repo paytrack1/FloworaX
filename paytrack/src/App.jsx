@@ -79,7 +79,8 @@ const App = () => {
       case 'reports':   return <Reports />;
       case 'expenses':  return <Expenses />;
       case 'bookings':  return <Bookings />;
-      case 'invoices':  return <Invoices />;
+      case 'invoices': return <Invoices />;
+      case 'customers': return <Customers />;
       case 'customers': return <Customers />;
       case 'settings':  return <Settings />;
       default:          return <Home />;

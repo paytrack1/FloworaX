@@ -11,6 +11,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const serviceRoutes = require('./src/routes/services');
 const bookingRoutes = require('./src/routes/bookings');
 const invoiceRoutes = require('./src/routes/invoices');
+const customerRoutes = require('./src/routes/customers');
 // TODO: customer module not built yet (no route file or model) — re-enable once it exists
 // const customerRoutes = require('./src/routes/customers');
 const Invoice  = require('./src/models/Invoice');
@@ -805,6 +806,7 @@ app.post('/webhook/paystack', (req, res, next) => {
 app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/customers', customerRoutes);
 // TODO: re-enable once ./src/routes/customers.js and its model exist
 // app.use('/api/customers', customerRoutes);
 
