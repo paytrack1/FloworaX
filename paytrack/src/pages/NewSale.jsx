@@ -3,7 +3,7 @@ import { X, CheckCircle, CreditCard, Smartphone, Banknote } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
 const NewSale = ({ onBack }) => {
-  const { addSale } = useStore();
+  const { addSale, user } = useStore();
 
   const [itemName, setItemName] = useState('');
   const [total, setTotal] = useState('');
@@ -11,31 +11,27 @@ const NewSale = ({ onBack }) => {
   const [reference, setReference] = useState('');
   const [isDraft, setIsDraft] = useState(false);
 
-  // ── Clean reference — strip "Session Id:", spaces, labels ──
   const cleanReference = (raw) => {
     return raw
-      .replace(/session\s*id\s*:/gi, '')   // remove "Session Id:"
-      .replace(/rrn\s*:/gi, '')             // remove "RRN:"
-      .replace(/ref\s*:/gi, '')             // remove "Ref:"
-      .replace(/reference\s*:/gi, '')       // remove "Reference:"
-      .trim();                              // remove spaces
+      .replace(/session\s*id\s*:/gi, '')
+      .replace(/rrn\s*:/gi, '')
+      .replace(/ref\s*:/gi, '')
+      .replace(/reference\s*:/gi, '')
+      .trim();
   };
 
   const handleReferenceChange = (e) => {
-    const cleaned = cleanReference(e.target.value);
-    setReference(cleaned);
+    setReference(cleanReference(e.target.value));
   };
 
   const isInvalid = (!total || total <= 0) || (paymentMethod !== 'cash' && !reference);
 
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
-
     if (isInvalid) {
       alert("Please enter an amount. For Transfer/POS, a Reference ID is required.");
       return;
     }
-
     try {
       addSale({
         itemName: itemName || "General Sale",
@@ -44,7 +40,6 @@ const NewSale = ({ onBack }) => {
         reference: paymentMethod === 'cash' ? null : cleanReference(reference),
         status: isDraft ? 'draft' : 'completed',
       });
-
       onBack();
     } catch (err) {
       console.error("Sale Error:", err);
@@ -58,9 +53,14 @@ const NewSale = ({ onBack }) => {
       <div className="bg-white p-6 flex justify-between items-center border-b border-slate-100">
         <div>
           <h2 className="text-xl font-black text-[#0F172A]">New Transaction</h2>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Adeola Store Ledger</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            {user?.businessName || 'Store'} Ledger
+          </p>
         </div>
-        <button onClick={onBack} className="p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-red-50 hover:text-red-500 transition-all">
+        <button
+          onClick={onBack}
+          className="p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-red-50 hover:text-red-500 transition-all"
+        >
           <X size={20} />
         </button>
       </div>
@@ -73,7 +73,7 @@ const NewSale = ({ onBack }) => {
             type="text"
             value={itemName}
             onChange={(e) => setItemName(e.target.value)}
-            className="w-full p-4 rounded-2xl border border-slate-200 focus:border-[#2F5FB3] outline-none font-bold"
+            className="w-full p-4 rounded-2xl border border-slate-200 focus:border-[#185FA5] outline-none font-bold"
             placeholder="e.g. 2 Loaves of Bread"
           />
         </div>
@@ -86,7 +86,7 @@ const NewSale = ({ onBack }) => {
             required
             value={total}
             onChange={(e) => setTotal(e.target.value)}
-            className="w-full p-4 text-3xl font-black rounded-2xl border border-slate-200 focus:border-[#2F5FB3] outline-none"
+            className="w-full p-4 text-3xl font-black rounded-2xl border border-slate-200 focus:border-[#185FA5] outline-none"
             placeholder="0.00"
           />
         </div>
@@ -101,7 +101,9 @@ const NewSale = ({ onBack }) => {
                 type="button"
                 onClick={() => setPaymentMethod(m)}
                 className={`py-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${
-                  paymentMethod === m ? 'border-[#2F5FB3] bg-blue-50 text-[#2F5FB3]' : 'border-transparent bg-white text-slate-400'
+                  paymentMethod === m
+                    ? 'border-[#185FA5] bg-blue-50 text-[#185FA5]'
+                    : 'border-transparent bg-white text-slate-400'
                 }`}
               >
                 {m === 'cash' && <Banknote size={24} />}
@@ -123,10 +125,9 @@ const NewSale = ({ onBack }) => {
               required
               value={reference}
               onChange={handleReferenceChange}
-              className="w-full p-4 rounded-2xl border-2 border-red-50 focus:border-[#2F5FB3] outline-none font-mono"
+              className="w-full p-4 rounded-2xl border-2 border-red-50 focus:border-[#185FA5] outline-none font-mono"
               placeholder="Paste reference number here..."
             />
-            {/* Show cleaned preview */}
             {reference && (
               <p className="text-[10px] text-green-600 font-mono ml-1">
                 ✅ Cleaned: {reference}
@@ -142,7 +143,7 @@ const NewSale = ({ onBack }) => {
           type="button"
           onClick={handleSubmit}
           className={`w-full py-5 rounded-[2rem] font-black text-white shadow-xl transition-all flex items-center justify-center gap-2
-            ${isInvalid ? 'bg-slate-300' : 'bg-[#2F5FB3] active:scale-95'}`}
+            ${isInvalid ? 'bg-slate-300' : 'bg-[#185FA5] active:scale-95'}`}
         >
           <CheckCircle size={20} />
           {isDraft ? 'SAVE DRAFT' : 'COMPLETE SALE'}
