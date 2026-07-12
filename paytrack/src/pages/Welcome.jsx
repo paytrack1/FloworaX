@@ -63,7 +63,7 @@ const PROBLEMS = [
 const FAQS = [
   {
     q: 'Is FloworaX really free to start?',
-    a: 'Yes. The Free plan includes sales, services, bookings, finance tracking, and reports, no card required. Upgrade only when you outgrow the limits.',
+    a: 'Yes. The Free plan includes sales, services, bookings, finance tracking, and reports, no card required. Upgrade to Pro or Business anytime you need higher limits or extra features like invoices, events, and staff tools.',
   },
   {
     q: 'My business is not on the list. Does FloworaX still work for me?',

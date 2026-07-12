@@ -76,8 +76,8 @@ const BusinessTypeOnboarding = () => {
     'Other',
   ];
 
-  const currencies = ['NGN', 'USD', 'EUR', 'GHS'];
-  const timezones = ['Africa/Lagos', 'Africa/Abidjan', 'Europe/London', 'America/New_York', 'Asia/Dubai'];
+  const currencies = ['NGN'];
+  const timezones = ['Africa/Lagos'];
 
   const handleChange = (field, value) => {
     setError('');
