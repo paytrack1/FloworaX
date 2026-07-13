@@ -41,7 +41,7 @@ const Privacy = () => (
         </section>
         <section>
           <h2 className="font-black text-[#0F172A] text-lg mb-2">9. Contact</h2>
-          <p>Privacy questions: <a href="mailto:floworax2@gmail.com" className="text-[#185FA5] font-bold">hello@floworax.com</a>.</p>
+          <p>Privacy questions: <a href="mailto:floworax2@gmail.com" className="text-[#185FA5] font-bold">floworax2@gmail.com</a>.</p>
         </section>
       </div>
     </div>
