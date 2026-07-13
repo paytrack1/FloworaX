@@ -14,6 +14,11 @@ import Customers from './pages/Customers';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import PublicBooking from './pages/PublicBooking';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import Cookies from './pages/Cookies';
+import Contact from './pages/Contact';
+import NotFound from './pages/NotFound';
 import BusinessTypeOnboarding from './pages/BusinessTypeOnboarding';
 import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
@@ -41,6 +46,11 @@ const App = () => {
   if (path.startsWith('/book/') || path.startsWith('/booking/')) {
     return <PublicBooking />;
   }
+
+  if (path === '/terms') return <Terms />;
+  if (path === '/privacy') return <Privacy />;
+  if (path === '/cookies') return <Cookies />;
+  if (path === '/contact') return <Contact />;
 
   if (path === '/reset-password') {
     const token = new URLSearchParams(window.location.search).get('token');

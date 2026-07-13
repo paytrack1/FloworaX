@@ -816,6 +816,31 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
+// -- CONTACT FORM --
+app.post(`/api/contact`, async (req, res) => {
+  const { name, email, message } = req.body;
+  if (!name || !email || !message)
+    return res.status(400).json({ error: `name, email and message are required` });
+
+  try {
+    if (resend) {
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: `floworax2@gmail.com`,
+        reply_to: email,
+        subject: `New contact form message from ` + name,
+        html: `<p><strong>Name:</strong> ` + name + `</p><p><strong>Email:</strong> ` + email + `</p><p><strong>Message:</strong></p><p>` + message + `</p>`,
+      });
+    } else {
+      console.log(`[DEV] Contact form from ` + email + `: ` + message);
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error(`Contact form error:`, err.stack || err);
+    res.status(500).json({ error: `Failed to send message` });
+  }
+});
+
 // ── 404 handler ──
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
