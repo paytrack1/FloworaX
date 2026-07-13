@@ -139,7 +139,7 @@ const Settings = () => {
     },
     {
       label: 'Help & Support',
-      sub: 'hello@floworax.com',
+      sub: 'floworax2@gmail.com',
       iconBg: '#FFF7ED',
       action: 'support',
     },
@@ -228,8 +228,8 @@ const Settings = () => {
         <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
           <p className="text-orange-800 font-bold text-sm mb-1">Contact Support</p>
           <p className="text-orange-600 text-xs mb-3">Send us an email and we will respond within 24 hours.</p>
-          <a href="mailto:hello@floworax.com" className="bg-orange-500 text-white text-sm font-bold px-4 py-2 rounded-xl inline-block">
-            hello@floworax.com
+          <a href="mailto:floworax2@gmail.com" className="bg-orange-500 text-white text-sm font-bold px-4 py-2 rounded-xl inline-block">
+            floworax2@gmail.com
           </a>
         </div>
       )}

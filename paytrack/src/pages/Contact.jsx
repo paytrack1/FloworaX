@@ -19,7 +19,7 @@ const Contact = () => {
       if (!res.ok) throw new Error("Failed to send message");
       setSent(true);
     } catch (err) {
-      setError("Something went wrong. Please try again or email hello@floworax.com directly.");
+      setError("Something went wrong. Please try again or email floworax2@gmail.com directly.");
     }
   };
 
@@ -32,7 +32,7 @@ const Contact = () => {
         {sent ? (
           <div className="rounded-2xl bg-green-50 border border-green-200 p-4 text-green-700 text-sm font-medium">
             Thanks! We will get back to you within 24 hours. You can also reach us directly at{" "}
-            <a href="mailto:hello@floworax.com" className="font-bold">hello@floworax.com</a>.
+            <a href="mailto:floworax2@gmail.com" className="font-bold">floworax2@gmail.com</a>.
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
