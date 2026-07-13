@@ -152,17 +152,20 @@ const BusinessTypeOnboarding = () => {
               </label>
 
               <label className="block">
-                <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Business Type</span>
-                <select
-                  value={form.businessType}
-                  onChange={(e) => handleChange('businessType', e.target.value)}
-                  className="mt-2 w-full rounded-3xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
-                >
-                  <option value="">Select a type</option>
-                  {businessTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Business Category</span>
+                <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                  {options.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleChange("businessType", opt.value)}
+                      className={"text-left rounded-2xl border p-4 transition " + (form.businessType === opt.value ? "border-[#185FA5] bg-[#EFF6FF]" : "border-[#E2E8F0] bg-white")}
+                    >
+                      <p className="font-black text-sm text-[#0F172A]">{opt.title}</p>
+                      <p className="text-xs text-[#64748B] mt-1">{opt.description}</p>
+                    </button>
                   ))}
-                </select>
+                </div>
               </label>
             </div>
 

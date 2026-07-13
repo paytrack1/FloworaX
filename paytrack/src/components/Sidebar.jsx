@@ -1,7 +1,7 @@
 import React from "react";
 import { Home, BarChart2, FileText, Settings, LogOut, Plus, Zap, TrendingDown, Calendar, Receipt, Users } from "lucide-react";
 import { useStore } from "../store/useStore";
-import { getModulesForBusinessType } from "../store/modules";
+
 
 const allTabs = [
   { id: "home",      label: "Home",      icon: Home,         alwaysShow: true },
@@ -16,7 +16,7 @@ const allTabs = [
 
 const Sidebar = () => {
   const { activeTab, setActiveTab, setSaleModal, logout, user } = useStore();
-  const modules = getModulesForBusinessType(user?.businessType);
+  const modules = user?.modules || ["sales"];
   const visibleTabs = allTabs.filter(({ alwaysShow, module }) => {
     if (alwaysShow) return true;
     if (module) return modules.includes(module);
