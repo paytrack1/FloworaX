@@ -409,6 +409,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         <a href="/privacy" className="hover:text-[#185FA5]">Privacy</a>
         <a href="/cookies" className="hover:text-[#185FA5]">Cookies</a>
         <a href="/contact" className="hover:text-[#185FA5]">Contact</a>
+        <a href="/waitlist" className="hover:text-[#185FA5]">Waitlist</a>
       </div>
       <p className="text-[#94A3B8] text-xs font-medium">&copy; {new Date().getFullYear()} FloworaX. All rights reserved.</p>
       </footer>

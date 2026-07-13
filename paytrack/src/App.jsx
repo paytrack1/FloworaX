@@ -18,6 +18,7 @@ import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import Cookies from './pages/Cookies';
 import Contact from './pages/Contact';
+import Waitlist from './pages/Waitlist';
 import NotFound from './pages/NotFound';
 import BusinessTypeOnboarding from './pages/BusinessTypeOnboarding';
 import VerifyEmail from './pages/VerifyEmail';
@@ -51,6 +52,7 @@ const App = () => {
   if (path === '/privacy') return <Privacy />;
   if (path === '/cookies') return <Cookies />;
   if (path === '/contact') return <Contact />;
+  if (path === '/waitlist') return <Waitlist />;
 
   if (path === '/reset-password') {
     const token = new URLSearchParams(window.location.search).get('token');

@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Invoice = require('../models/Invoice');
 const requireAuth = require('../middleware/auth');
+const { requireFeature } = require('../middleware/plan');
 
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireFeature('invoices'), async (req, res) => {
   const { clientName, clientEmail, items, amount, dueDate, notes } = req.body;
   if (!clientName || typeof amount !== 'number') {
     return res.status(400).json({ error: 'clientName and amount are required' });
@@ -28,7 +29,7 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, requireFeature('invoices'), async (req, res) => {
   try {
     const invoices = await Invoice.find({ userId: req.user.id }).sort({ createdAt: -1 });
     res.json({ success: true, count: invoices.length, invoices });
@@ -37,7 +38,7 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
-router.patch('/:id/pay', requireAuth, async (req, res) => {
+router.patch('/:id/pay', requireAuth, requireFeature('invoices'), async (req, res) => {
   try {
     const invoice = await Invoice.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
@@ -51,7 +52,7 @@ router.patch('/:id/pay', requireAuth, async (req, res) => {
   }
 });
 
-router.patch('/:id', requireAuth, async (req, res) => {
+router.patch('/:id', requireAuth, requireFeature('invoices'), async (req, res) => {
   try {
     const updates = {};
     if (req.body.status) updates.status = req.body.status;
@@ -71,7 +72,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
   }
 });
 
-router.delete('/:id', requireAuth, async (req, res) => {
+router.delete('/:id', requireAuth, requireFeature('invoices'), async (req, res) => {
   try {
     await Invoice.deleteOne({ _id: req.params.id, userId: req.user.id });
     res.json({ success: true });
@@ -81,4 +82,3 @@ router.delete('/:id', requireAuth, async (req, res) => {
 });
 
 module.exports = router;
-

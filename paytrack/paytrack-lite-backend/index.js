@@ -12,6 +12,7 @@ const serviceRoutes = require('./src/routes/services');
 const bookingRoutes = require('./src/routes/bookings');
 const invoiceRoutes = require('./src/routes/invoices');
 const customerRoutes = require('./src/routes/customers');
+const waitlistRoutes = require('./src/routes/waitlist');
 // TODO: customer module not built yet (no route file or model) — re-enable once it exists
 // const customerRoutes = require('./src/routes/customers');
 const Invoice  = require('./src/models/Invoice');
@@ -807,6 +808,7 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/waitlist', waitlistRoutes);
 // TODO: re-enable once ./src/routes/customers.js and its model exist
 // app.use('/api/customers', customerRoutes);
 
