@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, BarChart2, Settings, TrendingDown, Calendar, Receipt, Users } from "lucide-react";
+import { Home, BarChart2, Settings, TrendingDown, Calendar, CalendarDays, Receipt, Users } from "lucide-react";
 import { useStore } from "../store/useStore";
 
 

@@ -12,6 +12,7 @@ const Home = () => {
     { title: 'Transactions', value: dashboard?.summary?.transactionCount ?? '0', subtitle: 'Completed this month', accent: 'from-violet-500 to-indigo-500' },
     { title: 'Bookings', value: dashboard?.subscription?.usage?.monthlyBookings ?? '0', subtitle: 'Monthly bookings', accent: 'from-amber-500 to-orange-500' },
     { title: 'Services', value: dashboard?.subscription?.usage?.activeServices ?? '0', subtitle: 'Active services', accent: 'from-sky-500 to-blue-500' },
+    { title: 'Events', value: dashboard?.subscription?.usage?.activeEvents ?? '0', subtitle: 'Active events', accent: 'from-fuchsia-500 to-pink-500' },
   ];
 
   return (
@@ -58,17 +59,17 @@ const Home = () => {
             <div className="rounded-2xl bg-[#F8FAFF] p-4">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Monthly sales</p>
               <p className="mt-3 text-2xl font-black text-[#0F172A]">{dashboard?.subscription?.usage?.monthlySales ?? '0'}</p>
-              <p className="text-xs text-[#64748B] mt-1">Limit: {dashboard?.subscription?.limits?.monthlySales === null ? 'Unlimited' : dashboard?.subscription?.limits?.monthlySales}</p>
+              <p className="text-xs text-[#64748B] mt-1">Limit: {dashboard?.subscription?.limits?.sales === null ? 'Unlimited' : dashboard?.subscription?.limits?.sales}</p>
             </div>
             <div className="rounded-2xl bg-[#F8FAFF] p-4">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Monthly bookings</p>
               <p className="mt-3 text-2xl font-black text-[#0F172A]">{dashboard?.subscription?.usage?.monthlyBookings ?? '0'}</p>
-              <p className="text-xs text-[#64748B] mt-1">Limit: {dashboard?.subscription?.limits?.monthlyBookings === null ? 'Unlimited' : dashboard?.subscription?.limits?.monthlyBookings}</p>
+              <p className="text-xs text-[#64748B] mt-1">Limit: {dashboard?.subscription?.limits?.bookings === null ? 'Unlimited' : dashboard?.subscription?.limits?.bookings}</p>
             </div>
             <div className="rounded-2xl bg-[#F8FAFF] p-4">
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Active services</p>
-              <p className="mt-3 text-2xl font-black text-[#0F172A]">{dashboard?.subscription?.usage?.activeServices ?? '0'}</p>
-              <p className="text-xs text-[#64748B] mt-1">Limit: {dashboard?.subscription?.limits?.services === null ? 'Unlimited' : dashboard?.subscription?.limits?.services}</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Active events</p>
+              <p className="mt-3 text-2xl font-black text-[#0F172A]">{dashboard?.subscription?.usage?.activeEvents ?? '0'}</p>
+              <p className="text-xs text-[#64748B] mt-1">Limit: {dashboard?.subscription?.limits?.events === null ? 'Unlimited' : dashboard?.subscription?.limits?.events}</p>
             </div>
           </div>
           <p className="text-sm text-[#475569]">{dashboard?.subscription?.plan?.description || 'Your plan details will appear here once your dashboard loads.'}</p>

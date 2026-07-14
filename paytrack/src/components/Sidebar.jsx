@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, BarChart2, FileText, Settings, LogOut, Plus, Zap, TrendingDown, Calendar, Receipt, Users } from "lucide-react";
+import { Home, BarChart2, FileText, Settings, LogOut, Plus, Zap, TrendingDown, Calendar, CalendarDays, Receipt, Users } from "lucide-react";
 import { useStore } from "../store/useStore";
 
 
@@ -9,6 +9,7 @@ const allTabs = [
   { id: "reports",   label: "Reports",   icon: FileText,     alwaysShow: true },
   { id: "expenses",  label: "Expenses",  icon: TrendingDown, alwaysShow: true },
   { id: "bookings",  label: "Bookings",  icon: Calendar,     module: "bookings" },
+  { id: "events",    label: "Events",    icon: CalendarDays, module: "events" },
   { id: "invoices",  label: "Invoices",  icon: Receipt,      module: "invoices" },
   { id: "customers", label: "Customers", icon: Users,        alwaysShow: true },
   { id: "settings",  label: "Settings",  icon: Settings,     alwaysShow: true },

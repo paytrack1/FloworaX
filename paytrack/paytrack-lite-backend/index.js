@@ -14,8 +14,6 @@ const invoiceRoutes = require('./src/routes/invoices');
 const customerRoutes = require('./src/routes/customers');
 const waitlistRoutes = require('./src/routes/waitlist');
 const eventRoutes = require('./src/routes/events');
-// TODO: customer module not built yet (no route file or model) — re-enable once it exists
-// const customerRoutes = require('./src/routes/customers');
 const Invoice  = require('./src/models/Invoice');
 const Service  = require('./src/models/Service');
 const Booking  = require('./src/models/Booking');
@@ -325,7 +323,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-   // ── VERIFY EMAIL ──
+// ── VERIFY EMAIL ──
 app.post('/api/auth/verify-email', requireAuth, async (req, res) => {
   const { otp } = req.body;
   if (!otp) return res.status(400).json({ error: 'Verification code is required' });
@@ -351,6 +349,7 @@ app.post('/api/auth/verify-email', requireAuth, async (req, res) => {
     res.status(500).json({ error: 'Verification failed' });
   }
 });
+
 // ── RESEND OTP (for logged-in, unverified user) ──
 app.post('/api/auth/resend-otp', requireAuth, async (req, res) => {
   try {
@@ -378,14 +377,13 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   if (!email) return res.status(400).json({ error: 'Email is required' });
   try {
     const user = await User.findOne({ email: email.toLowerCase().trim() });
-    // Always return the same generic response, whether or not the account exists
     if (!user) {
       return res.json({ success: true, message: 'If an account exists, a reset link has been sent.' });
     }
 
     const rawToken   = crypto.randomBytes(32).toString('hex');
     const tokenHash  = crypto.createHash('sha256').update(rawToken).digest('hex');
-    const tokenExpiry = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+    const tokenExpiry = new Date(Date.now() + 30 * 60 * 1000);
 
     user.resetTokenHash   = tokenHash;
     user.resetTokenExpiry = tokenExpiry;
@@ -715,7 +713,7 @@ app.get('/api/subscription', requireAuth, async (req, res) => {
 });
 
 app.post('/api/subscription/upgrade', requireAuth, async (req, res) => {
-  const { planId } = req.body;
+  const { planId, callbackUrl } = req.body;
   if (!planId) return res.status(400).json({ error: 'planId is required' });
   const plan = getPlanList().find((p) => p.id === planId);
   if (!plan) return res.status(400).json({ error: 'Invalid plan selected' });
@@ -723,12 +721,60 @@ app.post('/api/subscription/upgrade', requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    user.plan = planId;
-    await user.save();
-    res.json({ success: true, subscription: await buildSubscriptionSummary(req.user.id), user: formatUserResponse(user) });
+
+    if (plan.price === 0) {
+      user.plan = planId;
+      await user.save();
+      return res.json({ success: true, subscription: await buildSubscriptionSummary(req.user.id), user: formatUserResponse(user) });
+    }
+
+    const reference = `sub-${user._id}-${Date.now()}`;
+    const { data } = await axios.post(
+      `${PAYSTACK_BASE_URL}/transaction/initialize`,
+      {
+        email: user.email,
+        amount: Math.round(plan.price * 100),
+        reference,
+        callback_url: callbackUrl || process.env.FRONTEND_URL,
+        metadata: { type: 'subscription', planId, userId: user._id.toString() },
+      },
+      { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`, 'Content-Type': 'application/json' } }
+    );
+
+    res.json({
+      success: true,
+      requiresPayment: true,
+      authorizationUrl: data.data.authorization_url,
+      reference: data.data.reference,
+    });
   } catch (err) {
-    console.error('Upgrade error:', err);
-    res.status(500).json({ error: 'Failed to upgrade subscription' });
+    console.error('Upgrade error:', err.response?.data || err.message);
+    res.status(500).json({ error: 'Failed to start subscription upgrade' });
+  }
+});
+
+// ── VERIFY SUBSCRIPTION PAYMENT ──
+app.get('/api/subscription/verify/:reference', requireAuth, async (req, res) => {
+  const { reference } = req.params;
+  try {
+    const { isVerified } = await verifyPaystackTransaction(reference);
+    if (isVerified && reference.startsWith(`sub-${req.user.id}-`)) {
+      const { data } = await axios.get(
+        `${PAYSTACK_BASE_URL}/transaction/verify/${reference}`,
+        { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
+      );
+      const planId = data?.data?.metadata?.planId;
+      if (planId) {
+        const user = await User.findById(req.user.id);
+        user.plan = planId;
+        await user.save();
+        return res.json({ success: true, subscription: await buildSubscriptionSummary(req.user.id), user: formatUserResponse(user) });
+      }
+    }
+    res.json({ success: false, verified: false });
+  } catch (err) {
+    console.error('Subscription verify error:', err);
+    res.status(500).json({ error: 'Failed to verify subscription payment' });
   }
 });
 
@@ -790,7 +836,13 @@ app.post('/webhook/paystack', (req, res, next) => {
     if (event === 'charge.success') {
       const { reference, amount, metadata } = data;
       console.log(`Payment confirmed: ${amount / 100} ref: ${reference}`);
-            if (metadata?.ticketId || (reference && reference.startsWith('event-ticket-'))) {
+
+      // Branches are siblings, checked in order. First match wins.
+      if (metadata?.type === 'subscription' && metadata?.userId && metadata?.planId) {
+        await User.findByIdAndUpdate(metadata.userId, { plan: metadata.planId });
+        console.log(`Subscription upgraded via webhook: user ${metadata.userId} -> ${metadata.planId}`);
+
+      } else if (metadata?.ticketId || (reference && reference.startsWith('event-ticket-'))) {
         const ticketId = metadata?.ticketId || reference.replace('event-ticket-', '');
         const ticket = await EventTicket.findOneAndUpdate(
           { _id: ticketId, paymentStatus: { $ne: 'paid' } },
@@ -808,11 +860,13 @@ app.post('/webhook/paystack', (req, res, next) => {
             });
           }
         }
+
       } else if (metadata?.bookingId || (reference && reference.startsWith('booking-'))) {
         const bookingId = metadata?.bookingId || reference.replace('booking-', '');
         await Booking.findByIdAndUpdate(bookingId, {
           paymentStatus: 'paid', status: 'confirmed', paymentRef: reference,
         });
+
       } else {
         await Sale.findOneAndUpdate(
           { id: reference },
@@ -832,38 +886,36 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/waitlist', waitlistRoutes);
 app.use('/api/events', eventRoutes);
-// TODO: re-enable once ./src/routes/customers.js and its model exist
-// app.use('/api/customers', customerRoutes);
-
-// ── Global error handler ──
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err.stack || err);
-  res.status(500).json({ error: 'Internal server error' });
-});
 
 // -- CONTACT FORM --
-app.post(`/api/contact`, async (req, res) => {
+app.post('/api/contact', async (req, res) => {
   const { name, email, message } = req.body;
   if (!name || !email || !message)
-    return res.status(400).json({ error: `name, email and message are required` });
+    return res.status(400).json({ error: 'name, email and message are required' });
 
   try {
     if (resend) {
       await resend.emails.send({
         from: EMAIL_FROM,
-        to: `floworax2@gmail.com`,
+        to: 'floworax2@gmail.com',
         reply_to: email,
-        subject: `New contact form message from ` + name,
-        html: `<p><strong>Name:</strong> ` + name + `</p><p><strong>Email:</strong> ` + email + `</p><p><strong>Message:</strong></p><p>` + message + `</p>`,
+        subject: `New contact form message from ${name}`,
+        html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Message:</strong></p><p>${message}</p>`,
       });
     } else {
-      console.log(`[DEV] Contact form from ` + email + `: ` + message);
+      console.log(`[DEV] Contact form from ${email}: ${message}`);
     }
     res.json({ success: true });
   } catch (err) {
-    console.error(`Contact form error:`, err.stack || err);
-    res.status(500).json({ error: `Failed to send message` });
+    console.error('Contact form error:', err.stack || err);
+    res.status(500).json({ error: 'Failed to send message' });
   }
+});
+
+// ── Global error handler ──
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.stack || err);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 // ── 404 handler ──

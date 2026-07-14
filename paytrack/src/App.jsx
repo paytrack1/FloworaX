@@ -10,6 +10,7 @@ import SalesHistory from './pages/SalesHistory';
 import Expenses from './pages/Expenses';
 import Bookings from './pages/Bookings';
 import Invoices from './pages/Invoices';
+import Events from './pages/Events';
 import Customers from './pages/Customers';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
@@ -92,6 +93,7 @@ const App = () => {
       case 'expenses':  return <Expenses />;
       case 'bookings':  return <Bookings />;
       case 'invoices': return <Invoices />;
+      case 'events':    return <Events />;
       case 'customers': return <Customers />;
       case 'customers': return <Customers />;
       case 'settings':  return <Settings />;
