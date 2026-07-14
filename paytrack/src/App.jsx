@@ -104,9 +104,7 @@ const App = () => {
       case 'bookings':  return <Bookings />;
       case 'invoices': return <Invoices />;
       case 'events':    return <Events />;
-      case 'customers': return <Customers />;
-      case 'customers': return <Customers />;
-      case 'settings':  return <Settings />;
+      case 'customers': return <Customers />; case 'settings':  return <Settings />;
       default:          return <Home />;
     }
   };
