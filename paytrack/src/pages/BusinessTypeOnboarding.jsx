@@ -3,12 +3,12 @@ import { useStore } from '../store/useStore';
 
 // MODULE_MAP keys must match the values in `businessTypes` below exactly.
 const MODULE_MAP = {
-  Consultant:  ['bookings', 'customers', 'invoices', 'finance', 'reports'],
+  Consultant:  ['bookings', 'events', 'customers', 'invoices', 'finance', 'reports'],
   Church:      ['events', 'customers', 'invoices', 'finance', 'reports'],
-  Clinic:      ['bookings', 'customers', 'invoices', 'finance', 'reports'],
+  Clinic:      ['bookings', 'events', 'customers', 'invoices', 'finance', 'reports'],
   School:      ['events', 'customers', 'invoices', 'finance', 'reports'],
-  Agency:      ['sales', 'bookings', 'invoices', 'customers', 'finance', 'reports'],
-  Freelancer:  ['bookings', 'invoices', 'customers', 'finance', 'reports'],
+  Agency:      ['sales', 'bookings', 'events', 'invoices', 'customers', 'finance', 'reports'],
+  Freelancer:  ['bookings', 'events', 'invoices', 'customers', 'finance', 'reports'],
   Other:       ['sales', 'bookings', 'events', 'invoices', 'customers', 'finance', 'reports'],
 };
 
