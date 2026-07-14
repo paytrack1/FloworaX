@@ -13,11 +13,15 @@ const bookingRoutes = require('./src/routes/bookings');
 const invoiceRoutes = require('./src/routes/invoices');
 const customerRoutes = require('./src/routes/customers');
 const waitlistRoutes = require('./src/routes/waitlist');
+const eventRoutes = require('./src/routes/events');
 // TODO: customer module not built yet (no route file or model) — re-enable once it exists
 // const customerRoutes = require('./src/routes/customers');
 const Invoice  = require('./src/models/Invoice');
 const Service  = require('./src/models/Service');
 const Booking  = require('./src/models/Booking');
+const Event       = require('./src/models/Event');
+const EventTicket  = require('./src/models/EventTicket');
+const { ticketHtml } = require('./src/routes/events');
 const express  = require('express');
 const cors     = require('cors');
 const crypto   = require('crypto');
@@ -786,7 +790,25 @@ app.post('/webhook/paystack', (req, res, next) => {
     if (event === 'charge.success') {
       const { reference, amount, metadata } = data;
       console.log(`Payment confirmed: ${amount / 100} ref: ${reference}`);
-      if (metadata?.bookingId || (reference && reference.startsWith('booking-'))) {
+            if (metadata?.ticketId || (reference && reference.startsWith('event-ticket-'))) {
+        const ticketId = metadata?.ticketId || reference.replace('event-ticket-', '');
+        const ticket = await EventTicket.findOneAndUpdate(
+          { _id: ticketId, paymentStatus: { $ne: 'paid' } },
+          { paymentStatus: 'paid', status: 'valid', paymentRef: reference },
+          { new: true }
+        );
+        if (ticket && resend) {
+          const ev = await Event.findById(ticket.eventId);
+          if (ev) {
+            await resend.emails.send({
+              from: EMAIL_FROM,
+              to: ticket.buyerEmail,
+              subject: `Your ticket for ${ev.title}`,
+              html: ticketHtml(ev, ticket),
+            });
+          }
+        }
+      } else if (metadata?.bookingId || (reference && reference.startsWith('booking-'))) {
         const bookingId = metadata?.bookingId || reference.replace('booking-', '');
         await Booking.findByIdAndUpdate(bookingId, {
           paymentStatus: 'paid', status: 'confirmed', paymentRef: reference,
@@ -809,6 +831,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/waitlist', waitlistRoutes);
+app.use('/api/events', eventRoutes);
 // TODO: re-enable once ./src/routes/customers.js and its model exist
 // app.use('/api/customers', customerRoutes);
 

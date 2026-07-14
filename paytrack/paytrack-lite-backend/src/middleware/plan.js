@@ -1,20 +1,20 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
 const PLAN_CATALOG = {
   free: {
     name: 'Free',
     price: 0,
-    description: 'Start for free with core sales, services, bookings, finance, and reports.',
-    features: ['sales', 'services', 'bookings', 'finance', 'reports'],
-    limits: { monthlySales: 50, monthlyBookings: 40, services: 8 },
+    description: 'Start for free with core sales, services, bookings, finance, reports, and a taste of events.',
+    features: ['sales', 'services', 'bookings', 'finance', 'reports', 'events'],
+    limits: { sales: 50, bookings: 40, services: 8, events: 3 },
     badge: 'Best for starters',
   },
   pro: {
     name: 'Pro',
     price: 2000,
-    description: 'Grow with higher limits, invoices, events, advanced reports, and booking controls.',
+    description: 'Grow with higher limits, invoices, unlimited events, advanced reports, and booking controls.',
     features: ['sales', 'services', 'bookings', 'finance', 'reports', 'invoices', 'events'],
-    limits: { monthlySales: 500, monthlyBookings: 200, services: 20 },
+    limits: { sales: 500, bookings: 200, services: 20, events: null },
     badge: 'Most popular',
   },
   business: {
@@ -22,7 +22,7 @@ const PLAN_CATALOG = {
     price: 4000,
     description: 'Unlimited access to all business tools, staff features, and premium support.',
     features: ['sales', 'services', 'bookings', 'finance', 'reports', 'invoices', 'events', 'staff'],
-    limits: { monthlySales: null, monthlyBookings: null, services: null },
+    limits: { sales: null, bookings: null, services: null, events: null },
     badge: 'Enterprise',
   },
 };
@@ -58,16 +58,22 @@ async function countActiveServices(userId) {
   return Service.countDocuments({ userId, isActive: true });
 }
 
+async function countActiveEvents(userId) {
+  const Event = mongoose.model('Event');
+  return Event.countDocuments({ userId, status: 'active' });
+}
+
 async function buildSubscriptionSummary(userId) {
   const User = mongoose.model('User');
   const user = await User.findById(userId);
   if (!user) return null;
 
   const plan = getPlan(user.plan);
-  const [monthlySales, monthlyBookings, activeServices] = await Promise.all([
+  const [monthlySales, monthlyBookings, activeServices, activeEvents] = await Promise.all([
     countMonthlySales(userId),
     countMonthlyBookings(userId),
     countActiveServices(userId),
+    countActiveEvents(userId),
   ]);
 
   return {
@@ -76,6 +82,7 @@ async function buildSubscriptionSummary(userId) {
       monthlySales,
       monthlyBookings,
       activeServices,
+      activeEvents,
     },
     limits: plan.limits,
     features: plan.features,
@@ -98,6 +105,14 @@ function isUnlimited(limit) {
   return limit === null || limit === undefined;
 }
 
+async function countUsageFor(normalizedFeature, userId) {
+  if (normalizedFeature === 'sales') return countMonthlySales(userId);
+  if (normalizedFeature === 'bookings') return countMonthlyBookings(userId);
+  if (normalizedFeature === 'services') return countActiveServices(userId);
+  if (normalizedFeature === 'events') return countActiveEvents(userId);
+  return 0;
+}
+
 function requireFeature(feature) {
   const normalizedFeature = normalizeFeatureName(feature);
   return async (req, res, next) => {
@@ -112,11 +127,7 @@ function requireFeature(feature) {
 
     const limit = plan.limits?.[normalizedFeature];
     if (!isUnlimited(limit)) {
-      let count = 0;
-      if (normalizedFeature === 'sales') count = await countMonthlySales(user._id);
-      if (normalizedFeature === 'bookings') count = await countMonthlyBookings(user._id);
-      if (normalizedFeature === 'services') count = await countActiveServices(user._id);
-
+      const count = await countUsageFor(normalizedFeature, user._id);
       if (count >= limit) {
         return res.status(403).json({ error: formatLimitError(normalizedFeature, limit, plan) });
       }
@@ -141,10 +152,7 @@ async function requireProviderFeature(providerId, feature) {
 
   const limit = plan.limits?.[normalizedFeature];
   if (!isUnlimited(limit)) {
-    let count = 0;
-    if (normalizedFeature === 'bookings') count = await countMonthlyBookings(providerId);
-    if (normalizedFeature === 'services') count = await countActiveServices(providerId);
-
+    const count = await countUsageFor(normalizedFeature, providerId);
     if (count >= limit) {
       return { allowed: false, status: 403, error: `This provider has reached the ${plan.name} plan limit of ${limit} ${normalizedFeature}.` };
     }
