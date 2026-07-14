@@ -1,28 +1,22 @@
-import React from "react";
-import { Home, BarChart2, FileText, Settings, LogOut, Plus, Zap, TrendingDown, Calendar, CalendarDays, Receipt, Users } from "lucide-react";
-import { useStore } from "../store/useStore";
-
-
-const allTabs = [
-  { id: "home",      label: "Home",      icon: Home,         alwaysShow: true },
-  { id: "sales",     label: "Sales",     icon: BarChart2,    module: "sales" },
-  { id: "reports",   label: "Reports",   icon: FileText,     alwaysShow: true },
-  { id: "expenses",  label: "Expenses",  icon: TrendingDown, alwaysShow: true },
-  { id: "bookings",  label: "Bookings",  icon: Calendar,     module: "bookings" },
-  { id: "events",    label: "Events",    icon: CalendarDays, module: "events" },
-  { id: "invoices",  label: "Invoices",  icon: Receipt,      module: "invoices" },
-  { id: "customers", label: "Customers", icon: Users,        alwaysShow: true },
-  { id: "settings",  label: "Settings",  icon: Settings,     alwaysShow: true },
+import React from 'react';
+import { Home, BarChart2, FileText, Settings, LogOut, Plus, Zap, TrendingDown, Calendar, Receipt, Users, Ticket } from 'lucide-react';
+import { useStore } from '../store/useStore';
+import { getModulesForBusinessType } from '../store/modules';
+const tabs = [
+  { id: 'home',      label: 'Home',      icon: Home },
+  { id: 'sales',     label: 'Sales',     icon: BarChart2 },
+  { id: 'reports',   label: 'Reports',   icon: FileText },
+  { id: 'expenses',  label: 'Expenses',  icon: TrendingDown },
+  { id: 'bookings',  label: 'Bookings',  icon: Calendar },
+  { id: 'invoices',  label: 'Invoices',  icon: Receipt },
+  { id: 'events',    label: 'Events',    icon: Ticket },
+  { id: 'customers', label: 'Customers', icon: Users },
+  { id: 'settings',  label: 'Settings',  icon: Settings },
 ];
-
 const Sidebar = () => {
-  const { activeTab, setActiveTab, setSaleModal, logout, user } = useStore();
-  const modules = user?.modules || ["sales"];
-  const visibleTabs = allTabs.filter(({ alwaysShow, module }) => {
-    if (alwaysShow) return true;
-    if (module) return modules.includes(module);
-    return false;
-  });
+  const { activeTab, setActiveTab,setSaleModal, logout, user } = useStore();
+  const enabledModules = getModulesForBusinessType(user?.businessType);
+  const visibleTabs = tabs.filter(({ id }) => id === 'reports' || enabledModules.includes(id));
 
   return (
     <aside className="hidden lg:flex fixed top-0 left-0 bottom-0 w-64 bg-[#0F172A] flex-col z-50">
@@ -58,7 +52,15 @@ const Sidebar = () => {
           );
         })}
       </nav>
-      <div className="p-4 border-t border-white/5">
+      <div className="p-4 border-t border-white/5 space-y-2">
+        {user?.role === 'admin' && (
+          <button
+            onClick={() => { setActiveTab('home'); window.history.pushState({}, '', '/admin'); window.location.reload(); }}
+            className="w-full rounded-xl border border-[#2F5FB3] px-3 py-2 text-left text-sm font-bold text-[#8DB3FF]"
+          >
+            Admin dashboard
+          </button>
+        )}
         <div className="flex items-center gap-3 px-2 py-3">
           <div className="w-9 h-9 rounded-xl bg-[#2F5FB3] flex items-center justify-center flex-shrink-0">
             <span className="text-white font-black text-sm">{user?.businessName?.charAt(0).toUpperCase() || "M"}</span>

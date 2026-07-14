@@ -2,6 +2,16 @@ import React, { useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { Camera, ChevronRight } from 'lucide-react';
 
+const MODULE_OPTIONS = [
+  { key: 'customers', label: 'Customers' },
+  { key: 'sales', label: 'Sales' },
+  { key: 'bookings', label: 'Bookings' },
+  { key: 'events', label: 'Events' },
+  { key: 'finance', label: 'Finance' },
+  { key: 'reports', label: 'Reports' },
+  { key: 'invoices', label: 'Invoices' },
+];
+
 const Settings = () => {
   const { logout, user, setProfileImage, sales, dashboard, plans, planError, fetchPlans, upgradePlan, updateBusinessProfile } = useStore();
   const [exportStatus, setExportStatus] = useState('');
@@ -22,6 +32,7 @@ const Settings = () => {
     currency: user?.currency || 'NGN',
     timezone: user?.timezone || 'Africa/Lagos',
   });
+  const [selectedModules, setSelectedModules] = useState(user?.modules || []);
   const businessTypes = ['Consultant', 'Church', 'Clinic', 'School', 'Agency', 'Freelancer', 'Other'];
   const fileInputRef = useRef(null);
 
@@ -37,7 +48,7 @@ const Settings = () => {
     }
     setSavingProfile(true);
     try {
-      await updateBusinessProfile(profileForm);
+      await updateBusinessProfile({ ...profileForm, modules: selectedModules });
       setShowEditProfile(false);
     } catch (err) {
       setProfileError(err.message || 'Failed to save changes.');
@@ -299,6 +310,21 @@ const Settings = () => {
                   placeholder="Account name / number"
                 />
               </label>
+
+              <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFF] p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Modules</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {MODULE_OPTIONS.map((module) => {
+                    const checked = selectedModules.includes(module.key);
+                    return (
+                      <label key={module.key} className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${checked ? 'border-[#185FA5] bg-white' : 'border-[#E2E8F0] bg-transparent'}`}>
+                        <span className="font-semibold text-[#0F172A]">{module.label}</span>
+                        <input type="checkbox" checked={checked} onChange={() => setSelectedModules((prev) => prev.includes(module.key) ? prev.filter((item) => item !== module.key) : [...prev, module.key])} className="h-4 w-4 rounded border-slate-300 text-[#185FA5] focus:ring-[#185FA5]" />
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>

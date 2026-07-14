@@ -1,15 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 
-// MODULE_MAP keys must match the values in `businessTypes` below exactly.
-const MODULE_MAP = {
-  Consultant:  ['bookings', 'events', 'customers', 'invoices', 'finance', 'reports'],
-  Church:      ['events', 'customers', 'invoices', 'finance', 'reports'],
-  Clinic:      ['bookings', 'events', 'customers', 'invoices', 'finance', 'reports'],
-  School:      ['events', 'customers', 'invoices', 'finance', 'reports'],
-  Agency:      ['sales', 'bookings', 'events', 'invoices', 'customers', 'finance', 'reports'],
-  Freelancer:  ['bookings', 'events', 'invoices', 'customers', 'finance', 'reports'],
-  Other:       ['sales', 'bookings', 'events', 'invoices', 'customers', 'finance', 'reports'],
+const MODULE_OPTIONS = [
+  { key: 'customers', label: 'Customers' },
+  { key: 'sales', label: 'Sales' },
+  { key: 'bookings', label: 'Bookings' },
+  { key: 'events', label: 'Events' },
+  { key: 'finance', label: 'Finance' },
+  { key: 'reports', label: 'Reports' },
+  { key: 'invoices', label: 'Invoices' },
+];
+
+const DEFAULT_MODULES = ['sales', 'customers', 'reports'];
+
+const getModulesForBusinessType = (businessType) => {
+  const key = (businessType || '').toLowerCase();
+  if (['health_wellness', 'professional_services'].includes(key)) return ['bookings', 'customers', 'invoices', 'finance', 'reports', 'events'];
+  if (key === 'education_nonprofits') return ['events', 'customers', 'invoices', 'finance', 'reports'];
+  if (key === 'business_retail') return ['sales', 'customers', 'invoices', 'finance', 'reports'];
+  if (key === 'complete_business_os') return MODULE_OPTIONS.map((option) => option.key);
+  return DEFAULT_MODULES;
 };
 
 const options = [
@@ -65,6 +75,7 @@ const BusinessTypeOnboarding = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selectedModules, setSelectedModules] = useState(() => getModulesForBusinessType(user?.businessType || ''));
 
   const businessTypes = [
     'Consultant',
@@ -94,6 +105,10 @@ const BusinessTypeOnboarding = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleModuleToggle = (moduleKey) => {
+    setSelectedModules((prev) => prev.includes(moduleKey) ? prev.filter((item) => item !== moduleKey) : [...prev, moduleKey]);
+  };
+
   const handleContinue = async () => {
     const requiredFields = ['businessName', 'businessType', 'phone', 'address', 'bankAccount', 'currency', 'timezone'];
     const missing = requiredFields.filter((field) => !form[field]?.toString().trim());
@@ -107,7 +122,7 @@ const BusinessTypeOnboarding = () => {
       await updateBusinessProfile({
         businessName: form.businessName,
         businessType: form.businessType,
-        modules: MODULE_MAP[form.businessType] || ['sales'],
+        modules: selectedModules,
         phone: form.phone,
         address: form.address,
         bankAccount: form.bankAccount,
@@ -167,6 +182,27 @@ const BusinessTypeOnboarding = () => {
                   ))}
                 </div>
               </label>
+            </div>
+
+            <div className="rounded-3xl border border-[#E2E8F0] bg-white p-5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Step 2</p>
+                  <h2 className="mt-1 text-lg font-black text-[#0F172A]">Choose your modules</h2>
+                  <p className="mt-1 text-sm text-[#64748B]">These are pre-filled based on your business type, but you can edit them anytime from Settings.</p>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {MODULE_OPTIONS.map((module) => {
+                  const checked = selectedModules.includes(module.key);
+                  return (
+                    <label key={module.key} className={`flex cursor-pointer items-center justify-between rounded-2xl border px-4 py-3 transition ${checked ? 'border-[#185FA5] bg-[#EFF6FF]' : 'border-[#E2E8F0] bg-white'}`}>
+                      <span className="text-sm font-semibold text-[#0F172A]">{module.label}</span>
+                      <input type="checkbox" checked={checked} onChange={() => handleModuleToggle(module.key)} className="h-4 w-4 rounded border-slate-300 text-[#185FA5] focus:ring-[#185FA5]" />
+                    </label>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">

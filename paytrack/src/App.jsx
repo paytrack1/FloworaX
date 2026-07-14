@@ -24,6 +24,8 @@ import NotFound from './pages/NotFound';
 import BusinessTypeOnboarding from './pages/BusinessTypeOnboarding';
 import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
+import EventRegistration from './pages/EventRegistration';
+// import AdminDashboard from "./pages/AdminDashboard";
 import { useEffect } from 'react';
 
 const App = () => {
@@ -47,6 +49,10 @@ const App = () => {
 
   if (path.startsWith('/book/') || path.startsWith('/booking/')) {
     return <PublicBooking />;
+  }
+
+  if (path.startsWith('/events/')) {
+    return <EventRegistration />;
   }
 
   if (path === '/terms') return <Terms />;
@@ -81,6 +87,10 @@ const App = () => {
   // ── Business type not set (ONLY this check — not phone/address etc) ──
   if (user && !user.businessType) {
     return <BusinessTypeOnboarding />;
+  }
+
+  if (user?.role === 'admin') {
+    // if (path === '/admin') return <AdminDashboard />;
   }
 
   // ── Page renderer ──

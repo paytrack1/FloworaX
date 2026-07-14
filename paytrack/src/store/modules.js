@@ -1,5 +1,5 @@
 export const getModulesForBusinessType = (businessType) => {
-  const base = ['home', 'expenses', 'customers', 'settings'];
+  const base = ['home', 'expenses', 'customers', 'settings', 'events'];
 
   const map = {
     // Bookings + Payments

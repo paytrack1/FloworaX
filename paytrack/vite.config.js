@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'logo.png'],
+      includeAssets: ['logo.png', 'screenshot-home.png', 'screenshot-bookings.png'], 
       manifest: {
         name: 'Flowora',
         short_name: 'Flowora',
@@ -16,24 +16,32 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
+        id: '/',
+        // This is where your updated icons array goes:
         icons: [
           {
-            src: 'logo.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: 'logo.png',
+            src: '/logo.png',
             sizes: '512x512',
             type: 'image/png',
+            purpose: 'any'
+          }
+        ],
+        screenshots: [
+          {
+            src: '/screenshot-home.png',
+            sizes: '1366x728',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Flowora Desktop Dashboard'
           },
           {
-            src: 'favicon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'any maskable',
-          },
-        ],
+            src: '/screenshot-bookings.png',
+            sizes: '1366x728',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Flowora Bookings Overview'
+          }
+        ]
       },
     }),
   ],

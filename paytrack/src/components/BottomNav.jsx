@@ -1,27 +1,21 @@
-import React from "react";
-import { Home, BarChart2, Settings, TrendingDown, Calendar, CalendarDays, Receipt, Users } from "lucide-react";
-import { useStore } from "../store/useStore";
-
-
-const allTabs = [
-  { id: "home",      label: "Home",     icon: Home,         alwaysShow: true },
-  { id: "sales",     label: "Sales",    icon: BarChart2,    module: "sales" },
-  { id: "expenses",  label: "Expenses", icon: TrendingDown, alwaysShow: true },
-  { id: "bookings",  label: "Bookings", icon: Calendar,     module: "bookings" },
-  { id: "invoices",  label: "Invoices", icon: Receipt,      module: "invoices" },
-  { id: "customers", label: "Clients",  icon: Users,        alwaysShow: true },
-  { id: "settings",  label: "Settings", icon: Settings,     alwaysShow: true },
+import React from 'react';
+import { Home, BarChart2, FileText, Settings, TrendingDown, Calendar,Receipt, Users, Ticket } from 'lucide-react';
+import { useStore } from '../store/useStore';
+import { getModulesForBusinessType } from '../store/modules';
+const tabs = [
+  { id: 'home',      label: 'Home',      icon: Home },
+  { id: 'sales',     label: 'Sales',     icon: BarChart2 },
+  { id: 'expenses',  label: 'Expenses',  icon: TrendingDown },
+  { id: 'bookings',  label: 'Bookings',  icon: Calendar },
+  { id: 'invoices',  label: 'Invoices',  icon: Receipt },
+  { id: 'events',    label: 'Events',    icon: Ticket },
+  { id: 'customers', label: 'Customers', icon: Users },
+  { id: 'settings',  label: 'Settings',  icon: Settings },
 ];
-
 const BottomNav = () => {
   const { activeTab, setActiveTab, user } = useStore();
-  const modules = user?.modules || ["sales"];
-
-  const visibleTabs = allTabs.filter(({ alwaysShow, module }) => {
-    if (alwaysShow) return true;
-    if (module) return modules.includes(module);
-    return false;
-  });
+  const enabledModules = getModulesForBusinessType(user?.businessType);
+  const visibleTabs = tabs.filter(({ id }) => enabledModules.includes(id));
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#E2E8F0] z-40">
