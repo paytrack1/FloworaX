@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logo.png', 'screenshot-home.png', 'screenshot-bookings.png'], 
+      includeAssets: ['logo-192.png', 'logo-512.png', 'logo-512-maskable.png', 'screenshot-home.png', 'screenshot-bookings.png'],
       manifest: {
         name: 'Flowora',
         short_name: 'Flowora',
@@ -18,12 +18,24 @@ export default defineConfig({
         start_url: '/',
         id: '/',
         // This is where your updated icons array goes:
-        icons: [
+       icons: [
           {
-            src: '/logo.png',
+            src: '/logo-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/logo-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any'
+          },
+          {
+            src: '/logo-512-maskable.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ],
         screenshots: [
