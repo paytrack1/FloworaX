@@ -136,6 +136,7 @@ const userSchema = new mongoose.Schema({
   timezone:     { type: String, default: null },
   plan:         { type: String, enum: ['free', 'pro', 'business'], default: 'free' },
   modules:      { type: [String], default: ['sales'] },
+  role:         { type: String, enum: ['user', 'admin'], default: 'user' },
   createdAt:    { type: Date, default: Date.now },
 });
 
@@ -283,7 +284,7 @@ app.post('/api/auth/register', async (req, res) => {
     await sendOTPEmail(user.email, otp);
 
     const token = jwt.sign(
-      { id: user._id.toString(), email: user.email, businessName: user.businessName },
+      { id: user._id.toString(), email: user.email, businessName: user.businessName, role: user.role },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -310,7 +311,7 @@ app.post('/api/auth/login', async (req, res) => {
     if (!match) return res.status(401).json({ error: 'Invalid email or password' });
 
     const token = jwt.sign(
-      { id: user._id.toString(), email: user.email, businessName: user.businessName },
+      { id: user._id.toString(), email: user.email, businessName: user.businessName, role: user.role },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
