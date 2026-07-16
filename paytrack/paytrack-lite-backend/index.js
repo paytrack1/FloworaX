@@ -919,25 +919,6 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-// ── Global error handler ──
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err.stack || err);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-// ── 404 handler ──
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
-// ── Start ──
-const startServer = async () => {
-  const dbConnected = await connectToDatabase();
-  if (!dbConnected) {
-    console.error('Server startup aborted: MongoDB connection failed.');
-    process.exit(1);
-  }
-
 // ── SECURE ADMIN DASHBOARD ROUTE ──
 app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
   if (req.user.role !== 'admin') {
@@ -1006,6 +987,25 @@ app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
     res.status(500).json({ error: 'Failed to retrieve admin system metrics.' });
   }
 });
+
+// ── Global error handler ──
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.stack || err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// ── 404 handler ──
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// ── Start ──
+const startServer = async () => {
+  const dbConnected = await connectToDatabase();
+  if (!dbConnected) {
+    console.error('Server startup aborted: MongoDB connection failed.');
+    process.exit(1);
+  }
 
   app.listen(PORT, () => {
     console.log(`\nFlowora Backend v2.0 running on port ${PORT}`);
