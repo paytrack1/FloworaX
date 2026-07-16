@@ -63,9 +63,12 @@ app.use(helmet());
 // ── CORS ──
 app.use(cors({
   origin: [
+    app.use(cors({
+  origin: [
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',
+    'http://localhost:4173',
     'https://floworax.com',
     'https://app.floworax.com',
     'https://paytracklite.vercel.app',
