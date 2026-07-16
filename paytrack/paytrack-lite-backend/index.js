@@ -136,7 +136,7 @@ const userSchema = new mongoose.Schema({
   timezone:     { type: String, default: null },
   plan:         { type: String, enum: ['free', 'pro', 'business'], default: 'free' },
   modules:      { type: [String], default: ['sales'] },
-  role:         { type: String, enum: ['user', 'admin'], default: 'user' },
+  role:         { type: String, enum: ['user', 'admin'], default: 'user' },
   lastLoginAt:  { type: Date, default: null },
   createdAt:    { type: Date, default: Date.now },
 });
@@ -310,6 +310,9 @@ app.post('/api/auth/login', async (req, res) => {
 
     const match = await bcrypt.compare(password, user.passwordHash);
     if (!match) return res.status(401).json({ error: 'Invalid email or password' });
+
+    user.lastLoginAt = new Date();
+    await user.save();
 
     const token = jwt.sign(
       { id: user._id.toString(), email: user.email, businessName: user.businessName, role: user.role },
@@ -933,8 +936,6 @@ const startServer = async () => {
     process.exit(1);
   }
 
-  
-
 // ── SECURE ADMIN DASHBOARD ROUTE ──
 app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
   if (req.user.role !== 'admin') {
@@ -944,18 +945,58 @@ app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
     const users = await User.find({}, '-password').sort({ createdAt: -1 });
     const totalUsers = users.length;
     const premiumUsers = users.filter(u => u.plan !== 'free' && u.plan !== 'basic').length;
-    const [totalSalesCount, totalBookingsCount] = await Promise.all([
+
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const [
+      totalSalesCount,
+      totalBookingsCount,
+      totalEventsCount,
+      newSignupsThisMonth,
+      activeUsers,
+      revenueAgg,
+      planBreakdownAgg,
+      topBusinessTypesAgg
+    ] = await Promise.all([
       Sale.countDocuments({}),
-      Booking.countDocuments({})
+      Booking.countDocuments({}),
+      Event.countDocuments({}),
+      User.countDocuments({ createdAt: { $gte: startOfMonth } }),
+      User.countDocuments({ lastLoginAt: { $gte: thirtyDaysAgo } }),
+      Sale.aggregate([{ $group: { _id: null, total: { $sum: '$total' } } }]),
+      User.aggregate([{ $group: { _id: '$plan', count: { $sum: 1 } } }]),
+      User.aggregate([
+        { $match: { businessType: { $ne: null } } },
+        { $group: { _id: '$businessType', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 5 }
+      ])
     ]);
+
+    const totalRevenue = revenueAgg[0]?.total || 0;
+    const planBreakdown = planBreakdownAgg.reduce((acc, p) => {
+      acc[p._id || 'free'] = p.count;
+      return acc;
+    }, {});
+    const topBusinessTypes = topBusinessTypesAgg.map(t => ({ type: t._id, count: t.count }));
+    const recentSignups = users.slice(0, 10);
+
     res.json({
       success: true,
       metrics: {
         totalUsers,
+        activeUsers,
+        newSignupsThisMonth,
         premiumUsers,
+        totalRevenue,
         totalSales: totalSalesCount,
-        totalBookings: totalBookingsCount
+        totalBookings: totalBookingsCount,
+        totalEvents: totalEventsCount,
+        planBreakdown,
+        topBusinessTypes
       },
+      recentSignups,
       users
     });
   } catch (err) {
@@ -963,7 +1004,8 @@ app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
     res.status(500).json({ error: 'Failed to retrieve admin system metrics.' });
   }
 });
-app.listen(PORT, () => {
+
+  app.listen(PORT, () => {
     console.log(`\nFlowora Backend v2.0 running on port ${PORT}`);
     console.log(`  Database : MongoDB`);
     console.log(`  Auth     : JWT (bcrypt + 7d expiry)`);
