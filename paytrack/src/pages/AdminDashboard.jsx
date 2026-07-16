@@ -53,7 +53,7 @@ export default function AdminDashboard() {
           { label: 'Active (30d)', val: metrics.activeUsers, bg: 'bg-cyan-500/10 text-cyan-700' },
           { label: 'New This Month', val: metrics.newSignupsThisMonth, bg: 'bg-indigo-500/10 text-indigo-700' },
           { label: 'Premium Users', val: metrics.premiumUsers, bg: 'bg-emerald-500/10 text-emerald-700' },
-          { label: 'Total Revenue', val: formatCurrency(metrics.totalRevenue), bg: 'bg-green-500/10 text-green-700' },
+          { label: 'Verified Users', val: metrics.verifiedUsers, bg: 'bg-green-500/10 text-green-700' },
           { label: 'Platform Sales', val: metrics.totalSales, bg: 'bg-purple-500/10 text-purple-700' },
           { label: 'Total Bookings', val: metrics.totalBookings, bg: 'bg-amber-500/10 text-amber-700' },
           { label: 'Total Events', val: metrics.totalEvents, bg: 'bg-rose-500/10 text-rose-700' },
@@ -135,8 +135,8 @@ export default function AdminDashboard() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${usr.businessType ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                      {usr.businessType ? 'Setup Done' : 'Pending'}
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${usr.emailVerified ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {usr.emailVerified ? 'Verified' : 'Unverified'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-xs text-slate-400">

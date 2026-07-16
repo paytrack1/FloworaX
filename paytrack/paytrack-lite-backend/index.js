@@ -652,7 +652,6 @@ const buildFinancialSummary = async (userId) => {
   const invoiceOutstanding = invoiceTotal - invoicePaid;
 
   return {
-    totalRevenue,
     totalExpenses,
     netProfit,
     cashFlow: netProfit,
@@ -927,6 +926,7 @@ app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
   try {
     const users = await User.find({}, '-password').sort({ createdAt: -1 });
     const totalUsers = users.length;
+    const verifiedUsers = users.filter(u => u.emailVerified).length;
     const premiumUsers = users.filter(u => u.plan !== 'free' && u.plan !== 'basic').length;
 
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -938,7 +938,6 @@ app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
       totalEventsCount,
       newSignupsThisMonth,
       activeUsers,
-      revenueAgg,
       planBreakdownAgg,
       topBusinessTypesAgg
     ] = await Promise.all([
@@ -947,7 +946,7 @@ app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
       Event.countDocuments({}),
       User.countDocuments({ createdAt: { $gte: startOfMonth } }),
       User.countDocuments({ lastLoginAt: { $gte: thirtyDaysAgo } }),
-      Sale.aggregate([{ $group: { _id: null, total: { $sum: '$total' } } }]),
+
       User.aggregate([{ $group: { _id: '$plan', count: { $sum: 1 } } }]),
       User.aggregate([
         { $match: { businessType: { $ne: null } } },
@@ -956,8 +955,6 @@ app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
         { $limit: 5 }
       ])
     ]);
-
-    const totalRevenue = revenueAgg[0]?.total || 0;
     const planBreakdown = planBreakdownAgg.reduce((acc, p) => {
       acc[p._id || 'free'] = p.count;
       return acc;
@@ -969,10 +966,10 @@ app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
       success: true,
       metrics: {
         totalUsers,
+        verifiedUsers,
         activeUsers,
         newSignupsThisMonth,
         premiumUsers,
-        totalRevenue,
         totalSales: totalSalesCount,
         totalBookings: totalBookingsCount,
         totalEvents: totalEventsCount,
