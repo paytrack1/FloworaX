@@ -247,6 +247,7 @@ const formatUserResponse = (user) => ({
   currency:     user.currency || null,
   timezone:     user.timezone || null,
   plan:         user.plan || 'free',
+  role:         user.role || 'user',
 });
 
 // ── Health check ──
