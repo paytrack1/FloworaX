@@ -136,7 +136,8 @@ const userSchema = new mongoose.Schema({
   timezone:     { type: String, default: null },
   plan:         { type: String, enum: ['free', 'pro', 'business'], default: 'free' },
   modules:      { type: [String], default: ['sales'] },
-  role:         { type: String, enum: ['user', 'admin'], default: 'user' },
+  role:         { type: String, enum: ['user', 'admin'], default: 'user' },
+  lastLoginAt:  { type: Date, default: null },
   createdAt:    { type: Date, default: Date.now },
 });
 
