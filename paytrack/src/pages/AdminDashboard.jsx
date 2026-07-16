@@ -29,7 +29,7 @@ export default function AdminDashboard() {
 
   const { metrics, users } = adminData;
 
-  const filteredUsers = users.filter(usr => 
+  const filteredUsers = users.filter(usr =>
     usr.email?.toLowerCase().includes(search.toLowerCase()) ||
     usr.businessName?.toLowerCase().includes(search.toLowerCase())
   );
@@ -40,14 +40,23 @@ export default function AdminDashboard() {
     return 'bg-slate-100 text-slate-600';
   };
 
+  const formatCurrency = (n) => `₦${(n || 0).toLocaleString()}`;
+
+  const planEntries = Object.entries(metrics.planBreakdown || {});
+  const topBusinessTypes = metrics.topBusinessTypes || [];
+
   return (
     <div className="space-y-8 p-6 max-w-7xl mx-auto">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total Registered', val: metrics.totalUsers, bg: 'bg-blue-500/10 text-blue-700' },
+          { label: 'Active (30d)', val: metrics.activeUsers, bg: 'bg-cyan-500/10 text-cyan-700' },
+          { label: 'New This Month', val: metrics.newSignupsThisMonth, bg: 'bg-indigo-500/10 text-indigo-700' },
           { label: 'Premium Users', val: metrics.premiumUsers, bg: 'bg-emerald-500/10 text-emerald-700' },
+          { label: 'Total Revenue', val: formatCurrency(metrics.totalRevenue), bg: 'bg-green-500/10 text-green-700' },
           { label: 'Platform Sales', val: metrics.totalSales, bg: 'bg-purple-500/10 text-purple-700' },
           { label: 'Total Bookings', val: metrics.totalBookings, bg: 'bg-amber-500/10 text-amber-700' },
+          { label: 'Total Events', val: metrics.totalEvents, bg: 'bg-rose-500/10 text-rose-700' },
         ].map((m, i) => (
           <div key={i} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{m.label}</span>
@@ -56,6 +65,36 @@ export default function AdminDashboard() {
             </span>
           </div>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+          <h2 className="text-lg font-black text-slate-800 mb-4">Subscription Breakdown</h2>
+          <div className="space-y-3">
+            {planEntries.length === 0 && <p className="text-sm text-slate-400">No plan data yet.</p>}
+            {planEntries.map(([plan, count]) => (
+              <div key={plan} className="flex items-center justify-between">
+                <span className={`px-2 py-0.5 rounded-md text-xs font-black uppercase ${planBadgeClass(plan)}`}>
+                  {plan}
+                </span>
+                <span className="text-sm font-bold text-slate-700">{count} users</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+          <h2 className="text-lg font-black text-slate-800 mb-4">Top Business Types</h2>
+          <div className="space-y-3">
+            {topBusinessTypes.length === 0 && <p className="text-sm text-slate-400">No business type data yet.</p>}
+            {topBusinessTypes.map((t) => (
+              <div key={t.type} className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-slate-600 capitalize">{t.type}</span>
+                <span className="text-sm font-bold text-slate-700">{t.count} users</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
