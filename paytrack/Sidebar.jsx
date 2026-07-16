@@ -1,6 +1,7 @@
 import React from 'react';
-import { Home, BarChart2, FileText, Settings, LogOut, Plus, Zap, TrendingDown, Calendar, Receipt, Users } from 'lucide-react';
+import { Home, BarChart2, FileText, Settings, LogOut, Plus, Zap, TrendingDown, Calendar, Receipt, Users, Ticket } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { getModulesForBusinessType } from '../store/modules';
 
 const tabs = [
   { id: 'home',      label: 'Home',      icon: Home },
@@ -9,14 +10,15 @@ const tabs = [
   { id: 'expenses',  label: 'Expenses',  icon: TrendingDown },
   { id: 'bookings',  label: 'Bookings',  icon: Calendar },
   { id: 'invoices',  label: 'Invoices',  icon: Receipt },
+  { id: 'events',    label: 'Events',    icon: Ticket },
   { id: 'customers', label: 'Customers', icon: Users },
   { id: 'settings',  label: 'Settings',  icon: Settings },
 ];
 
 const Sidebar = () => {
   const { activeTab, setActiveTab, setSaleModal, logout, user } = useStore();
-  const hasBookings = ['health_wellness', 'complete_business_os'].includes(user?.businessType);
-  const visibleTabs = tabs.filter(({ id }) => id !== 'bookings' || hasBookings);
+  const enabledModules = getModulesForBusinessType(user?.businessType);
+  const visibleTabs = tabs.filter(({ id }) => id === 'reports' || enabledModules.includes(id));
 
   return (
     <aside className="hidden lg:flex fixed top-0 left-0 bottom-0 w-64 bg-[#0F172A] flex-col z-50">

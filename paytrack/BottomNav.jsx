@@ -1,6 +1,7 @@
 import React from 'react';
-import { Home, BarChart2, FileText, Settings, TrendingDown, Calendar, Receipt, Users } from 'lucide-react';
+import { Home, BarChart2, FileText, Settings, TrendingDown, Calendar, Receipt, Users, Ticket } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { getModulesForBusinessType } from '../store/modules';
 
 const tabs = [
   { id: 'home',      label: 'Home',      icon: Home },
@@ -8,14 +9,15 @@ const tabs = [
   { id: 'expenses',  label: 'Expenses',  icon: TrendingDown },
   { id: 'bookings',  label: 'Bookings',  icon: Calendar },
   { id: 'invoices',  label: 'Invoices',  icon: Receipt },
+  { id: 'events',    label: 'Events',    icon: Ticket },
   { id: 'customers', label: 'Customers', icon: Users },
   { id: 'settings',  label: 'Settings',  icon: Settings },
 ];
 
 const BottomNav = () => {
   const { activeTab, setActiveTab, user } = useStore();
-  const hasBookings = ['health_wellness', 'complete_business_os'].includes(user?.businessType);
-  const visibleTabs = tabs.filter(({ id }) => id !== 'bookings' || hasBookings);
+  const enabledModules = getModulesForBusinessType(user?.businessType);
+  const visibleTabs = tabs.filter(({ id }) => enabledModules.includes(id));
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#E2E8F0] z-40">

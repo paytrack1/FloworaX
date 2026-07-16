@@ -25,7 +25,7 @@ import BusinessTypeOnboarding from './pages/BusinessTypeOnboarding';
 import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
 import EventRegistration from './pages/EventRegistration';
-// import AdminDashboard from "./pages/AdminDashboard";
+import AdminDashboard from './pages/AdminDashboard';
 import { useEffect } from 'react';
 
 const App = () => {
@@ -89,8 +89,8 @@ const App = () => {
     return <BusinessTypeOnboarding />;
   }
 
-  if (user?.role === 'admin') {
-    // if (path === '/admin') return <AdminDashboard />;
+  if (user?.role === 'admin' && path === '/admin') {
+    return <AdminDashboard />;
   }
 
   // ── Page renderer ──

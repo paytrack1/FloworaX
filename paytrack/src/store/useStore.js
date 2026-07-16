@@ -82,7 +82,7 @@ export const useStore = create(
       resetPassword: async (token, newPassword) => {
         set({ authError: null });
         try {
-          const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
+          const res = await fetch(`${BACKEND_URL}/api/admin/dashboard`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token, newPassword }),
@@ -117,6 +117,8 @@ export const useStore = create(
       setActiveTab: (tab) => set({ activeTab: tab }),
       setSaleModal: (open) => set({ isSaleModalOpen: open }),
       dashboard: null,
+      adminData: null,
+      adminError: null,
       dashboardError: null,
       plans: [],
       planError: null,
@@ -223,6 +225,27 @@ export const useStore = create(
         }
       },
 
+      
+
+      fetchAdminDashboard: async () => {
+        const { token } = get();
+        if (!token) return;
+        set({ adminError: null });
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/admin/dashboard`, {
+            headers: authHeaders(token),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            set({ adminData: data, adminError: null });
+          } else {
+            set({ adminError: data.error || 'Failed to fetch Admin stats.' });
+          }
+        } catch (err) {
+          console.error('Admin API error:', err);
+          set({ adminError: err.message });
+        }
+      },
       fetchDashboard: async () => {
         const { token } = get();
         if (!token) return;

@@ -931,7 +931,37 @@ const startServer = async () => {
     process.exit(1);
   }
 
-  app.listen(PORT, () => {
+  
+
+// ── SECURE ADMIN DASHBOARD ROUTE ──
+app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied. Administrators only.' });
+  }
+  try {
+    const users = await User.find({}, '-password').sort({ createdAt: -1 });
+    const totalUsers = users.length;
+    const premiumUsers = users.filter(u => u.plan !== 'free' && u.plan !== 'basic').length;
+    const [totalSalesCount, totalBookingsCount] = await Promise.all([
+      Sale.countDocuments({}),
+      Booking.countDocuments({})
+    ]);
+    res.json({
+      success: true,
+      metrics: {
+        totalUsers,
+        premiumUsers,
+        totalSales: totalSalesCount,
+        totalBookings: totalBookingsCount
+      },
+      users
+    });
+  } catch (err) {
+    console.error('Admin Fetch Error:', err);
+    res.status(500).json({ error: 'Failed to retrieve admin system metrics.' });
+  }
+});
+app.listen(PORT, () => {
     console.log(`\nFlowora Backend v2.0 running on port ${PORT}`);
     console.log(`  Database : MongoDB`);
     console.log(`  Auth     : JWT (bcrypt + 7d expiry)`);
