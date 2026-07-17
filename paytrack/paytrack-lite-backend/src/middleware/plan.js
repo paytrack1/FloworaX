@@ -1,4 +1,4 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 const PLAN_CATALOG = {
   free: {
@@ -60,7 +60,7 @@ async function countActiveServices(userId) {
 
 async function countActiveEvents(userId) {
   const Event = mongoose.model('Event');
-  return Event.countDocuments({ userId, status: 'active' });
+  return Event.countDocuments({ userId, isActive: true, status: 'published' });
 }
 
 async function buildSubscriptionSummary(userId) {
