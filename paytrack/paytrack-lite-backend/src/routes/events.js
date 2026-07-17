@@ -35,6 +35,7 @@ function ticketHtml(event, ticket) {
       <p style="margin:4px 0"><strong>Time:</strong> ${event.time}</p>
       <p style="margin:4px 0"><strong>Location:</strong> ${event.location}</p>
       <p style="margin:12px 0 0;font-size:24px;font-weight:bold;letter-spacing:2px">${ticket.ticketCode}</p>
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(ticket.ticketCode)}" alt="Ticket QR code" style="margin:16px auto 0;display:block" />
     </div>
     <p style="margin:0;color:#64748B;font-size:13px">Show this code at check-in. Powered by Flowora</p>
   </div>`;
