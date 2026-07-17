@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { fetchFinancialSummary } from '../api/financial';
 
@@ -61,10 +61,11 @@ const Reports = () => {
         {/* KPI Grid */}
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: 'Total Revenue',   value: `₦${total.toLocaleString()}`,              color: '#0F172A' },
+            { label: 'Total Revenue',   value: `â‚¦${total.toLocaleString()}`,              color: '#0F172A' },
             { label: 'Total Sales',     value: count,                                      color: '#0F172A' },
-            { label: 'Avg Sale Value',  value: `₦${avg.toLocaleString()}`,                color: '#185FA5' },
+            { label: 'Avg Sale Value',  value: `â‚¦${avg.toLocaleString()}`,                color: '#185FA5' },
             { label: 'Net Profit',      value: `₦${Math.round(netProfit).toLocaleString()}`, color: '#15803D' },
+            { label: 'Total Expenses',   value: `₦${Math.round(summary.totalExpenses).toLocaleString()}`, color: '#DC2626' },
           ].map((kpi) => (
             <div key={kpi.label} className="bg-white p-4 rounded-2xl border border-[#E2E8F0] shadow-sm">
               <p className="text-[#94A3B8] text-[11px] font-semibold uppercase tracking-wide mb-1">
@@ -88,7 +89,7 @@ const Reports = () => {
               {verified} of {count} sales verified
             </p>
           </div>
-          <div className="text-5xl opacity-20">✓</div>
+          <div className="text-5xl opacity-20">âœ“</div>
         </div>
 
         {/* Real Bar Chart */}
