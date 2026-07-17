@@ -31,7 +31,9 @@ const Home = () => {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[#64748B] text-xs font-semibold uppercase tracking-widest">Welcome back</p>
-            <div className="flex items-center gap-3">`n            <h1 className="text-3xl font-black text-[#0F172A]">{user?.businessName || 'Your business'} Dashboard</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-black text-[#0F172A]">{user?.businessName || 'Your business'} Dashboard</h1>
+            </div>
           </div>
           <div className="inline-flex items-center gap-2 rounded-3xl bg-white px-4 py-3 shadow-sm">
             <div className="space-y-1 text-right">
@@ -69,12 +71,12 @@ const Home = () => {
             <div className="rounded-2xl bg-[#F8FAFF] p-4">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Monthly sales</p>
               <p className="mt-3 text-2xl font-black text-[#0F172A]">{dashboard?.subscription?.usage?.monthlySales ?? '0'}</p>
-              <p className="text-xs text-[#64748B] mt-1">Limit: {dashboard?.subscription?.limits?.sales === null ? 'Unlimited' : dashboard?.subscription?.limits?.sales}</p>
+              <p className="text-xs text-[#64748B] mt-1">Limit: {dashboard?.subscription?.limits?.monthlySales === null ? 'Unlimited' : dashboard?.subscription?.limits?.monthlySales}</p>
             </div>
             <div className="rounded-2xl bg-[#F8FAFF] p-4">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Monthly bookings</p>
               <p className="mt-3 text-2xl font-black text-[#0F172A]">{dashboard?.subscription?.usage?.monthlyBookings ?? '0'}</p>
-              <p className="text-xs text-[#64748B] mt-1">Limit: {dashboard?.subscription?.limits?.bookings === null ? 'Unlimited' : dashboard?.subscription?.limits?.bookings}</p>
+              <p className="text-xs text-[#64748B] mt-1">Limit: {dashboard?.subscription?.limits?.monthlyBookings === null ? 'Unlimited' : dashboard?.subscription?.limits?.monthlyBookings}</p>
             </div>
             <div className="rounded-2xl bg-[#F8FAFF] p-4">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Active events</p>

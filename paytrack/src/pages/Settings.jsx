@@ -17,8 +17,10 @@ const MODULE_OPTIONS = [
 const Settings = () => {
   const { logout, user, setProfileImage, sales, dashboard, plans, planError, fetchPlans, upgradePlan, updateBusinessProfile } = useStore();
   const [exportStatus, setExportStatus] = useState('');
+  const [syncMsg, setSyncMsg] = useState('');
   const [showSupport, setShowSupport] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
+  const [billing, setBilling] = useState('monthly');
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isUpgrading, setIsUpgrading] = useState(false);
@@ -125,6 +127,19 @@ const Settings = () => {
     }
   };
 
+  // Plan pricing helpers. NOTE: the backend's plan catalog (src/middleware/plan.js)
+  // currently only defines a single `price` field per plan -- there is no `annualPrice`.
+  // The annual toggle below is wired but will always fall back to monthly pricing
+  // until/unless annual pricing is actually added to the backend plan data.
+  const getPrice = (plan) => (billing === 'annual' && plan.annualPrice ? plan.annualPrice : plan.price);
+  const getLabel = (plan) => {
+    if (plan.price === 0) return 'Free forever';
+    if (billing === 'annual' && plan.annualPrice) return `₦${plan.annualPrice.toLocaleString()}/year`;
+    return `₦${plan.price.toLocaleString()}/month`;
+  };
+  const getOriginal = (plan) =>
+    billing === 'annual' && plan.annualPrice ? `₦${(plan.price * 12).toLocaleString()}` : null;
+
   const settingsOptions = [
     {
       label: 'Store Profile',
@@ -162,7 +177,10 @@ const Settings = () => {
     if (action === 'export') handleExportCSV();
     if (action === 'support') setShowSupport(!showSupport);
     if (action === 'profile') setShowEditProfile(true);
-    if (action === 'sync') setSyncMsg('Auto-sync is enabled. Sales sync every 30 seconds when online.');
+    if (action === 'sync') {
+      setSyncMsg('Auto-sync is enabled. Sales sync every 30 seconds when online.');
+      setTimeout(() => setSyncMsg(''), 4000);
+    }
     if (action === 'plans') {
       setShowPlans(!showPlans);
       if (!plans?.length) fetchPlans?.();
@@ -235,6 +253,13 @@ const Settings = () => {
           </button>
         ))}
       </div>
+
+      {/* SYNC MESSAGE */}
+      {syncMsg && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+          <p className="text-blue-700 text-sm font-medium text-center">{syncMsg}</p>
+        </div>
+      )}
 
       {/* SUPPORT */}
       {showSupport && (
@@ -339,7 +364,7 @@ const Settings = () => {
                 </div>
               </div>
 
-              <FAlert type="error" message={profileError} onDismiss={() => setProfileError("")} />
+              {profileError && <FAlert type="error" message={profileError} onDismiss={() => setProfileError('')} />}
 
               <div className="flex gap-3 pt-2">
                 <button
@@ -364,17 +389,7 @@ const Settings = () => {
       )}
 
       {/* PLANS */}
-      {showPlans && ((
-        () => {
-          const [billing, setBilling] = React.useState('monthly');
-          const getPrice = (plan) => billing === 'annual' && plan.annualPrice ? plan.annualPrice : plan.price;
-          const getLabel = (plan) => {
-            if (plan.price === 0) return 'Free forever';
-            if (billing === 'annual' && plan.annualPrice) return ?/year;
-            return ?/month;
-          };
-          const getOriginal = (plan) => billing === 'annual' && plan.annualPrice ? ? : null;
-          return (
+      {showPlans && (
         <div className="bg-white rounded-3xl border border-[#E2E8F0] p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -388,18 +403,18 @@ const Settings = () => {
           <div className="flex items-center justify-center mb-5">
             <div className="flex bg-[#F1F5F9] rounded-2xl p-1 gap-1">
               <button onClick={() => setBilling('monthly')}
-                className={px-4 py-2 rounded-xl text-sm font-bold transition-all }>
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${billing === 'monthly' ? 'bg-white text-[#185FA5] shadow-sm' : 'text-[#94A3B8]'}`}>
                 Monthly
               </button>
               <button onClick={() => setBilling('annual')}
-                className={px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 }>
-                ? Annual
-                <span className={	ext-[10px] font-black px-2 py-0.5 rounded-full }>Save 17%</span>
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${billing === 'annual' ? 'bg-white text-[#185FA5] shadow-sm' : 'text-[#94A3B8]'}`}>
+                Annual
+                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${billing === 'annual' ? 'bg-[#DCFCE7] text-green-700' : 'bg-[#F1F5F9] text-[#94A3B8]'}`}>Save 17%</span>
               </button>
             </div>
           </div>
 
-          <FAlert type="error" message={planError} />
+          {planError && <FAlert type="error" message={planError} />}
           <div className="grid gap-4 sm:grid-cols-3">
             {(plans || []).map((plan) => {
               const price  = getPrice(plan);
@@ -408,7 +423,7 @@ const Settings = () => {
               const isCurrent = plan.id === user?.plan;
               return (
               <button key={plan.id} type="button" onClick={() => openConfirmUpgrade({ ...plan, selectedPrice: price, billing })}
-                className={ounded-3xl border p-4 text-left transition relative }>
+                className={`rounded-3xl border p-4 text-left transition relative ${isCurrent ? 'border-[#185FA5] bg-[#EEF4FF]' : 'border-[#E2E8F0] bg-white hover:border-[#185FA5]'}`}>
                 {plan.badge === 'Most popular' && (
                   <span className="absolute -top-2 left-4 bg-[#185FA5] text-white text-[10px] font-black px-3 py-0.5 rounded-full">Most popular</span>
                 )}
@@ -420,7 +435,7 @@ const Settings = () => {
                   {struck && <p className="text-xs text-[#94A3B8] line-through">{struck}</p>}
                   <p className="text-2xl font-black text-[#0F172A]">{label}</p>
                   {billing === 'annual' && plan.annualPrice && (
-                    <p className="text-[10px] text-green-600 font-bold mt-0.5">2 months free ??</p>
+                    <p className="text-[10px] text-green-600 font-bold mt-0.5">2 months free 🎉</p>
                   )}
                 </div>
                 <p className="text-xs text-[#94A3B8]">{plan.description}</p>
@@ -430,9 +445,7 @@ const Settings = () => {
           </div>
           {planMessage && <FAlert type="info" message={planMessage} />}
         </div>
-          );
-        }
-      )())}
+      )}
 
       {/* CONFIRM UPGRADE MODAL */}
       {selectedPlan && (
@@ -451,10 +464,12 @@ const Settings = () => {
                   {selectedPlan.billing === 'annual' ? 'Annual cost' : 'Monthly cost'}
                 </p>
                 {selectedPlan.billing === 'annual' && selectedPlan.annualPrice && (
-                  <p className="text-xs text-[#94A3B8] line-through mt-2">?{(selectedPlan.price * 12).toLocaleString()}</p>
+                  <p className="text-xs text-[#94A3B8] line-through mt-2">₦{(selectedPlan.price * 12).toLocaleString()}</p>
                 )}
-                <p className="mt-1 text-2xl font-black text-[#0F172A]">?{(selectedPlan.selectedPrice || selectedPlan.price)?.toLocaleString()}</p>
-                {selectedPlan.billing === 'annual' && <p className="text-xs text-green-600 font-bold mt-1">You save ?{((selectedPlan.price * 12) - selectedPlan.annualPrice).toLocaleString()} ??</p>}
+                <p className="mt-1 text-2xl font-black text-[#0F172A]">₦{(selectedPlan.selectedPrice || selectedPlan.price)?.toLocaleString()}</p>
+                {selectedPlan.billing === 'annual' && selectedPlan.annualPrice && (
+                  <p className="text-xs text-green-600 font-bold mt-1">You save ₦{((selectedPlan.price * 12) - selectedPlan.annualPrice).toLocaleString()} annually</p>
+                )}
                 <p className="text-xs text-[#64748B] mt-2">Billed {selectedPlan.billing || 'monthly'}</p>
               </div>
               <div className="rounded-3xl border border-[#E2E8F0] p-4">
@@ -476,12 +491,13 @@ const Settings = () => {
               </button>
               <button type="button" onClick={confirmUpgrade} disabled={isUpgrading}
                 className="rounded-3xl bg-[#185FA5] px-5 py-3 text-sm font-bold text-white transition disabled:opacity-50">
-                {isUpgrading ? <FSpinner size='sm' /> : Confirm upgrade to }
+                {isUpgrading ? <FSpinner size="sm" /> : `Confirm upgrade to ${selectedPlan.name}`}
               </button>
             </div>
           </div>
         </div>
       )}
+
       {/* EXPORT STATUS */}
       {exportStatus && (
         <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
