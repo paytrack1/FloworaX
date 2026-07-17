@@ -15,7 +15,7 @@ const CATEGORIES = [
 ];
 
 const Expenses = () => {
-  const { token } = useStore();
+  const { token, fetchDashboard } = useStore();
   const [expenses, setExpenses]       = useState([]);
   const [summary, setSummary]         = useState({ totalExpenses: 0 });
   const [showForm, setShowForm]       = useState(false);
@@ -83,6 +83,7 @@ const Expenses = () => {
       setExpenses(expensesData);
       const summaryData = await fetchFinancialSummary(token);
       setSummary(summaryData);
+      fetchDashboard();
       setForm({
         description: '',
         amount:      '',
@@ -105,6 +106,7 @@ const Expenses = () => {
       setExpenses(expensesData);
       const summaryData = await fetchFinancialSummary(token);
       setSummary(summaryData);
+      fetchDashboard();
     } catch (err) {
       console.error('Failed to delete expense:', err);
     }
