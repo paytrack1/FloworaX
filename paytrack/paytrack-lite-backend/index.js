@@ -4,34 +4,34 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 require('dotenv').config();
 
 // ── Security ──
-const helmet     = require('helmet');
-const rateLimit  = require('express-rate-limit');
+const helmet        = require('helmet');
+const rateLimit     = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 
-const serviceRoutes = require('./src/routes/services');
-const bookingRoutes = require('./src/routes/bookings');
-const invoiceRoutes = require('./src/routes/invoices');
+const serviceRoutes  = require('./src/routes/services');
+const bookingRoutes  = require('./src/routes/bookings');
+const invoiceRoutes  = require('./src/routes/invoices');
 const customerRoutes = require('./src/routes/customers');
 const waitlistRoutes = require('./src/routes/waitlist');
-const eventRoutes = require('./src/routes/events');
-const Invoice  = require('./src/models/Invoice');
-const Service  = require('./src/models/Service');
-const Booking  = require('./src/models/Booking');
-const Event       = require('./src/models/Event');
-const EventTicket  = require('./src/models/EventTicket');
+const eventRoutes    = require('./src/routes/events');
+const Invoice        = require('./src/models/Invoice');
+const Service        = require('./src/models/Service');
+const Booking        = require('./src/models/Booking');
+const Event          = require('./src/models/Event');
+const EventTicket    = require('./src/models/EventTicket');
 const { ticketHtml } = require('./src/routes/events');
-const express  = require('express');
-const cors     = require('cors');
-const crypto   = require('crypto');
-const axios    = require('axios');
-const bcrypt   = require('bcryptjs');
-const jwt      = require('jsonwebtoken');
-const mongoose = require('mongoose');
+const express        = require('express');
+const cors           = require('cors');
+const crypto         = require('crypto');
+const axios          = require('axios');
+const bcrypt         = require('bcryptjs');
+const jwt            = require('jsonwebtoken');
+const mongoose       = require('mongoose');
 const { getPlanList, buildSubscriptionSummary, requireFeature } = require('./src/middleware/plan');
 
 // ── Resend Email Configuration ──
 const { Resend } = require('resend');
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resend     = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
 const app  = express();
@@ -66,7 +66,6 @@ app.use(cors({
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',
-    'http://localhost:4173',
     'https://floworax.com',
     'https://app.floworax.com',
     'https://paytracklite.vercel.app',
@@ -85,7 +84,7 @@ app.use(mongoSanitize());
 
 // ── Rate limiters ──
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 10,
   message: { error: 'Too many attempts. Please try again in 15 minutes.' },
   standardHeaders: true,
@@ -120,26 +119,26 @@ const connectToDatabase = async () => {
 
 // ── Mongoose Schemas ──
 const userSchema = new mongoose.Schema({
-  email:        { type: String, required: true, unique: true, lowercase: true, trim: true },
-  businessName: { type: String, required: true, trim: true },
-  passwordHash: { type: String, required: true },
-  emailVerified:  { type: Boolean, default: false },
-  otpHash:        { type: String, default: null },
-  otpExpiry:      { type: Date,   default: null },
+  email:            { type: String, required: true, unique: true, lowercase: true, trim: true },
+  businessName:     { type: String, required: true, trim: true },
+  passwordHash:     { type: String, required: true },
+  emailVerified:    { type: Boolean, default: false },
+  otpHash:          { type: String, default: null },
+  otpExpiry:        { type: Date,   default: null },
   resetTokenHash:   { type: String, default: null },
   resetTokenExpiry: { type: Date,   default: null },
-  profileImage: { type: String, default: null },
-  businessType: { type: String, default: null },
-  phone:        { type: String, default: null },
-  address:      { type: String, default: null },
-  bankAccount:  { type: String, default: null },
-  currency:     { type: String, default: null },
-  timezone:     { type: String, default: null },
-  plan:         { type: String, enum: ['free', 'pro', 'business'], default: 'free' },
-  modules:      { type: [String], default: ['sales'] },
-  role:         { type: String, enum: ['user', 'admin'], default: 'user' },
-  lastLoginAt:  { type: Date, default: null },
-  createdAt:    { type: Date, default: Date.now },
+  profileImage:     { type: String, default: null },
+  businessType:     { type: String, default: null },
+  phone:            { type: String, default: null },
+  address:          { type: String, default: null },
+  bankAccount:      { type: String, default: null },
+  currency:         { type: String, default: null },
+  timezone:         { type: String, default: null },
+  plan:             { type: String, enum: ['free', 'pro', 'business'], default: 'free' },
+  modules:          { type: [String], default: ['sales'] },
+  role:             { type: String, enum: ['user', 'admin'], default: 'user' },
+  lastLoginAt:      { type: Date, default: null },
+  createdAt:        { type: Date, default: Date.now },
 });
 
 const saleSchema = new mongoose.Schema({
@@ -160,13 +159,13 @@ const saleSchema = new mongoose.Schema({
 });
 
 const expenseSchema = new mongoose.Schema({
-  id:           { type: String, required: true, unique: true },
-  userId:       { type: String, required: true, index: true },
-  description:  { type: String },
-  amount:       { type: Number, required: true },
-  category:     { type: String, default: 'Other' },
-  synced:       { type: Number, default: 0 },
-  createdAt:    { type: Date, default: Date.now },
+  id:          { type: String, required: true, unique: true },
+  userId:      { type: String, required: true, index: true },
+  description: { type: String },
+  amount:      { type: Number, required: true },
+  category:    { type: String, default: 'Other' },
+  synced:      { type: Number, default: 0 },
+  createdAt:   { type: Date, default: Date.now },
 });
 
 const User    = mongoose.model('User', userSchema);
@@ -217,7 +216,7 @@ const isDisposableEmail = (email) => {
 // ── Email sending helper ──
 const sendOTPEmail = async (email, otp) => {
   if (!resend) {
-    console.log(`[DEV] OTP for ${email}: ${otp}`); // no Resend key set — log instead of sending
+    console.log(`[DEV] OTP for ${email}: ${otp}`);
     return;
   }
   const result = await resend.emails.send({
@@ -228,27 +227,27 @@ const sendOTPEmail = async (email, otp) => {
   });
   if (result.error) {
     console.error('Resend send failed:', result.error);
-    console.log(`[FALLBACK] OTP for ${email}: ${otp}`); // so you can still test even if email fails
+    console.log(`[FALLBACK] OTP for ${email}: ${otp}`);
   } else {
     console.log(`Resend accepted email for ${email}, id: ${result.data?.id}`);
   }
 };
 
 const formatUserResponse = (user) => ({
-  id:           user._id.toString(),
-  email:        user.email,
+  id:            user._id.toString(),
+  email:         user.email,
   emailVerified: user.emailVerified,
-  businessName: user.businessName,
-  businessType: user.businessType || null,
-  modules:      user.modules || ['sales'],
-  profileImage: user.profileImage || null,
-  phone:        user.phone || null,
-  address:      user.address || null,
-  bankAccount:  user.bankAccount || null,
-  currency:     user.currency || null,
-  timezone:     user.timezone || null,
-  plan:         user.plan || 'free',
-  role:         user.role || 'user',
+  businessName:  user.businessName,
+  businessType:  user.businessType || null,
+  modules:       user.modules || ['sales'],
+  profileImage:  user.profileImage || null,
+  phone:         user.phone || null,
+  address:       user.address || null,
+  bankAccount:   user.bankAccount || null,
+  currency:      user.currency || null,
+  timezone:      user.timezone || null,
+  plan:          user.plan || 'free',
+  role:          user.role || 'user',
 });
 
 // ── Health check ──
@@ -263,15 +262,15 @@ app.post('/api/auth/register', async (req, res) => {
     return res.status(400).json({ error: 'Password must be at least 8 characters' });
 
   try {
-    if (isDisposableEmail(email)) return res.status(400).json({ error: 'Disposable email addresses are not allowed. Please use a real email.' });
+    if (isDisposableEmail(email))
+      return res.status(400).json({ error: 'Disposable email addresses are not allowed. Please use a real email.' });
 
     const existing = await User.findOne({ email: email.toLowerCase().trim() });
     if (existing) return res.status(409).json({ error: 'An account with this email already exists' });
 
-    // Generate numeric 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpHash = await bcrypt.hash(otp, 10);
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const otp       = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash   = await bcrypt.hash(otp, 10);
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await User.create({
@@ -283,7 +282,6 @@ app.post('/api/auth/register', async (req, res) => {
       otpExpiry,
     });
 
-    // Send the verification code
     await sendOTPEmail(user.email, otp);
 
     const token = jwt.sign(
@@ -313,8 +311,8 @@ app.post('/api/auth/login', async (req, res) => {
     const match = await bcrypt.compare(password, user.passwordHash);
     if (!match) return res.status(401).json({ error: 'Invalid email or password' });
 
-    user.lastLoginAt = new Date();
-    await user.save();
+    // ── Update lastLoginAt ──
+    await User.findByIdAndUpdate(user._id, { lastLoginAt: new Date() });
 
     const token = jwt.sign(
       { id: user._id.toString(), email: user.email, businessName: user.businessName, role: user.role },
@@ -331,63 +329,65 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ── VERIFY EMAIL ──
-app.post('/api/auth/verify-email', async (req, res) => {
-  const { email, otp } = req.body;
-  if (!email || !otp) return res.status(400).json({ error: 'Email and verification code are required' });
+app.post('/api/auth/verify-email', requireAuth, async (req, res) => {
+  const { otp } = req.body;
+  if (!otp) return res.status(400).json({ error: 'Verification code is required' });
   try {
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    if (user.emailVerified) return res.status(400).json({ error: 'Email is already verified. Please log in.' });
+    if (user.emailVerified) return res.status(400).json({ error: 'Email is already verified' });
     if (!user.otpHash || !user.otpExpiry) return res.status(400).json({ error: 'No verification code found. Please request a new one.' });
     if (user.otpExpiry < new Date()) return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
+
     const match = await bcrypt.compare(otp, user.otpHash);
-    if (!match) return res.status(400).json({ error: 'Invalid verification code. Please check and try again.' });
+    if (!match) return res.status(400).json({ error: 'Invalid verification code' });
+
     user.emailVerified = true;
-    user.otpHash   = null;
-    user.otpExpiry = null;
+    user.otpHash       = null;
+    user.otpExpiry     = null;
     await user.save();
-    const token = jwt.sign({ id: user._id.toString(), email: user.email, businessName: user.businessName }, JWT_SECRET, { expiresIn: '7d' });
-    console.log('Email verified:', user.email);
-    res.json({ success: true, token, user: formatUserResponse(user) });
+
+    console.log(`Email verified: ${user.email}`);
+    res.json({ success: true, user: formatUserResponse(user) });
   } catch (err) {
     console.error('Verify email error:', err.stack || err);
     res.status(500).json({ error: 'Verification failed' });
   }
 });
 
-// -- RESEND OTP --
-app.post('/api/auth/resend-otp', async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email is required' });
+// ── RESEND OTP ──
+app.post('/api/auth/resend-otp', requireAuth, async (req, res) => {
   try {
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
     if (user.emailVerified) return res.status(400).json({ error: 'This email is already verified' });
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpHash = await bcrypt.hash(otp, 10);
+
+    const otp       = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash   = await bcrypt.hash(otp, 10);
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
     user.otpHash   = otpHash;
-    user.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    user.otpExpiry = otpExpiry;
     await user.save();
     await sendOTPEmail(user.email, otp);
-    console.log('Resent OTP to:', user.email);
+
+    console.log(`Resent OTP to: ${user.email}`);
     res.json({ success: true, message: 'A new verification code has been sent.' });
   } catch (err) {
     console.error('Resend OTP error:', err.stack || err);
     res.status(500).json({ error: 'Failed to resend verification code' });
   }
 });
+
 // ── FORGOT PASSWORD ──
 app.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
   try {
     const user = await User.findOne({ email: email.toLowerCase().trim() });
-    if (!user) {
-      return res.json({ success: true, message: 'If an account exists, a reset link has been sent.' });
-    }
+    if (!user) return res.json({ success: true, message: 'If an account exists, a reset link has been sent.' });
 
-    const rawToken   = crypto.randomBytes(32).toString('hex');
-    const tokenHash  = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const rawToken    = crypto.randomBytes(32).toString('hex');
+    const tokenHash   = crypto.createHash('sha256').update(rawToken).digest('hex');
     const tokenExpiry = new Date(Date.now() + 30 * 60 * 1000);
 
     user.resetTokenHash   = tokenHash;
@@ -429,14 +429,14 @@ app.post('/api/auth/reset-password', async (req, res) => {
   try {
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const user = await User.findOne({
-      resetTokenHash: tokenHash,
+      resetTokenHash:   tokenHash,
       resetTokenExpiry: { $gt: new Date() },
     });
 
     if (!user) return res.status(400).json({ error: 'Invalid or expired reset link. Please request a new one.' });
 
-    user.passwordHash = await bcrypt.hash(newPassword, 12);
-    user.resetTokenHash = null;
+    user.passwordHash     = await bcrypt.hash(newPassword, 12);
+    user.resetTokenHash   = null;
     user.resetTokenExpiry = null;
     await user.save();
 
@@ -468,15 +468,15 @@ app.patch('/api/auth/profile', requireAuth, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    if (businessName) user.businessName = businessName.trim();
-    if (businessType !== undefined) user.businessType = businessType.trim();
-    if (Array.isArray(modules)) user.modules = modules;
-    if (phone)        user.phone        = phone.trim();
-    if (address)      user.address      = address.trim();
-    if (bankAccount)  user.bankAccount  = bankAccount.trim();
-    if (currency)     user.currency     = currency.trim();
-    if (timezone)     user.timezone     = timezone.trim();
-    if (profileImage) user.profileImage = profileImage;
+    if (businessName !== undefined) user.businessName = businessName.trim();
+    if (businessType !== undefined) user.businessType = businessType ? businessType.trim() : null;
+    if (Array.isArray(modules))     user.modules      = modules;
+    if (phone)                      user.phone        = phone.trim();
+    if (address)                    user.address      = address.trim();
+    if (bankAccount)                user.bankAccount  = bankAccount.trim();
+    if (currency)                   user.currency     = currency.trim();
+    if (timezone)                   user.timezone     = timezone.trim();
+    if (profileImage)               user.profileImage = profileImage;
 
     if (newPassword) {
       if (!currentPassword) return res.status(400).json({ error: 'Current password required' });
@@ -650,11 +650,12 @@ const buildFinancialSummary = async (userId) => {
   const invoiceOutstanding = invoiceTotal - invoicePaid;
 
   return {
+    totalRevenue,
     totalExpenses,
     netProfit,
-    cashFlow: netProfit,
+    cashFlow:         netProfit,
     transactionCount: completedSales.length,
-    invoiceTotals: { total: invoiceTotal, paid: invoicePaid, outstanding: invoiceOutstanding },
+    invoiceTotals:    { total: invoiceTotal, paid: invoicePaid, outstanding: invoiceOutstanding },
   };
 };
 
@@ -686,8 +687,8 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
       buildFinancialSummary(req.user.id),
       buildSubscriptionSummary(req.user.id),
       Sale.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(10),
-      Booking.find({ providerId: req.user.id, type: 'appointment', scheduledDate: { $gte: today }, status: { $in: ['pending','confirmed'] } }).sort({ scheduledDate: 1 }).limit(5),
-      Booking.find({ providerId: req.user.id, type: 'event', scheduledDate: { $gte: today }, status: { $in: ['pending','confirmed'] } }).sort({ scheduledDate: 1 }).limit(5),
+      Booking.find({ providerId: req.user.id, type: 'appointment', scheduledDate: { $gte: today }, status: { $in: ['pending', 'confirmed'] } }).sort({ scheduledDate: 1 }).limit(5),
+      Booking.find({ providerId: req.user.id, type: 'event', scheduledDate: { $gte: today }, status: { $in: ['pending', 'confirmed'] } }).sort({ scheduledDate: 1 }).limit(5),
       Invoice.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(5),
       Service.find({ userId: req.user.id, isActive: true }).limit(5),
     ]);
@@ -736,20 +737,20 @@ app.post('/api/subscription/upgrade', requireAuth, async (req, res) => {
     const { data } = await axios.post(
       `${PAYSTACK_BASE_URL}/transaction/initialize`,
       {
-        email: user.email,
-        amount: Math.round(plan.price * 100),
+        email:        user.email,
+        amount:       Math.round(plan.price * 100),
         reference,
         callback_url: callbackUrl || process.env.FRONTEND_URL,
-        metadata: { type: 'subscription', planId, userId: user._id.toString() },
+        metadata:     { type: 'subscription', planId, userId: user._id.toString() },
       },
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`, 'Content-Type': 'application/json' } }
     );
 
     res.json({
-      success: true,
-      requiresPayment: true,
+      success:          true,
+      requiresPayment:  true,
       authorizationUrl: data.data.authorization_url,
-      reference: data.data.reference,
+      reference:        data.data.reference,
     });
   } catch (err) {
     console.error('Upgrade error:', err.response?.data || err.message);
@@ -825,7 +826,7 @@ app.get('/api/payments/verify/:reference', requireAuth, async (req, res) => {
 app.post('/webhook/paystack', (req, res, next) => {
   const sig = req.headers['x-paystack-signature'];
   if (!sig) return res.status(400).end();
-  const hash = crypto.createHmac('sha512', PAYSTACK_SECRET_KEY).update(req.body).digest('hex');
+  const hash       = crypto.createHmac('sha512', PAYSTACK_SECRET_KEY).update(req.body).digest('hex');
   const sigBuffer  = Buffer.from(sig, 'utf8');
   const hashBuffer = Buffer.from(hash, 'utf8');
   if (sigBuffer.length !== hashBuffer.length || !crypto.timingSafeEqual(sigBuffer, hashBuffer)) {
@@ -841,7 +842,6 @@ app.post('/webhook/paystack', (req, res, next) => {
       const { reference, amount, metadata } = data;
       console.log(`Payment confirmed: ${amount / 100} ref: ${reference}`);
 
-      // Branches are siblings, checked in order. First match wins.
       if (metadata?.type === 'subscription' && metadata?.userId && metadata?.planId) {
         await User.findByIdAndUpdate(metadata.userId, { plan: metadata.planId });
         console.log(`Subscription upgraded via webhook: user ${metadata.userId} -> ${metadata.planId}`);
@@ -857,10 +857,10 @@ app.post('/webhook/paystack', (req, res, next) => {
           const ev = await Event.findById(ticket.eventId);
           if (ev) {
             await resend.emails.send({
-              from: EMAIL_FROM,
-              to: ticket.buyerEmail,
+              from:    EMAIL_FROM,
+              to:      ticket.buyerEmail,
               subject: `Your ticket for ${ev.title}`,
-              html: ticketHtml(ev, ticket),
+              html:    ticketHtml(ev, ticket),
             });
           }
         }
@@ -884,14 +884,14 @@ app.post('/webhook/paystack', (req, res, next) => {
 });
 
 // ── Feature routes ──
-app.use('/api/services', serviceRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/invoices', invoiceRoutes);
-app.use('/api/customers', customerRoutes);
-app.use('/api/waitlist', waitlistRoutes);
-app.use('/api/events', eventRoutes);
+app.use('/api/services',   serviceRoutes);
+app.use('/api/bookings',   bookingRoutes);
+app.use('/api/invoices',   invoiceRoutes);
+app.use('/api/customers',  customerRoutes);
+app.use('/api/waitlist',   waitlistRoutes);
+app.use('/api/events',     eventRoutes);
 
-// -- CONTACT FORM --
+// ── CONTACT FORM ──
 app.post('/api/contact', async (req, res) => {
   const { name, email, message } = req.body;
   if (!name || !email || !message)
@@ -900,11 +900,11 @@ app.post('/api/contact', async (req, res) => {
   try {
     if (resend) {
       await resend.emails.send({
-        from: EMAIL_FROM,
-        to: 'floworax2@gmail.com',
+        from:     EMAIL_FROM,
+        to:       'floworax2@gmail.com',
         reply_to: email,
-        subject: `New contact form message from ${name}`,
-        html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Message:</strong></p><p>${message}</p>`,
+        subject:  `New contact form message from ${name}`,
+        html:     `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Message:</strong></p><p>${message}</p>`,
       });
     } else {
       console.log(`[DEV] Contact form from ${email}: ${message}`);
@@ -916,70 +916,85 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-// ── SECURE ADMIN DASHBOARD ROUTE ──
+// ── ADMIN DASHBOARD ──
 app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Access denied. Administrators only.' });
   }
   try {
-    const users = await User.find({}, '-password').sort({ createdAt: -1 });
-    const totalUsers = users.length;
-    const verifiedUsers = users.filter(u => u.emailVerified).length;
-    const premiumUsers = users.filter(u => u.plan !== 'free' && u.plan !== 'basic').length;
+    const now          = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
 
-    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const allUsers     = await User.find({}, '-passwordHash').sort({ createdAt: -1 });
+    const totalUsers   = allUsers.length;
+    const newThisMonth = allUsers.filter(u => new Date(u.createdAt) >= startOfMonth).length;
+    const activeUsers  = allUsers.filter(u => u.lastLoginAt && new Date(u.lastLoginAt) >= thirtyDaysAgo).length;
 
-    const [
-      totalSalesCount,
-      totalBookingsCount,
-      totalEventsCount,
-      newSignupsThisMonth,
-      activeUsers,
-      planBreakdownAgg,
-      topBusinessTypesAgg
-    ] = await Promise.all([
-      Sale.countDocuments({}),
-      Booking.countDocuments({}),
-      Event.countDocuments({}),
-      User.countDocuments({ createdAt: { $gte: startOfMonth } }),
-      User.countDocuments({ lastLoginAt: { $gte: thirtyDaysAgo } }),
+    const planBreakdown = {
+      free:     allUsers.filter(u => u.plan === 'free').length,
+      pro:      allUsers.filter(u => u.plan === 'pro').length,
+      business: allUsers.filter(u => u.plan === 'business').length,
+    };
 
-      User.aggregate([{ $group: { _id: '$plan', count: { $sum: 1 } } }]),
-      User.aggregate([
-        { $match: { businessType: { $ne: null } } },
-        { $group: { _id: '$businessType', count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
-        { $limit: 5 }
-      ])
-    ]);
-    const planBreakdown = planBreakdownAgg.reduce((acc, p) => {
-      acc[p._id || 'free'] = p.count;
-      return acc;
-    }, {});
-    const topBusinessTypes = topBusinessTypesAgg.map(t => ({ type: t._id, count: t.count }));
-    const recentSignups = users.slice(0, 10);
+    const businessTypeCounts = {};
+    allUsers.forEach(u => {
+      if (u.businessType) {
+        businessTypeCounts[u.businessType] = (businessTypeCounts[u.businessType] || 0) + 1;
+      }
+    });
+    const topBusinessTypes = Object.entries(businessTypeCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([type, count]) => ({ type, count }));
+
+    const allSales       = await Sale.find({});
+    const totalRevenue   = allSales.reduce((sum, s) => sum + (s.total || 0), 0);
+    const salesThisMonth = allSales.filter(s => new Date(s.createdAt) >= startOfMonth).length;
+
+    const totalBookings      = await Booking.countDocuments();
+    const bookingsThisMonth  = await Booking.countDocuments({ createdAt: { $gte: startOfMonth } });
+    const totalEvents        = await Event.countDocuments();
+
+    const recentSignups = allUsers.slice(0, 10).map(u => ({
+      id:           u._id,
+      email:        u.email,
+      businessName: u.businessName,
+      businessType: u.businessType,
+      plan:         u.plan,
+      createdAt:    u.createdAt,
+      lastLoginAt:  u.lastLoginAt,
+    }));
 
     res.json({
       success: true,
       metrics: {
-        totalUsers,
-        verifiedUsers,
-        activeUsers,
-        newSignupsThisMonth,
-        premiumUsers,
-        totalSales: totalSalesCount,
-        totalBookings: totalBookingsCount,
-        totalEvents: totalEventsCount,
-        planBreakdown,
-        topBusinessTypes
+        users: {
+          total:            totalUsers,
+          active:           activeUsers,
+          newThisMonth,
+          planBreakdown,
+          topBusinessTypes,
+        },
+        revenue: {
+          total:           totalRevenue,
+          salesCount:      allSales.length,
+          salesThisMonth,
+        },
+        bookings: {
+          total:      totalBookings,
+          thisMonth:  bookingsThisMonth,
+        },
+        events: {
+          total: totalEvents,
+        },
       },
       recentSignups,
-      users
+      users: allUsers,
     });
   } catch (err) {
-    console.error('Admin Fetch Error:', err);
-    res.status(500).json({ error: 'Failed to retrieve admin system metrics.' });
+    console.error('Admin dashboard error:', err);
+    res.status(500).json({ error: 'Failed to retrieve admin metrics.' });
   }
 });
 
