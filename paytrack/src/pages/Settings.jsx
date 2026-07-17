@@ -1,17 +1,17 @@
-import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import FAlert   from '../components/FAlert';
 import FSpinner from '../components/FSpinner';
 import { useStore } from '../store/useStore';
-import { Camera, ChevronRight } from 'lucide-react';
+import { Camera, ChevronRight, Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt } from 'lucide-react';
 
 const MODULE_OPTIONS = [
-  { key: 'customers', label: 'Customers', icon: '\ud83d\udc65', description: 'Manage your clients' },
-  { key: 'sales', label: 'Sales', icon: '\ud83d\udcb5', description: 'Record and track sales' },
-  { key: 'bookings', label: 'Bookings', icon: '\ud83d\udcc5', description: 'Accept appointments online' },
-  { key: 'events', label: 'Events', icon: '\ud83c\udf9f\ufe0f', description: 'Sell tickets and manage attendees' },
-  { key: 'finance', label: 'Finance', icon: '\ud83d\udcb0', description: 'Track income and expenses' },
-  { key: 'reports', label: 'Reports', icon: '\ud83d\udcca', description: 'See performance at a glance' },
-  { key: 'invoices', label: 'Invoices', icon: '\ud83e\uddfe', description: 'Bill clients and get paid' },
+  { key: 'customers', label: 'Customers', icon: Users, description: 'Manage your clients' },
+  { key: 'sales', label: 'Sales', icon: DollarSign, description: 'Record and track sales' },
+  { key: 'bookings', label: 'Bookings', icon: Calendar, description: 'Accept appointments online' },
+  { key: 'events', label: 'Events', icon: Ticket, description: 'Sell tickets and manage attendees' },
+  { key: 'finance', label: 'Finance', icon: Wallet, description: 'Track income and expenses' },
+  { key: 'reports', label: 'Reports', icon: BarChart2, description: 'See performance at a glance' },
+  { key: 'invoices', label: 'Invoices', icon: Receipt, description: 'Bill clients and get paid' },
 ];
 
 const Settings = () => {
@@ -134,11 +134,11 @@ const Settings = () => {
   const getPrice = (plan) => (billing === 'annual' && plan.annualPrice ? plan.annualPrice : plan.price);
   const getLabel = (plan) => {
     if (plan.price === 0) return 'Free forever';
-    if (billing === 'annual' && plan.annualPrice) return `₦${plan.annualPrice.toLocaleString()}/year`;
-    return `₦${plan.price.toLocaleString()}/month`;
+    if (billing === 'annual' && plan.annualPrice) return `â‚¦${plan.annualPrice.toLocaleString()}/year`;
+    return `â‚¦${plan.price.toLocaleString()}/month`;
   };
   const getOriginal = (plan) =>
-    billing === 'annual' && plan.annualPrice ? `₦${(plan.price * 12).toLocaleString()}` : null;
+    billing === 'annual' && plan.annualPrice ? `â‚¦${(plan.price * 12).toLocaleString()}` : null;
 
   const settingsOptions = [
     {
@@ -238,11 +238,11 @@ const Settings = () => {
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-black"
                 style={{ backgroundColor: opt.iconBg }}
               >
-                {opt.action === 'profile' && '👤'}
-                {opt.action === 'plans' && '⭐'}
-                {opt.action === 'sync' && '🔄'}
-                {opt.action === 'export' && '📥'}
-                {opt.action === 'support' && '💬'}
+                {opt.action === 'profile' && 'ðŸ‘¤'}
+                {opt.action === 'plans' && 'â­'}
+                {opt.action === 'sync' && 'ðŸ”„'}
+                {opt.action === 'export' && 'ðŸ“¥'}
+                {opt.action === 'support' && 'ðŸ’¬'}
               </div>
               <div>
                 <p className="text-[#0F172A] font-bold text-sm">{opt.label}</p>
@@ -345,7 +345,7 @@ const Settings = () => {
                     const checked = selectedModules.includes(module.key);
                     return (
                       <label key={module.key} className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${checked ? 'border-[#185FA5] bg-white' : 'border-[#E2E8F0] bg-transparent'}`}>
-                        <span className="text-lg leading-none mr-2">{module.icon}</span><span className="font-semibold text-[#0F172A]">{module.label}<br/><span className="text-xs font-normal text-[#64748B]">{module.description}</span></span>
+                        <module.icon size={18} className="mr-2 text-[#185FA5] flex-shrink-0" /><span className="font-semibold text-[#0F172A]">{module.label}<br/><span className="text-xs font-normal text-[#64748B]">{module.description}</span></span>
                         <input type="checkbox" checked={checked} onChange={() => setSelectedModules((prev) => prev.includes(module.key) ? prev.filter((item) => item !== module.key) : [...prev, module.key])} className="h-4 w-4 rounded border-slate-300 text-[#185FA5] focus:ring-[#185FA5]" />
                       </label>
                     );
@@ -380,7 +380,7 @@ const Settings = () => {
                   disabled={savingProfile}
                   className="flex-1 py-3 bg-[#185FA5] text-white rounded-2xl font-bold text-sm disabled:opacity-60"
                 >
-                  {savingProfile ? 'Saving…' : 'Save Changes'}
+                  {savingProfile ? 'Savingâ€¦' : 'Save Changes'}
                 </button>
               </div>
             </div>
@@ -435,7 +435,7 @@ const Settings = () => {
                   {struck && <p className="text-xs text-[#94A3B8] line-through">{struck}</p>}
                   <p className="text-2xl font-black text-[#0F172A]">{label}</p>
                   {billing === 'annual' && plan.annualPrice && (
-                    <p className="text-[10px] text-green-600 font-bold mt-0.5">2 months free 🎉</p>
+                    <p className="text-[10px] text-green-600 font-bold mt-0.5">2 months free ðŸŽ‰</p>
                   )}
                 </div>
                 <p className="text-xs text-[#94A3B8]">{plan.description}</p>
@@ -464,11 +464,11 @@ const Settings = () => {
                   {selectedPlan.billing === 'annual' ? 'Annual cost' : 'Monthly cost'}
                 </p>
                 {selectedPlan.billing === 'annual' && selectedPlan.annualPrice && (
-                  <p className="text-xs text-[#94A3B8] line-through mt-2">₦{(selectedPlan.price * 12).toLocaleString()}</p>
+                  <p className="text-xs text-[#94A3B8] line-through mt-2">â‚¦{(selectedPlan.price * 12).toLocaleString()}</p>
                 )}
-                <p className="mt-1 text-2xl font-black text-[#0F172A]">₦{(selectedPlan.selectedPrice || selectedPlan.price)?.toLocaleString()}</p>
+                <p className="mt-1 text-2xl font-black text-[#0F172A]">â‚¦{(selectedPlan.selectedPrice || selectedPlan.price)?.toLocaleString()}</p>
                 {selectedPlan.billing === 'annual' && selectedPlan.annualPrice && (
-                  <p className="text-xs text-green-600 font-bold mt-1">You save ₦{((selectedPlan.price * 12) - selectedPlan.annualPrice).toLocaleString()} annually</p>
+                  <p className="text-xs text-green-600 font-bold mt-1">You save â‚¦{((selectedPlan.price * 12) - selectedPlan.annualPrice).toLocaleString()} annually</p>
                 )}
                 <p className="text-xs text-[#64748B] mt-2">Billed {selectedPlan.billing || 'monthly'}</p>
               </div>
