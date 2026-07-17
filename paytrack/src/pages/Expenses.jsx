@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { useStore } from "../store/useStore";
 import { Package, Car, Store, Users, Zap, Megaphone, Wrench, DollarSign, Plus, Trash2, TrendingDown } from "lucide-react";
 
@@ -145,7 +145,7 @@ const Expenses = () => {
                   </div>
                   <div>
                     <p className="text-[#0F172A] font-bold text-sm">{expense.description}</p>
-                    <p className="text-[#94A3B8] text-xs mt-0.5">{expense.category} � {new Date(expense.createdAt).toLocaleDateString()}</p>
+                    <p className="text-[#94A3B8] text-xs mt-0.5">{expense.category} · {new Date(expense.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
