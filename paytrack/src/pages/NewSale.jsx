@@ -13,6 +13,7 @@ const NewSale = ({ onBack }) => {
   const [reference, setReference] = useState('');
   const [isDraft, setIsDraft] = useState(false);
   const [saleError, setSaleError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const cleanReference = (raw) => {
     return raw
@@ -35,6 +36,7 @@ const NewSale = ({ onBack }) => {
       setSaleError("Please enter an amount. For Transfer/POS, a Reference ID is required.");
       return;
     }
+    setSaving(true);
     try {
       setSaleError(""); addSale({
         itemName: itemName || "General Sale",
@@ -47,6 +49,8 @@ const NewSale = ({ onBack }) => {
     } catch (err) {
       console.error("Sale Error:", err);
       setSaleError("Store Error: Could not save sale.");
+    } finally {
+      setSaving(false);
     }
   };
 
