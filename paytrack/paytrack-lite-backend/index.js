@@ -331,53 +331,51 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ── VERIFY EMAIL ──
-app.post('/api/auth/verify-email', requireAuth, async (req, res) => {
-  const { otp } = req.body;
-  if (!otp) return res.status(400).json({ error: 'Verification code is required' });
+app.post('/api/auth/verify-email', async (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) return res.status(400).json({ error: 'Email and verification code are required' });
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) return res.status(404).json({ error: 'User not found' });
-    if (user.emailVerified) return res.status(400).json({ error: 'Email is already verified' });
+    if (user.emailVerified) return res.status(400).json({ error: 'Email is already verified. Please log in.' });
     if (!user.otpHash || !user.otpExpiry) return res.status(400).json({ error: 'No verification code found. Please request a new one.' });
     if (user.otpExpiry < new Date()) return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
-
     const match = await bcrypt.compare(otp, user.otpHash);
-    if (!match) return res.status(400).json({ error: 'Invalid verification code' });
-
+    if (!match) return res.status(400).json({ error: 'Invalid verification code. Please check and try again.' });
     user.emailVerified = true;
-    user.otpHash = null;
+    user.otpHash   = null;
     user.otpExpiry = null;
     await user.save();
-
-    console.log(`Email verified: ${user.email}`);
-    res.json({ success: true, user: formatUserResponse(user) });
+    const token = jwt.sign({ id: user._id.toString(), email: user.email, businessName: user.businessName }, JWT_SECRET, { expiresIn: '7d' });
+    console.log('Email verified:', user.email);
+    res.json({ success: true, token, user: formatUserResponse(user) });
   } catch (err) {
     console.error('Verify email error:', err.stack || err);
     res.status(500).json({ error: 'Verification failed' });
   }
 });
 
-// ── RESEND OTP (for logged-in, unverified user) ──
-app.post('/api/auth/resend-otp', requireAuth, async (req, res) => {
+// -- RESEND OTP --
+app.post('/api/auth/resend-otp', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) return res.status(404).json({ error: 'User not found' });
     if (user.emailVerified) return res.status(400).json({ error: 'This email is already verified' });
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpHash = await bcrypt.hash(otp, 10);
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-    user.otpHash = otpHash;
-    user.otpExpiry = otpExpiry;
+    user.otpHash   = otpHash;
+    user.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
     await sendOTPEmail(user.email, otp);
-    console.log(`Resent OTP to: ${user.email}`);
+    console.log('Resent OTP to:', user.email);
     res.json({ success: true, message: 'A new verification code has been sent.' });
   } catch (err) {
     console.error('Resend OTP error:', err.stack || err);
     res.status(500).json({ error: 'Failed to resend verification code' });
   }
 });
-
 // ── FORGOT PASSWORD ──
 app.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
