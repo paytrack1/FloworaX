@@ -1,0 +1,5 @@
+{
+  "rootDir": "paytrack",
+  "buildCommand": "npm install && npm run build",
+  "outputDir": "paytrack/dist"
+}
