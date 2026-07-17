@@ -12,7 +12,6 @@ const PLAN_CATALOG = {
   pro: {
     name: 'Pro',
     price: 2000,
-    price: 2000,
     annualPrice: 20000,
     features: ['sales', 'services', 'bookings', 'finance', 'reports', 'invoices', 'events'],
     limits: { sales: 500, bookings: 200, services: 20, events: null },
@@ -20,7 +19,6 @@ const PLAN_CATALOG = {
   },
   business: {
     name: 'Business',
-    price: 4000,
     price: 4000,
     annualPrice: 40000,
     features: ['sales', 'services', 'bookings', 'finance', 'reports', 'invoices', 'events', 'staff'],
@@ -170,3 +168,4 @@ module.exports = {
   requireFeature,
   requireProviderFeature,
 };
+
