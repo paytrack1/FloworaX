@@ -14,6 +14,7 @@ export const useStore = create(
       isAuthenticated: false,
       user: null,
       token: null,
+      pendingEmail: null,
       authError: null,
       activeTab: 'home',
       isSaleModalOpen: false,
@@ -30,6 +31,10 @@ export const useStore = create(
           });
           const data = await res.json();
           if (!res.ok) { set({ authError: data.error || 'Registration failed' }); throw new Error(data.error); }
+          if (data.requiresVerification) {
+            set({ pendingEmail: data.email, authError: null });
+            return data;
+          }
           set({ isAuthenticated: true, user: data.user, token: data.token, authError: null });
           await get().init();
           return data;
@@ -62,7 +67,8 @@ export const useStore = create(
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || 'Verification failed');
-        set((state) => ({ user: { ...state.user, emailVerified: true } }));
+        set({ isAuthenticated: true, user: data.user, token: data.token, pendingEmail: null, authError: null });
+        await get().init();
         return data;
       },
       forgotPassword: async (email) => {
@@ -353,7 +359,7 @@ export const useStore = create(
     }),
     {
       name: 'flowora-auth',
-      partialize: (state) => ({ isAuthenticated: state.isAuthenticated, user: state.user, token: state.token }),
+      partialize: (state) => ({ isAuthenticated: state.isAuthenticated, user: state.user, token: state.token, pendingEmail: state.pendingEmail }),
     }
   )
 );

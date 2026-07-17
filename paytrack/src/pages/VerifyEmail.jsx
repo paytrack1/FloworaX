@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import FAlert   from '../components/FAlert';
+import FSpinner from '../components/FSpinner';
 import { useStore } from '../store/useStore';
 
 const VerifyEmail = () => {
@@ -77,7 +79,7 @@ const VerifyEmail = () => {
           disabled={loading || code.length !== 6}
           className="w-full bg-[#185FA5] text-white py-4 rounded-2xl font-bold disabled:opacity-60 active:scale-95 transition-all"
         >
-          {loading ? 'Verifying…' : 'Verify'}
+          {loading ? <FSpinner size='sm' /> : 'Verify'}
         </button>
 
         <button
