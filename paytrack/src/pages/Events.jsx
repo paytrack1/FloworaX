@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import FSpinner from '../components/FSpinner';
+import FAlert from '../components/FAlert';
 import {
   Plus,
   MapPin,
@@ -26,6 +27,7 @@ export default function Events() {
   const [form, setForm] = useState({ title: "", date: "", time: "", location: "", capacity: "", price: "" });
   const [saving, setSaving] = useState(false);
 
+  const [formError, setFormError] = useState("");
   useEffect(() => { fetchEvents(); }, []);
 
   const fetchEvents = async () => {
@@ -40,7 +42,7 @@ export default function Events() {
 
   const handleCreateEvent = async () => {
     if (!form.title.trim() || !form.date || !form.time.trim()) {
-      alert("Title, date, and time are required.");
+      setFormError("Title, date, and time are required.");
       return;
     }
     setSaving(true);
@@ -115,7 +117,7 @@ export default function Events() {
           <p className="text-sm text-gray-500">Manage your conferences, ticketing, and real-time check-ins</p>
         </div>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => { setFormError(""); setShowCreateModal(true); }}
           className="bg-[#0A1F44] text-white px-4 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition-all flex items-center gap-2"
         >
           <Plus size={18} />
@@ -222,8 +224,9 @@ export default function Events() {
               <input type="text" placeholder="Location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm" />
               <input type="number" placeholder="Capacity" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm" />
               <input type="number" placeholder="Price (0 for free)" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm" />
-              <button onClick={handleCreateEvent} disabled={saving} className="w-full bg-[#0A1F44] text-white py-2 rounded-lg font-bold text-sm hover:opacity-95 transition-all disabled:opacity-50">
-                {saving ? "Creating..." : "Create Event"}
+              <FAlert type="error" message={formError} onDismiss={() => setFormError("")} />
+              <button onClick={handleCreateEvent} disabled={saving} className="w-full bg-[#185FA5] text-white py-3 rounded-xl font-bold text-sm disabled:opacity-60 flex items-center justify-center gap-3">
+                {saving ? <FSpinner size="sm" /> : "Create Event"}
               </button>
             </div>
           </div>
