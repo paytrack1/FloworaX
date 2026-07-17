@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
+import { Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt } from 'lucide-react';
 
 const MODULE_OPTIONS = [
-  { key: 'customers', label: 'Customers', icon: '\ud83d\udc65', description: 'Manage your clients' },
-  { key: 'sales', label: 'Sales', icon: '\ud83d\udcb5', description: 'Record and track sales' },
-  { key: 'bookings', label: 'Bookings', icon: '\ud83d\udcc5', description: 'Accept appointments online' },
-  { key: 'events', label: 'Events', icon: '\ud83c\udf9f\ufe0f', description: 'Sell tickets and manage attendees' },
-  { key: 'finance', label: 'Finance', icon: '\ud83d\udcb0', description: 'Track income and expenses' },
-  { key: 'reports', label: 'Reports', icon: '\ud83d\udcca', description: 'See performance at a glance' },
-  { key: 'invoices', label: 'Invoices', icon: '\ud83e\uddfe', description: 'Bill clients and get paid' },
+  { key: 'customers', label: 'Customers', icon: Users, description: 'Manage your clients' },
+  { key: 'sales', label: 'Sales', icon: DollarSign, description: 'Record and track sales' },
+  { key: 'bookings', label: 'Bookings', icon: Calendar, description: 'Accept appointments online' },
+  { key: 'events', label: 'Events', icon: Ticket, description: 'Sell tickets and manage attendees' },
+  { key: 'finance', label: 'Finance', icon: Wallet, description: 'Track income and expenses' },
+  { key: 'reports', label: 'Reports', icon: BarChart2, description: 'See performance at a glance' },
+  { key: 'invoices', label: 'Invoices', icon: Receipt, description: 'Bill clients and get paid' },
 ];
 
 const DEFAULT_MODULES = ['sales', 'customers', 'reports'];
@@ -197,7 +198,7 @@ const BusinessTypeOnboarding = () => {
                   const checked = selectedModules.includes(module.key);
                   return (
                     <label key={module.key} className={`flex cursor-pointer items-center justify-between rounded-2xl border px-4 py-3 transition ${checked ? 'border-[#185FA5] bg-[#EFF6FF]' : 'border-[#E2E8F0] bg-white'}`}>
-                      <span className="text-xl leading-none mr-3">{module.icon}</span><span className="text-sm font-semibold text-[#0F172A]">{module.label}<br/><span className="text-xs font-normal text-[#64748B]">{module.description}</span></span>
+                      <module.icon size={20} className="mr-3 text-[#185FA5] flex-shrink-0" /><span className="text-sm font-semibold text-[#0F172A]">{module.label}<br/><span className="text-xs font-normal text-[#64748B]">{module.description}</span></span>
                       <input type="checkbox" checked={checked} onChange={() => handleModuleToggle(module.key)} className="h-4 w-4 rounded border-slate-300 text-[#185FA5] focus:ring-[#185FA5]" />
                     </label>
                   );
