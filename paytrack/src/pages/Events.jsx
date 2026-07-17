@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Plus,
   MapPin,
@@ -83,6 +83,26 @@ export default function Events() {
     setTicketInput("");
   };
 
+
+  const handleShare = async (event) => {
+    const url = `${window.location.origin}/events/${event._id}`;
+    const text = `You are invited to ${event.title}! Register here: ${url}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: event.title, text, url });
+      } catch (err) {
+        console.error("Share cancelled or failed:", err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        setScanResult("Link copied to clipboard!");
+        setTimeout(() => setScanResult(""), 3000);
+      } catch (err) {
+        console.error("Copy failed:", err);
+      }
+    }
+  };
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6 bg-slate-50 min-h-screen">
       <div className="flex justify-between items-center">
@@ -105,7 +125,7 @@ export default function Events() {
             <div>
               <div className="flex justify-between items-start">
                 <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700">
-                  {event.price === 0 ? "Free" : `₦${event.price}`}
+                  {event.price === 0 ? "Free" : `?${event.price}`}
                 </span>
                 <span className="text-xs text-gray-400 flex items-center gap-1">
                   <Calendar size={12} /> {event.date} at {event.time}
@@ -121,7 +141,7 @@ export default function Events() {
                   <p className="text-xs text-gray-400 uppercase font-semibold flex items-center gap-1">
                     <Ticket size={12} /> Tickets Issued
                   </p>
-                  <p className="text-2xl font-bold text-[#0A1F44] mt-1">{event.ticketCount || 0} <span className="text-xs text-gray-400">/ {event.capacity || "∞"}</span></p>
+                  <p className="text-2xl font-bold text-[#0A1F44] mt-1">{event.ticketCount || 0} <span className="text-xs text-gray-400">/ {event.capacity || "8"}</span></p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 uppercase font-semibold flex items-center gap-1">
@@ -143,6 +163,7 @@ export default function Events() {
                 <Users size={16} /> Attendee List
               </button>
             </div>
+              <button onClick={() => handleShare(event)} className="flex-1 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2">Share Event</button>
           </div>
         ))}
       </div>
