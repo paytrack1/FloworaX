@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import FAlert   from '../components/FAlert';
+import FSpinner from '../components/FSpinner';
 import { useStore } from '../store/useStore';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
@@ -152,7 +154,7 @@ const buildInvoiceHTML = (invoice, businessName = 'My Business') => {
 const downloadInvoicePDF = (invoice, businessName) => {
   const html = buildInvoiceHTML(invoice, businessName);
   const printWindow = window.open('', '_blank');
-  if (!printWindow) { alert('Allow pop-ups to download the PDF.'); return; }
+  if (!printWindow) { setSaveError('Allow pop-ups to download the PDF. Please enable them in your browser.'); return; }
   printWindow.document.write(html);
   printWindow.document.close();
   printWindow.focus();
@@ -442,11 +444,7 @@ const Invoices = () => {
                 placeholder="Payment terms, bank details, thank-you note…"
                 className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#185FA5] h-20 resize-none" />
             </div>
-
-            {error && (
-              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-red-600 text-sm">⚠️ {error}</p>
-              </div>
+            <FAlert type="error" message={error} onDismiss={() => setError("")} />
             )}
 
             <div className="flex gap-3">
@@ -454,7 +452,7 @@ const Invoices = () => {
                 className="flex-1 py-3 border border-[#E2E8F0] rounded-xl font-bold text-[#64748B] text-sm">
                 Cancel
               </button>
-              <button onClick={handleCreate} disabled={saving}
+                {saving ? <FSpinner size="sm" /> : 'Create Invoice'}
                 className="flex-1 py-3 bg-[#185FA5] text-white rounded-xl font-bold text-sm disabled:opacity-60">
                 {saving ? 'Saving…' : 'Create Invoice'}
               </button>
@@ -543,7 +541,7 @@ const Invoices = () => {
 
       {/* ── Invoice List ───────────────────────────────────────────────────── */}
       <div className="px-6">
-        {loading ? (
+          <div className="flex justify-center py-16"><FSpinner size="md" message="Loading invoices" /></div>
           <div className="text-center py-16 text-[#94A3B8] text-sm">Loading invoices…</div>
         ) : (() => {
           const filtered = activeTab === 'paid'

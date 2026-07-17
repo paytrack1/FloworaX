@@ -1,4 +1,6 @@
 import React, { useState, useRef } from 'react';
+import FAlert   from '../components/FAlert';
+import FSpinner from '../components/FSpinner';
 import { useStore } from '../store/useStore';
 import { Camera, ChevronRight } from 'lucide-react';
 
@@ -160,7 +162,7 @@ const Settings = () => {
     if (action === 'export') handleExportCSV();
     if (action === 'support') setShowSupport(!showSupport);
     if (action === 'profile') setShowEditProfile(true);
-    if (action === 'sync') alert('Auto-sync is enabled. Sales sync every 30 seconds when online.');
+    if (action === 'sync') setSyncMsg('Auto-sync is enabled. Sales sync every 30 seconds when online.');
     if (action === 'plans') {
       setShowPlans(!showPlans);
       if (!plans?.length) fetchPlans?.();
@@ -337,11 +339,7 @@ const Settings = () => {
                 </div>
               </div>
 
-              {profileError && (
-                <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-red-600 text-sm font-medium">{profileError}</p>
-                </div>
-              )}
+              <FAlert type="error" message={profileError} onDismiss={() => setProfileError("")} />
 
               <div className="flex gap-3 pt-2">
                 <button
@@ -375,7 +373,7 @@ const Settings = () => {
             </div>
             <button onClick={() => setShowPlans(false)} className="text-sm text-[#64748B]">Close</button>
           </div>
-          {planError && <p className="text-sm text-red-600 mb-4">{planError}</p>}
+          <FAlert type="error" message={planError} />
           <div className="grid gap-4 sm:grid-cols-3">
             {(plans || []).map((plan) => (
               <button

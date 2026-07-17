@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import FAlert from '../components/FAlert';
+import FSpinner from '../components/FSpinner';
 import { X, CheckCircle, CreditCard, Smartphone, Banknote } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
@@ -10,6 +12,7 @@ const NewSale = ({ onBack }) => {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [reference, setReference] = useState('');
   const [isDraft, setIsDraft] = useState(false);
+  const [saleError, setSaleError] = useState('');
 
   const cleanReference = (raw) => {
     return raw
@@ -29,11 +32,11 @@ const NewSale = ({ onBack }) => {
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
     if (isInvalid) {
-      alert("Please enter an amount. For Transfer/POS, a Reference ID is required.");
+      setSaleError("Please enter an amount. For Transfer/POS, a Reference ID is required.");
       return;
     }
     try {
-      addSale({
+      setSaleError(""); addSale({
         itemName: itemName || "General Sale",
         total: parseFloat(total),
         paymentMethod,
@@ -43,7 +46,7 @@ const NewSale = ({ onBack }) => {
       onBack();
     } catch (err) {
       console.error("Sale Error:", err);
-      alert("Store Error: Could not save sale.");
+      setSaleError("Store Error: Could not save sale.");
     }
   };
 
@@ -137,7 +140,7 @@ const NewSale = ({ onBack }) => {
         )}
       </form>
 
-      {/* ACTION BUTTON */}
+      {/* Error */}`n      <FAlert type="error" message={saleError} onDismiss={() => setSaleError("")} />`n      {/* ACTION BUTTON */}
       <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 z-50">
         <button
           type="button"
@@ -145,8 +148,7 @@ const NewSale = ({ onBack }) => {
           className={`w-full py-5 rounded-[2rem] font-black text-white shadow-xl transition-all flex items-center justify-center gap-2
             ${isInvalid ? 'bg-slate-300' : 'bg-[#185FA5] active:scale-95'}`}
         >
-          <CheckCircle size={20} />
-          {isDraft ? 'SAVE DRAFT' : 'COMPLETE SALE'}
+          {saving ? <FSpinner size="sm" /> : (<><CheckCircle size={20} /><span>{isDraft ? "SAVE DRAFT" : "COMPLETE SALE"}</span></>)}
         </button>
       </div>
     </div>
