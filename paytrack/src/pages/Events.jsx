@@ -39,6 +39,10 @@ export default function Events() {
   };
 
   const handleCreateEvent = async () => {
+    if (!form.title.trim() || !form.date || !form.time.trim()) {
+      alert("Title, date, and time are required.");
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch(`${BACKEND_URL}/api/events`, {
