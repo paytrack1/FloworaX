@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import FSpinner from '../components/FSpinner';
 import DashboardCard from '../components/DashboardCard';
 import { useStore } from '../store/useStore';
 
 const Home = () => {
-  const { user, dashboard } = useStore();
+  const { user, dashboard, fetchDashboard } = useStore();
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => { fetchDashboard(); }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchDashboard();
+    setRefreshing(false);
+  };
 
   const dashboardMetrics = [
     { title: 'Revenue', value: dashboard?.summary?.totalRevenue ? `₦${dashboard.summary.totalRevenue.toLocaleString()}` : '₦0', subtitle: 'Monthly total', accent: 'from-blue-500 to-cyan-500' },
@@ -21,7 +31,7 @@ const Home = () => {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[#64748B] text-xs font-semibold uppercase tracking-widest">Welcome back</p>
-            <h1 className="text-3xl font-black text-[#0F172A]">{user?.businessName || 'Your business'} Dashboard</h1>
+            <div className="flex items-center gap-3">`n            <h1 className="text-3xl font-black text-[#0F172A]">{user?.businessName || 'Your business'} Dashboard</h1>
           </div>
           <div className="inline-flex items-center gap-2 rounded-3xl bg-white px-4 py-3 shadow-sm">
             <div className="space-y-1 text-right">
