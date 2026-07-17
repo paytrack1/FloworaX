@@ -2,7 +2,7 @@
 import FAlert   from '../components/FAlert';
 import FSpinner from '../components/FSpinner';
 import { useStore } from '../store/useStore';
-import { Camera, ChevronRight, Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt } from 'lucide-react';
+import { Camera, ChevronRight, Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt, Store, CreditCard, RefreshCw, Download, HelpCircle } from 'lucide-react';
 
 const MODULE_OPTIONS = [
   { key: 'customers', label: 'Customers', icon: Users, description: 'Manage your clients' },
@@ -238,11 +238,11 @@ const Settings = () => {
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-black"
                 style={{ backgroundColor: opt.iconBg }}
               >
-                {opt.action === 'profile' && 'ðŸ‘¤'}
-                {opt.action === 'plans' && 'â­'}
-                {opt.action === 'sync' && 'ðŸ”„'}
-                {opt.action === 'export' && 'ðŸ“¥'}
-                {opt.action === 'support' && 'ðŸ’¬'}
+                {opt.action === 'profile' && <Store size={18} className="text-[#185FA5]" />}
+                {opt.action === 'plans' && <CreditCard size={18} className="text-amber-600" />}
+                {opt.action === 'sync' && <RefreshCw size={18} className="text-green-600" />}
+                {opt.action === 'export' && <Download size={18} className="text-purple-600" />}
+                {opt.action === 'support' && <HelpCircle size={18} className="text-orange-600" />}
               </div>
               <div>
                 <p className="text-[#0F172A] font-bold text-sm">{opt.label}</p>
