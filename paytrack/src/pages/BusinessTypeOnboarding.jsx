@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
+import FSpinner from '../components/FSpinner';
 import { Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt } from 'lucide-react';
 
 const MODULE_OPTIONS = [
@@ -288,7 +289,7 @@ const BusinessTypeOnboarding = () => {
                 disabled={loading}
                 className="w-full sm:w-auto bg-[#185FA5] text-white px-6 py-3 rounded-2xl font-black text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
               >
-                {loading ? 'Saving...' : 'Continue'}
+                {loading ? <FSpinner size="sm" /> : 'Continue'}
               </button>
             </div>
           </div>
