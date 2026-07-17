@@ -12,7 +12,8 @@ const PLAN_CATALOG = {
   pro: {
     name: 'Pro',
     price: 2000,
-    description: 'Grow with higher limits, invoices, unlimited events, advanced reports, and booking controls.',
+    price: 2000,
+    annualPrice: 20000,
     features: ['sales', 'services', 'bookings', 'finance', 'reports', 'invoices', 'events'],
     limits: { sales: 500, bookings: 200, services: 20, events: null },
     badge: 'Most popular',
@@ -20,7 +21,8 @@ const PLAN_CATALOG = {
   business: {
     name: 'Business',
     price: 4000,
-    description: 'Unlimited access to all business tools, staff features, and premium support.',
+    price: 4000,
+    annualPrice: 40000,
     features: ['sales', 'services', 'bookings', 'finance', 'reports', 'invoices', 'events', 'staff'],
     limits: { sales: null, bookings: null, services: null, events: null },
     badge: 'Enterprise',
