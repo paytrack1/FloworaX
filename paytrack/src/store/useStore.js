@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-const BACKEND_URL = 'https://flowora-backend.pxxl.run';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://flowora-backend-only.pxxl.run';
 
 const authHeaders = (token) => ({
   'Content-Type': 'application/json',
