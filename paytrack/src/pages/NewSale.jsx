@@ -9,6 +9,7 @@ const NewSale = ({ onBack }) => {
 
   const [itemName, setItemName] = useState('');
   const [total, setTotal] = useState('');
+  const [cost, setCost] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [reference, setReference] = useState('');
   const [isDraft, setIsDraft] = useState(false);
@@ -38,12 +39,15 @@ const NewSale = ({ onBack }) => {
     }
     setSaving(true);
     try {
+     const totalNum = parseFloat(total);
+      const costNum = parseFloat(cost) || 0;
       setSaleError(""); addSale({
         itemName: itemName || "General Sale",
-        total: parseFloat(total),
+        total: totalNum,
         paymentMethod,
         reference: paymentMethod === 'cash' ? null : cleanReference(reference),
         status: isDraft ? 'draft' : 'completed',
+        profit: totalNum - costNum,
       });
       onBack();
     } catch (err) {
@@ -96,6 +100,19 @@ const NewSale = ({ onBack }) => {
             className="w-full p-4 text-3xl font-black rounded-2xl border border-slate-200 focus:border-[#185FA5] outline-none"
             placeholder="0.00"
           />
+        </div>
+
+        {/* COST PRICE */}
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase text-slate-500 ml-1">Cost Price (₦) — optional</label>
+          <input
+            type="number"
+            value={cost}
+            onChange={(e) => setCost(e.target.value)}
+            className="w-full p-4 rounded-2xl border border-slate-200 focus:border-[#185FA5] outline-none"
+            placeholder="What this item cost you"
+          />
+          <p className="text-[10px] text-slate-400 ml-1">Leave blank if you don't want to track profit margin on this sale</p>
         </div>
 
         {/* PAYMENT METHODS */}
