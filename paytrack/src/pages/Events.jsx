@@ -29,6 +29,7 @@ export default function Events() {
   const [saving, setSaving] = useState(false);
 
   const [formError, setFormError] = useState("");
+  const [editingEventId, setEditingEventId] = useState(null);
   useEffect(() => { fetchEvents(); }, []);
 
   const fetchEvents = async () => {
@@ -48,21 +49,62 @@ export default function Events() {
     }
     setSaving(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/api/events`, {
-        method: "POST",
+      const isEditing = !!editingEventId;
+      const url = isEditing ? `${BACKEND_URL}/api/events/${editingEventId}` : `${BACKEND_URL}/api/events`;
+      const method = isEditing ? "PATCH" : "POST";
+      const res = await fetch(url, {
+        method,
         headers: authHeaders,
         body: JSON.stringify({ ...form, capacity: Number(form.capacity) || 0, price: Number(form.price) || 0 }),
       });
       const data = await res.json();
       if (data.success) {
-        setEvents(prev => [...prev, data.event]);
+        if (isEditing) {
+          setEvents(prev => prev.map(evt => evt._id === editingEventId ? { ...evt, ...data.event } : evt));
+        } else {
+          setEvents(prev => [...prev, data.event]);
+        }
         setShowCreateModal(false);
+        setEditingEventId(null);
         setForm({ title: "", date: "", time: "", location: "", capacity: "", price: "" });
+      } else {
+        setFormError(data.error || "Failed to save event.");
       }
     } catch (err) {
-      console.error("Failed to create event:", err);
+      console.error("Failed to save event:", err);
+      setFormError("Failed to save event.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleEditClick = (event) => {
+    setEditingEventId(event._id);
+    setForm({
+      title: event.title || "",
+      date: event.date || "",
+      time: event.time || "",
+      location: event.location || "",
+      capacity: event.capacity ?? "",
+      price: event.price ?? "",
+    });
+    setFormError("");
+    setShowCreateModal(true);
+  };
+
+  const handleDeleteEvent = async (eventId) => {
+    if (!window.confirm("Cancel this event? Attendees will no longer be able to register.")) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/events/${eventId}`, {
+        method: "DELETE",
+        headers: authHeaders,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEvents(prev => prev.filter(evt => evt._id !== eventId));
+      }
+    } catch (err) {
+      console.error("Failed to cancel event:", err);
     }
   };
 
@@ -118,7 +160,7 @@ export default function Events() {
           <p className="text-sm text-gray-500">Manage your conferences, ticketing, and real-time check-ins</p>
         </div>
         <button
-          onClick={() => { setFormError(""); setShowCreateModal(true); }}
+          onClick={() => { setFormError(""); setEditingEventId(null); setForm({ title: "", date: "", time: "", location: "", capacity: "", price: "" }); setShowCreateModal(true); }}
           className="bg-[#0A1F44] text-white px-4 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition-all flex items-center gap-2"
         >
           <Plus size={18} />
@@ -170,7 +212,15 @@ export default function Events() {
                 <Users size={16} /> Attendee List
               </button>
             </div>
-              <button onClick={() => handleShare(event)} className="flex-1 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2">Share Event</button>
+            <div className="mt-3 flex gap-3">
+              <button onClick={() => handleEditClick(event)} className="flex-1 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg text-sm font-bold transition-all">
+                Edit
+              </button>
+              <button onClick={() => handleDeleteEvent(event._id)} className="flex-1 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-bold transition-all">
+                Cancel Event
+              </button>
+            </div>
+            <button onClick={() => handleShare(event)} className="mt-3 w-full py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2">Share Event</button>
           </div>
         ))}
       </div>
@@ -214,10 +264,10 @@ export default function Events() {
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
-            <button onClick={() => setShowCreateModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+            <button onClick={() => { setShowCreateModal(false); setEditingEventId(null); setForm({ title: "", date: "", time: "", location: "", capacity: "", price: "" }); }} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
               <X size={20} />
             </button>
-            <h3 className="text-lg font-bold text-[#0A1F44] mb-4">Create Event</h3>
+            <h3 className="text-lg font-bold text-[#0A1F44] mb-4">{editingEventId ? "Edit Event" : "Create Event"}</h3>
             <div className="space-y-3">
               <input type="text" placeholder="Event title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm" />
               <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm" />
@@ -227,7 +277,7 @@ export default function Events() {
               <input type="number" placeholder="Price (0 for free)" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm" />
               <FAlert type="error" message={formError} onDismiss={() => setFormError("")} />
               <button onClick={handleCreateEvent} disabled={saving} className="w-full bg-[#185FA5] text-white py-3 rounded-xl font-bold text-sm disabled:opacity-60 flex items-center justify-center gap-3">
-                {saving ? <FSpinner size="sm" /> : "Create Event"}
+                {saving ? <FSpinner size="sm" /> : editingEventId ? "Save Changes" : "Create Event"}
               </button>
             </div>
           </div>
@@ -236,4 +286,3 @@ export default function Events() {
     </div>
   );
 }
-
