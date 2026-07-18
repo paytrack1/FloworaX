@@ -1,4 +1,0 @@
-{
-  "buildCommand": "cd paytrack && npm install && npm run build",
-  "outputDir": "paytrack/dist"
-}
