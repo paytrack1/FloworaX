@@ -30,6 +30,7 @@ export default function Events() {
 
   const [formError, setFormError] = useState("");
   const [editingEventId, setEditingEventId] = useState(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
   useEffect(() => { fetchEvents(); }, []);
 
   const fetchEvents = async () => {
@@ -93,7 +94,6 @@ export default function Events() {
   };
 
   const handleDeleteEvent = async (eventId) => {
-    if (!window.confirm("Cancel this event? Attendees will no longer be able to register.")) return;
     try {
       const res = await fetch(`${BACKEND_URL}/api/events/${eventId}`, {
         method: "DELETE",
@@ -105,6 +105,8 @@ export default function Events() {
       }
     } catch (err) {
       console.error("Failed to cancel event:", err);
+    } finally {
+      setConfirmingDeleteId(null);
     }
   };
 
@@ -216,7 +218,7 @@ export default function Events() {
               <button onClick={() => handleEditClick(event)} className="flex-1 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg text-sm font-bold transition-all">
                 Edit
               </button>
-              <button onClick={() => handleDeleteEvent(event._id)} className="flex-1 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-bold transition-all">
+              <button onClick={() => setConfirmingDeleteId(event._id)} className="flex-1 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-bold transition-all">
                 Cancel Event
               </button>
             </div>
@@ -256,6 +258,28 @@ export default function Events() {
                   {scanResult}
                 </p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmingDeleteId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+                <AlertCircle size={20} className="text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-[#0A1F44]">Cancel this event?</h3>
+            </div>
+            <p className="text-sm text-gray-500 mb-6">Attendees will no longer be able to register, and this can't be undone.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmingDeleteId(null)} className="flex-1 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm font-bold transition-all">
+                Keep Event
+              </button>
+              <button onClick={() => handleDeleteEvent(confirmingDeleteId)} className="flex-1 py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-lg text-sm font-bold transition-all">
+                Yes, Cancel It
+              </button>
             </div>
           </div>
         </div>
