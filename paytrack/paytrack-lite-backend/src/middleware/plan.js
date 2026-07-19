@@ -8,6 +8,7 @@ const PLAN_CATALOG = {
     features: ['sales', 'services', 'bookings', 'finance', 'reports', 'events'],
     limits: { sales: 50, bookings: 40, services: 8, events: 3 },
     badge: 'Best for starters',
+    platformFeePercent: 2,
   },
   pro: {
     name: 'Pro',
@@ -16,6 +17,7 @@ const PLAN_CATALOG = {
     features: ['sales', 'services', 'bookings', 'finance', 'reports', 'invoices', 'events'],
     limits: { sales: 500, bookings: 200, services: 20, events: null },
     badge: 'Most popular',
+    platformFeePercent: 0,
   },
   business: {
     name: 'Business',
@@ -24,6 +26,7 @@ const PLAN_CATALOG = {
     features: ['sales', 'services', 'bookings', 'finance', 'reports', 'invoices', 'events', 'staff'],
     limits: { sales: null, bookings: null, services: null, events: null },
     badge: 'Enterprise',
+    platformFeePercent: 0,
   },
 };
 
@@ -168,4 +171,3 @@ module.exports = {
   requireFeature,
   requireProviderFeature,
 };
-

@@ -1,11 +1,12 @@
-const express = require('express');
-const router  = express.Router();
-const crypto  = require('crypto');
-const axios   = require('axios');
+const express  = require('express');
+const router   = express.Router();
+const crypto   = require('crypto');
+const axios    = require('axios');
+const mongoose = require('mongoose');
 const Event       = require('../models/Event');
 const EventTicket = require('../models/EventTicket');
 const requireAuth = require('../middleware/auth');
-const { requireFeature, requireProviderFeature } = require('../middleware/plan');
+const { requireFeature, requireProviderFeature, getPlan } = require('../middleware/plan');
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_BASE_URL   = 'https://api.paystack.co';
@@ -204,15 +205,29 @@ router.post('/public/:id/register', async (req, res) => {
       return res.status(201).json({ success: true, ticket, paymentRequired: false });
     }
 
+    const owner = await mongoose.model('User').findById(event.userId);
+    const amountInKobo = Math.round(event.price * 100);
+    const ticketPayload = {
+      email: ticket.buyerEmail,
+      amount: amountInKobo,
+      reference: `event-ticket-${ticket._id}`,
+      callback_url: `${FRONTEND_URL}/events/ticket-success`,
+      metadata: { ticketId: ticket._id.toString(), eventId: event._id.toString(), buyerName: ticket.buyerName },
+    };
+
+    if (owner?.paystackSubaccountCode) {
+      const plan = getPlan(owner.plan);
+      const feePercent = typeof plan.platformFeePercent === 'number' ? plan.platformFeePercent : 0;
+      ticketPayload.subaccount = owner.paystackSubaccountCode;
+      ticketPayload.bearer = 'subaccount';
+      if (feePercent > 0) {
+        ticketPayload.transaction_charge = Math.round(amountInKobo * (feePercent / 100));
+      }
+    }
+
     const { data } = await axios.post(
       `${PAYSTACK_BASE_URL}/transaction/initialize`,
-      {
-        email: ticket.buyerEmail,
-        amount: Math.round(event.price * 100),
-        reference: `event-ticket-${ticket._id}`,
-        callback_url: `${FRONTEND_URL}/events/ticket-success`,
-        metadata: { ticketId: ticket._id.toString(), eventId: event._id.toString(), buyerName: ticket.buyerName },
-      },
+      ticketPayload,
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
     );
 
