@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, CalendarDays, MapPin, Ticket } from 'lucide-react';
+import { trackPageView, trackEvent } from '../utils/analytics';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
@@ -35,6 +36,7 @@ const EventRegistration = () => {
           return;
         }
         setEvent(data.event);
+        trackPageView(`Event: ${data.event.title || eventId}`);
       } catch {
         setError('Unable to load this event right now.');
       } finally {
@@ -62,9 +64,11 @@ const EventRegistration = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Registration failed.');
       if (data.paymentRequired && data.authorizationUrl) {
+        trackEvent('event_registration_started_payment', { event_id: eventId });
         window.location.href = data.authorizationUrl;
         return;
       }
+      trackEvent('event_registration_completed', { event_id: eventId, free: true });
       setDone(true);
     } catch (err) {
       setError(err.message || 'Registration failed.');
