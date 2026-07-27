@@ -3,3 +3,8 @@ node_modules/
 dist/
 build/
 .DS_Store
+
+FloworaX/
+FloworaX-OLD/
+flowora-backend-only/
+flowora-backend-only-OLD/
