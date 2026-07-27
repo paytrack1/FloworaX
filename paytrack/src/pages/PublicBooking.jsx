@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { trackPageView, trackEvent } from '../utils/analytics';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
@@ -27,6 +28,7 @@ const BookingForm = () => {
         const data = await res.json();
         if (!res.ok || !data.service) { setNotFound(true); return; }
         setService(data.service);
+        trackPageView(`Booking: ${data.service.title || serviceId}`);
       } catch {
         setNotFound(true);
       } finally {
@@ -54,9 +56,11 @@ const BookingForm = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not create booking');
       if (data.paymentRequired && data.authorizationUrl) {
+        trackEvent('booking_started_payment', { service_id: serviceId });
         window.location.href = data.authorizationUrl;
         return;
       }
+      trackEvent('booking_completed', { service_id: serviceId, free: true });
       setDone(true);
     } catch (err) {
       setError(err.message);

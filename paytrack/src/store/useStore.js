@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { trackEvent } from '../utils/analytics';
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://flowora-backend-only.pxxl.run';
 
 const authHeaders = (token) => ({
@@ -32,9 +33,11 @@ export const useStore = create(
           if (!res.ok) { set({ authError: data.error || 'Registration failed' }); throw new Error(data.error); }
           if (data.requiresVerification) {
             set({ pendingEmail: data.email, authError: null });
+            trackEvent('sign_up', { method: 'email' });
             return data;
           }
           set({ isAuthenticated: true, user: data.user, token: data.token, authError: null });
+          trackEvent('sign_up', { method: 'email' });
           await get().init();
           return data;
         } catch (err) { set({ authError: err.message }); throw err; }
@@ -127,6 +130,8 @@ export const useStore = create(
       dashboardError: null,
       plans: [],
       planError: null,
+      notifications: [],
+      unreadCount: 0,
 
       fetchUser: async () => {
         const { token } = get();
@@ -299,6 +304,7 @@ export const useStore = create(
             throw new Error(data.error || 'Failed to upgrade plan');
           }
           set({ user: data.user, dashboard: { ...get().dashboard, subscription: data.subscription }, planError: null });
+          trackEvent('subscription_upgrade', { plan_id: planId });
           return data;
         } catch (err) {
           console.error('Failed to upgrade plan:', err);
@@ -311,6 +317,61 @@ export const useStore = create(
         await get().fetchUser();
         await get().fetchSales();
         await get().fetchDashboard();
+        await get().fetchNotifications();
+      },
+
+      fetchNotifications: async () => {
+        const { token } = get();
+        if (!token) return;
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/notifications`, {
+            headers: authHeaders(token),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            set({ notifications: data.notifications || [], unreadCount: data.unreadCount || 0 });
+          }
+        } catch (err) {
+          console.error('Failed to load notifications:', err);
+        }
+      },
+
+      markNotificationRead: async (id) => {
+        const { token } = get();
+        if (!token) return;
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/notifications/${id}/read`, {
+            method: 'PATCH',
+            headers: authHeaders(token),
+          });
+          if (res.ok) {
+            set((state) => ({
+              notifications: state.notifications.map((n) => (n._id === id ? { ...n, read: true } : n)),
+              unreadCount: Math.max(0, state.unreadCount - 1),
+            }));
+          }
+        } catch (err) {
+          console.error('Failed to mark notification read:', err);
+        }
+      },
+
+      markAllNotificationsRead: async () => {
+        const { token } = get();
+        if (!token) return;
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/notifications/read-all`, {
+            method: 'PATCH',
+            headers: authHeaders(token),
+          });
+          if (res.ok) {
+            set((state) => ({
+              notifications: state.notifications.map((n) => ({ ...n, read: true })),
+              unreadCount: 0,
+            }));
+          }
+        } catch (err) {
+          console.error('Failed to mark all notifications read:', err);
+        }
       },
 
       addSale: async (saleData) => {

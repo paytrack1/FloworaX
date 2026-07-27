@@ -26,6 +26,7 @@ import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
 import EventRegistration from './pages/EventRegistration';
 import AdminDashboard from './pages/AdminDashboard';
+import NotificationBell from './components/NotificationBell';
 import { useEffect } from 'react';
 
 const App = () => {
@@ -127,6 +128,7 @@ const App = () => {
               {user?.businessName || 'Dashboard'}
             </p>
           </div>
+          <NotificationBell />
         </div>
 
         {/* Mobile header */}
@@ -140,17 +142,20 @@ const App = () => {
               {user?.businessName || 'Dashboard'}
             </p>
           </div>
-          <div
-            onClick={() => setActiveTab('settings')}
-            className="w-9 h-9 rounded-xl bg-[#185FA5] flex items-center justify-center overflow-hidden cursor-pointer active:scale-95 transition-transform"
-          >
-            {user?.profileImage ? (
-              <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-white font-black text-sm">
-                {user?.businessName?.charAt(0).toUpperCase() || 'M'}
-              </span>
-            )}
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <div
+              onClick={() => setActiveTab('settings')}
+              className="w-9 h-9 rounded-xl bg-[#185FA5] flex items-center justify-center overflow-hidden cursor-pointer active:scale-95 transition-transform"
+            >
+              {user?.profileImage ? (
+                <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-white font-black text-sm">
+                  {user?.businessName?.charAt(0).toUpperCase() || 'M'}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
