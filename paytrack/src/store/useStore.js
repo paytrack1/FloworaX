@@ -90,7 +90,7 @@ export const useStore = create(
       resetPassword: async (token, newPassword) => {
         set({ authError: null });
         try {
-          const res = await fetch(`${BACKEND_URL}/api/admin/dashboard`, {
+          const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token, newPassword }),
@@ -142,7 +142,7 @@ export const useStore = create(
         });
 
         const data = await res.json().catch(() => ({}));
-        if (res.ok && data.user) {
+        if (!res.ok && res.status === 401) { get().logout(); return null; } if (res.ok && data.user) {
           set({ user: data.user });
           return data.user;
         }
@@ -242,7 +242,7 @@ export const useStore = create(
         if (!token) return;
         set({ adminError: null });
         try {
-          const res = await fetch(`${BACKEND_URL}/api/admin/dashboard`, {
+          const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
             headers: authHeaders(token),
           });
           const data = await res.json();
