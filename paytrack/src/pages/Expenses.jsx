@@ -89,7 +89,7 @@ const Expenses = () => {
           <p className="text-[#94A3B8] text-[10px] font-semibold uppercase mb-1">Total Expenses</p>
           <div className="flex items-center gap-2">
             <TrendingDown size={20} className="text-red-500" />
-            <p className="font-black text-3xl text-red-500">N{totalExpenses.toLocaleString()}</p>
+            <p className="font-black text-3xl text-red-500">₦{totalExpenses.toLocaleString()}</p>
           </div>
         </div>
 
@@ -149,7 +149,7 @@ const Expenses = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <p className="text-red-500 font-black text-sm">N{expense.amount?.toLocaleString()}</p>
+                  <p className="text-red-500 font-black text-sm">₦{expense.amount?.toLocaleString()}</p>
                   <button onClick={() => handleDelete(expense.id || expense._id)} className="text-[#94A3B8] hover:text-red-500 transition-colors">
                     <Trash2 size={14} />
                   </button>
