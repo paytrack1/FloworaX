@@ -1,3 +1,4 @@
+import { apiFetch } from '../utils/apiFetch';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { trackEvent } from '../utils/analytics';
@@ -24,7 +25,7 @@ export const useStore = create(
       register: async (email, businessName, password) => {
         set({ authError: null });
         try {
-          const res = await fetch(`${BACKEND_URL}/api/auth/register`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, businessName, password }),
@@ -46,7 +47,7 @@ export const useStore = create(
       login: async (email, password) => {
         set({ authError: null });
         try {
-          const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
@@ -62,7 +63,7 @@ export const useStore = create(
       verifyEmail: async (otp) => {
         const { token } = get();
         if (!token) throw new Error('Authentication required');
-        const res = await fetch(`${BACKEND_URL}/api/auth/verify-email`, {
+        const res = await apiFetch(`${BACKEND_URL}/api/auth/verify-email`, {
           method: 'POST',
           headers: authHeaders(token),
           body: JSON.stringify({ otp }),
@@ -76,7 +77,7 @@ export const useStore = create(
       forgotPassword: async (email) => {
         set({ authError: null });
         try {
-          const res = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/auth/forgot-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email }),
@@ -90,7 +91,7 @@ export const useStore = create(
       resetPassword: async (token, newPassword) => {
         set({ authError: null });
         try {
-          const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/auth/reset-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token, newPassword }),
@@ -104,7 +105,7 @@ export const useStore = create(
       resendOtp: async () => {
         const { token } = get();
         if (!token) throw new Error('Authentication required');
-        const res = await fetch(`${BACKEND_URL}/api/auth/resend-otp`, {
+        const res = await apiFetch(`${BACKEND_URL}/api/auth/resend-otp`, {
           method: 'POST',
           headers: authHeaders(token),
         });
@@ -137,7 +138,7 @@ export const useStore = create(
         const { token } = get();
         if (!token) return null;
 
-        const res = await fetch(`${BACKEND_URL}/api/auth/me`, {
+        const res = await apiFetch(`${BACKEND_URL}/api/auth/me`, {
           headers: authHeaders(token),
         });
 
@@ -153,7 +154,7 @@ export const useStore = create(
         const { token } = get();
         if (!token) throw new Error('Authentication required');
         try {
-          const res = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/auth/profile`, {
             method: 'PATCH',
             headers: authHeaders(token),
             body: JSON.stringify({ businessType: '' }),
@@ -172,7 +173,7 @@ export const useStore = create(
         if (!token) throw new Error('Authentication required');
 
         try {
-          const res = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/auth/profile`, {
             method: 'PATCH',
             headers: authHeaders(token),
             body: JSON.stringify({ businessType }),
@@ -199,7 +200,7 @@ export const useStore = create(
         if (!token) throw new Error('Authentication required');
 
         try {
-          const res = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/auth/profile`, {
             method: 'PATCH',
             headers: authHeaders(token),
             body: JSON.stringify(profile),
@@ -223,7 +224,7 @@ export const useStore = create(
         const { token } = get();
         if (!token) return;
         try {
-          const res = await fetch(`${BACKEND_URL}/api/sales`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/sales`, {
             headers: authHeaders(token),
           });
           const data = await res.json();
@@ -242,7 +243,7 @@ export const useStore = create(
         if (!token) return;
         set({ adminError: null });
         try {
-          const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/auth/reset-password`, {
             headers: authHeaders(token),
           });
           const data = await res.json();
@@ -260,7 +261,7 @@ export const useStore = create(
         const { token } = get();
         if (!token) return;
         try {
-          const res = await fetch(`${BACKEND_URL}/api/dashboard`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/dashboard`, {
             headers: authHeaders(token),
           });
           const data = await res.json();
@@ -277,7 +278,7 @@ export const useStore = create(
 
       fetchPlans: async () => {
         try {
-          const res = await fetch(`${BACKEND_URL}/api/plans`);
+          const res = await apiFetch(`${BACKEND_URL}/api/plans`);
           const data = await res.json();
           if (res.ok) {
             set({ plans: data.plans || [], planError: null });
@@ -294,7 +295,7 @@ export const useStore = create(
         const { token } = get();
         if (!token) throw new Error('Authentication required');
         try {
-          const res = await fetch(`${BACKEND_URL}/api/subscription/upgrade`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/subscription/upgrade`, {
             method: 'POST',
             headers: authHeaders(token),
             body: JSON.stringify({ planId }),
@@ -324,7 +325,7 @@ export const useStore = create(
         const { token } = get();
         if (!token) return;
         try {
-          const res = await fetch(`${BACKEND_URL}/api/notifications`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/notifications`, {
             headers: authHeaders(token),
           });
           const data = await res.json();
@@ -340,7 +341,7 @@ export const useStore = create(
         const { token } = get();
         if (!token) return;
         try {
-          const res = await fetch(`${BACKEND_URL}/api/notifications/${id}/read`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/notifications/${id}/read`, {
             method: 'PATCH',
             headers: authHeaders(token),
           });
@@ -359,7 +360,7 @@ export const useStore = create(
         const { token } = get();
         if (!token) return;
         try {
-          const res = await fetch(`${BACKEND_URL}/api/notifications/read-all`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/notifications/read-all`, {
             method: 'PATCH',
             headers: authHeaders(token),
           });
@@ -378,7 +379,7 @@ export const useStore = create(
         const { token } = get();
         if (!token) throw new Error('Authentication required');
         try {
-          const res = await fetch(`${BACKEND_URL}/api/sales`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/sales`, {
             method: 'POST',
             headers: authHeaders(token),
             body: JSON.stringify(saleData),
@@ -397,7 +398,7 @@ export const useStore = create(
         const { token } = get();
         if (!token) return;
         try {
-          const res = await fetch(`${BACKEND_URL}/api/sales/sync`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/sales/sync`, {
             method: 'POST',
             headers: authHeaders(token),
             body: JSON.stringify({ sales: [sale] }),
