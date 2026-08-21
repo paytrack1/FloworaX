@@ -9,18 +9,18 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       manifest: {
-        name: 'Paytrack Lite',
+        name: 'FloworaX',
         short_name: 'Paytrack',
         description: 'Track your business finances seamlessly',
         theme_color: '#ffffff',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'logo-192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'logo-512.png',
             sizes: '512x512',
             type: 'image/png'
           }
