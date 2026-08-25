@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import FSpinner from '../components/FSpinner';
 import DashboardCard from '../components/DashboardCard';
 import { useStore } from '../store/useStore';
-import { useState } from 'react';
 import BulkOffering from './BulkOffering';
 
 const Home = () => {
   const [showBulk, setShowBulk] = useState(false);
-  if (showBulk) return <BulkOffering onBack={() => setShowBulk(false)} />;
   const { user, dashboard, fetchDashboard } = useStore();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -18,6 +16,8 @@ const Home = () => {
     await fetchDashboard();
     setRefreshing(false);
   };
+
+  if (showBulk) return <BulkOffering onBack={() => setShowBulk(false)} />;
 
   const dashboardMetrics = [
     { title: 'Revenue', value: dashboard?.summary?.totalRevenue ? `₦${dashboard.summary.totalRevenue.toLocaleString()}` : '₦0', subtitle: 'Monthly total', accent: 'from-blue-500 to-cyan-500' },
@@ -41,7 +41,7 @@ const Home = () => {
           </div>
           <div className="inline-flex items-center gap-2 rounded-3xl bg-white px-4 py-3 shadow-sm">
             <div className="space-y-1 text-right">
-              <span className="text-[#94A3B8] text-xs">Business type</span>
+              <span className="text-[#94A3B8] text-xs">Businesstype</span>
               <span className="rounded-full bg-[#E0F2FE] text-[#0C4A6E] text-[11px] font-bold px-3 py-1">
                 {user?.businessType || 'Not selected'}
               </span>
