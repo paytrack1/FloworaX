@@ -22,6 +22,7 @@ import Contact from './pages/Contact';
 import Waitlist from './pages/Waitlist';
 import NotFound from './pages/NotFound';
 import BusinessTypeOnboarding from './pages/BusinessTypeOnboarding';
+import BulkOffering from './pages/BulkOffering';
 import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
 import EventRegistration from './pages/EventRegistration';

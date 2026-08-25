@@ -2,8 +2,12 @@ import React, { useEffect, useState } from 'react';
 import FSpinner from '../components/FSpinner';
 import DashboardCard from '../components/DashboardCard';
 import { useStore } from '../store/useStore';
+import { useState } from 'react';
+import BulkOffering from './BulkOffering';
 
 const Home = () => {
+  const [showBulk, setShowBulk] = useState(false);
+  if (showBulk) return <BulkOffering onBack={() => setShowBulk(false)} />;
   const { user, dashboard, fetchDashboard } = useStore();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -52,6 +56,17 @@ const Home = () => {
         </div>
       </div>
 
+      {/* Bulk Offering Button - visible for Church business type */}
+      {user?.businessType?.toLowerCase() === 'church' && (
+        <div className="px-6 mt-4">
+          <button
+            onClick={() => setShowBulk(true)}
+            className="w-full bg-[#185FA5] text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
+          >
+            <span className="text-xl">🙏</span> Bulk Offering Entry
+          </button>
+        </div>
+      )}
       <div className="px-6 mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {dashboardMetrics.map((metric) => (
           <DashboardCard key={metric.title} title={metric.title} value={metric.value} subtitle={metric.subtitle} accent={metric.accent} />
