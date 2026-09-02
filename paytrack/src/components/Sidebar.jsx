@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, BarChart2, FileText, Settings, LogOut, Plus, Zap, TrendingDown, Calendar, Receipt, Users, Ticket } from 'lucide-react';
+import { Home, BarChart2, FileText, Settings, LogOut, Plus, Zap, TrendingDown, Calendar, Receipt, Users, Ticket, MessageSquare } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { getModulesForBusinessType } from '../store/modules';
 const tabs = [
@@ -11,6 +11,7 @@ const tabs = [
   { id: 'invoices',  label: 'Invoices',  icon: Receipt },
   { id: 'events',    label: 'Events',    icon: Ticket },
   { id: 'customers', label: 'Customers', icon: Users },
+  { id: 'communications', label: 'Communications', icon: MessageSquare },
   { id: 'settings',  label: 'Settings',  icon: Settings },
 ];
 const Sidebar = () => {

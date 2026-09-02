@@ -12,6 +12,7 @@ import Bookings from './pages/Bookings';
 import Invoices from './pages/Invoices';
 import Events from './pages/Events';
 import Customers from './pages/Customers';
+import Communications from './pages/Communications';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import PublicBooking from './pages/PublicBooking';
@@ -106,7 +107,9 @@ const App = () => {
       case 'bookings':  return <Bookings />;
       case 'invoices': return <Invoices />;
       case 'events':    return <Events />;
-      case 'customers': return <Customers />; case 'settings':  return <Settings />;
+      case 'customers': return <Customers />;
+      case 'communications': return <Communications />;
+      case 'settings':  return <Settings />;
       default:          return <Home />;
     }
   };

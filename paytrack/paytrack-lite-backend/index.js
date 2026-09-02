@@ -3,6 +3,17 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 require('dotenv').config();
 
+// ── Error monitoring (Sentry) ──
+const Sentry = require('@sentry/node');
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'production',
+    tracesSampleRate: 0.1,
+  });
+  console.log('Sentry error monitoring enabled');
+}
+
 // ── Security ──
 const helmet        = require('helmet');
 const rateLimit     = require('express-rate-limit');
@@ -14,11 +25,15 @@ const invoiceRoutes  = require('./src/routes/invoices');
 const customerRoutes = require('./src/routes/customers');
 const waitlistRoutes = require('./src/routes/waitlist');
 const eventRoutes    = require('./src/routes/events');
+const automationRoutes = require('./src/routes/automations');
 const Invoice        = require('./src/models/Invoice');
 const Service        = require('./src/models/Service');
 const Booking        = require('./src/models/Booking');
 const Event          = require('./src/models/Event');
 const EventTicket    = require('./src/models/EventTicket');
+const Automation     = require('./src/models/Automation');
+const AutomationLog  = require('./src/models/AutomationLog');
+const AutomationExecution = require('./src/models/AutomationExecution');
 const { ticketHtml } = require('./src/routes/events');
 const express        = require('express');
 const cors           = require('cors');
@@ -28,11 +43,46 @@ const bcrypt         = require('bcryptjs');
 const jwt            = require('jsonwebtoken');
 const mongoose       = require('mongoose');
 const { getPlan, getPlanList, buildSubscriptionSummary, requireFeature } = require('./src/middleware/plan');
+const notificationRoutes = require('./src/routes/notifications');
+const notify = require('./src/utils/notify');
+const cron = require('node-cron');
+const { runReminders, runFollowups } = require('./src/routes/bookings');
+const messagingService = require('./src/services/messagingService');
+const AutomationScheduler = require('./src/services/automationScheduler');
+const ResendProvider = require('./src/services/providers/resendProvider');
+const AfricasTalkingProvider = require('./src/services/providers/africasTalkingProvider');
+const TwilioWhatsAppProvider = require('./src/services/providers/twilioWhatsAppProvider');
 
 // ── Resend Email Configuration ──
 const { Resend } = require('resend');
 const resend     = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+
+// ── Initialize Messaging Service ──
+const smsProvider = process.env.AFRICAS_TALKING_API_KEY
+  ? new AfricasTalkingProvider(process.env.AFRICAS_TALKING_API_KEY, process.env.AFRICAS_TALKING_USERNAME)
+  : null;
+const whatsappProvider = process.env.TWILIO_ACCOUNT_SID
+  ? new TwilioWhatsAppProvider(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN, process.env.TWILIO_WHATSAPP_NUMBER_SID)
+  : null;
+
+messagingService.setProviders({
+  email: new ResendProvider(process.env.RESEND_API_KEY, EMAIL_FROM),
+  sms: smsProvider,
+  whatsapp: whatsappProvider,
+});
+
+if (process.env.AFRICAS_TALKING_API_KEY) {
+  console.log('✓ SMS provider: Africa\'s Talking configured');
+} else {
+  console.log('✗ SMS provider: Not configured (AFRICAS_TALKING_API_KEY not set)');
+}
+if (process.env.TWILIO_ACCOUNT_SID) {
+  console.log('✓ WhatsApp provider: Twilio configured');
+} else {
+  console.log('✗ WhatsApp provider: Not configured (TWILIO_ACCOUNT_SID not set)');
+}
+console.log('Messaging service initialized');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -67,12 +117,10 @@ app.use(cors({
     'http://localhost:5174',
     'http://localhost:5175',
     'https://floworax.pxxl.run',
+    'https://floworax.vercel.app',
     'https://floworax.com',
     'https://app.floworax.com',
-    'https://paytracklite.vercel.app',
-    'https://flowora.vercel.app',
-    'https://floworax.vercel.app',
-  ],
+    ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
   credentials: true,
@@ -271,7 +319,6 @@ app.post('/api/auth/register', async (req, res) => {
     return res.status(400).json({ error: 'email, businessName and password are required' });
   if (password.length < 8)
     return res.status(400).json({ error: 'Password must be at least 8 characters' });
-
   try {
     if (isDisposableEmail(email))
       return res.status(400).json({ error: 'Disposable email addresses are not allowed. Please use a real email.' });
@@ -298,7 +345,7 @@ app.post('/api/auth/register', async (req, res) => {
     const token = jwt.sign(
       { id: user._id.toString(), email: user.email, businessName: user.businessName, role: user.role },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '30d' }
     );
 
     console.log(`Registered: ${user.email}`);
@@ -328,7 +375,7 @@ app.post('/api/auth/login', async (req, res) => {
     const token = jwt.sign(
       { id: user._id.toString(), email: user.email, businessName: user.businessName, role: user.role },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '30d' }
     );
 
     console.log(`Login: ${user.email}`);
@@ -406,7 +453,6 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     await user.save();
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${rawToken}`;
-
     if (!resend) {
       console.log(`[DEV] Password reset link for ${user.email}: ${resetLink}`);
     } else {
@@ -479,15 +525,15 @@ app.patch('/api/auth/profile', requireAuth, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    if (businessName !== undefined) user.businessName = businessName.trim();
+    if (businessName !== undefined) user.businessName = businessName.trim().slice(0, 100);
     if (businessType !== undefined) user.businessType = businessType ? businessType.trim() : null;
     if (Array.isArray(modules))      user.modules      = modules;
-    if (phone)                      user.phone        = phone.trim();
-    if (address)                    user.address      = address.trim();
+    if (phone)                      user.phone        = phone.trim().slice(0, 20);
+    if (address)                    user.address      = address.trim().slice(0, 300);
     if (bankAccount)                user.bankAccount  = bankAccount.trim();
     if (currency)                   user.currency     = currency.trim();
     if (timezone)                   user.timezone     = timezone.trim();
-    if (profileImage)               user.profileImage = profileImage;
+    if (profileImage && (profileImage.startsWith('http://') || profileImage.startsWith('https://'))) user.profileImage = profileImage.slice(0, 500);
 
     if (newPassword) {
       if (!currentPassword) return res.status(400).json({ error: 'Current password required' });
@@ -592,6 +638,77 @@ app.get('/api/payouts/status', requireAuth, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch payout status' });
+  }
+});
+
+// ── ADMIN DASHBOARD ──
+app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied. Administrators only.' });
+  }
+  try {
+    const users = await User.find({}, '-password').sort({ createdAt: -1 });
+    const totalUsers = users.length;
+    const premiumUsers = users.filter(u => u.plan !== 'free' && u.plan !== 'basic').length;
+    const verifiedUsers = users.filter(u => u.emailVerified).length;
+
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const [
+      totalSalesCount,
+      totalBookingsCount,
+      totalEventsCount,
+      newSignupsThisMonth,
+      activeUsers,
+      revenueAgg,
+      planBreakdownAgg,
+      topBusinessTypesAgg
+    ] = await Promise.all([
+      Sale.countDocuments({}),
+      Booking.countDocuments({}),
+      Event.countDocuments({}),
+      User.countDocuments({ createdAt: { $gte: startOfMonth } }),
+      User.countDocuments({ lastLoginAt: { $gte: thirtyDaysAgo } }),
+      Sale.aggregate([{ $group: { _id: null, total: { $sum: '$total' } } }]),
+      User.aggregate([{ $group: { _id: '$plan', count: { $sum: 1 } } }]),
+      User.aggregate([
+        { $match: { businessType: { $ne: null } } },
+        { $group: { _id: '$businessType', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 5 }
+      ])
+    ]);
+
+    const totalRevenue = revenueAgg[0]?.total || 0;
+    const planBreakdown = planBreakdownAgg.reduce((acc, p) => {
+      acc[p._id || 'free'] = p.count;
+      return acc;
+    }, {});
+    const topBusinessTypes = topBusinessTypesAgg.map(t => ({ type: t._id, count: t.count }));
+    const recentSignups = users.slice(0, 10);
+
+    res.json({
+      success: true,
+      metrics: {
+        totalUsers,
+        activeUsers,
+        newSignupsThisMonth,
+        premiumUsers,
+        verifiedUsers,
+        totalRevenue,
+        totalSales: totalSalesCount,
+        totalBookings: totalBookingsCount,
+        totalEvents: totalEventsCount,
+        planBreakdown,
+        topBusinessTypes
+      },
+      recentSignups,
+      users
+    });
+  } catch (err) {
+    console.error('Admin Fetch Error:', err);
+    res.status(500).json({ error: 'Failed to retrieve admin system metrics.' });
   }
 });
 
@@ -830,19 +947,22 @@ app.post('/api/subscription/upgrade', requireAuth, async (req, res) => {
     if (plan.price === 0) {
       user.plan = planId;
       await user.save();
+      await notify(user._id, 'Subscription updated', `You're now on the ${plan.name || planId} plan.`, 'subscription');
       return res.json({ success: true, subscription: await buildSubscriptionSummary(req.user.id), user: formatUserResponse(user) });
     }
 
     const reference = `sub-${user._id}-${Date.now()}`;
+    const payload = {
+      email:        user.email,
+      amount:       Math.round(plan.price * 100),
+      reference,
+      callback_url: callbackUrl || process.env.FRONTEND_URL,
+      metadata:     { type: 'subscription', planId, userId: user._id.toString() },
+    };
+
     const { data } = await axios.post(
       `${PAYSTACK_BASE_URL}/transaction/initialize`,
-      {
-        email:        user.email,
-        amount:       Math.round(plan.price * 100),
-        reference,
-        callback_url: callbackUrl || process.env.FRONTEND_URL,
-        metadata:     { type: 'subscription', planId, userId: user._id.toString() },
-      },
+      payload,
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`, 'Content-Type': 'application/json' } }
     );
 
@@ -873,6 +993,8 @@ app.get('/api/subscription/verify/:reference', requireAuth, async (req, res) => 
         const user = await User.findById(req.user.id);
         user.plan = planId;
         await user.save();
+        const plan = getPlanList().find((p) => p.id === planId);
+        await notify(user._id, 'Subscription upgraded', `Payment received — you're now on the ${plan?.name || planId} plan.`, 'subscription');
         return res.json({ success: true, subscription: await buildSubscriptionSummary(req.user.id), user: formatUserResponse(user) });
       }
     }
@@ -933,6 +1055,8 @@ app.get('/api/payments/verify/:reference', requireAuth, async (req, res) => {
       { id: reference, userId: req.user.id },
       { synced: 1, verified: true, status: 'completed', provider: 'paystack' }
     );
+  } else {
+    await notify(req.user.id, 'Payment failed', `We couldn't verify payment for sale reference ${reference}.`, 'payment');
   }
 
   res.json({ success: isVerified, verified: isVerified, amount, reference });
@@ -1006,6 +1130,49 @@ app.use('/api/invoices',  invoiceRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/waitlist',  waitlistRoutes);
 app.use('/api/events',    eventRoutes);
+app.use('/api/automations', automationRoutes);
+app.use('/api/notifications', notificationRoutes);
+
+// ── Sentry error handler — must be registered after all routes ──
+if (process.env.SENTRY_DSN) {
+  Sentry.setupExpressErrorHandler(app);
+}
+
+// ── SCHEDULED REMINDERS ──
+if (process.env.ENABLE_CRON === 'true') {
+  cron.schedule('0 * * * *', async () => {
+    try {
+      const result = await runReminders();
+      if (result.sent > 0) console.log(`[cron] Sent ${result.sent} reminder email(s) for ${result.date}`);
+    } catch (err) {
+      console.error('[cron] Reminder job failed:', err.message);
+    }
+  });
+
+  cron.schedule('30 * * * *', async () => {
+    try {
+      const result = await runFollowups();
+      if (result.sent > 0) console.log(`[cron] Sent ${result.sent} follow-up email(s) for ${result.date}`);
+    } catch (err) {
+      console.error('[cron] Follow-up job failed:', err.message);
+    }
+  });
+
+  // ── Automation scheduler: runs every 5 minutes to process recurring/new-member automations ──
+  const automationScheduler = new AutomationScheduler(messagingService);
+  cron.schedule('*/5 * * * *', async () => {
+    try {
+      const result = await automationScheduler.runScheduler();
+      if (result.success && (result.schedulesSent > 0 || result.newMembersWelcomed > 0)) {
+        console.log(`[cron] Automations: ${result.schedulesSent} scheduled, ${result.newMembersWelcomed} welcomes`);
+      }
+    } catch (err) {
+      console.error('[cron] Automation scheduler job failed:', err.message);
+    }
+  });
+
+  console.log('Cron scheduler enabled: reminders hourly, follow-ups hourly (offset 30m), automations every 5m');
+}
 
 // Start Server Listen Setup
 connectToDatabase().then(() => {
