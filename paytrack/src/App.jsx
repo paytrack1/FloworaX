@@ -16,6 +16,7 @@ import Communications from './pages/Communications';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import PublicBooking from './pages/PublicBooking';
+import JoinChurch from './pages/JoinChurch';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import Cookies from './pages/Cookies';
@@ -49,6 +50,10 @@ const App = () => {
 
   // ── Public routes ──
   const path = window.location.pathname;
+
+  if (path.startsWith('/join/')) {
+    return <JoinChurch />;
+  }
 
   if (path.startsWith('/book/') || path.startsWith('/booking/')) {
     return <PublicBooking />;
