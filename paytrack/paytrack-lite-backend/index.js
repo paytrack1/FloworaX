@@ -3,90 +3,35 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 require('dotenv').config();
 
-// ── Error monitoring (Sentry) ──
-const Sentry = require('@sentry/node');
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.NODE_ENV || 'production',
-    tracesSampleRate: 0.1,
-  });
-  console.log('Sentry error monitoring enabled');
-}
-
 // ── Security ──
-const helmet        = require('helmet');
-const rateLimit     = require('express-rate-limit');
+const helmet     = require('helmet');
+const rateLimit  = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 
-const serviceRoutes  = require('./src/routes/services');
-const bookingRoutes  = require('./src/routes/bookings');
-const invoiceRoutes  = require('./src/routes/invoices');
-const customerRoutes = require('./src/routes/customers');
-const waitlistRoutes = require('./src/routes/waitlist');
-const eventRoutes    = require('./src/routes/events');
-const automationRoutes = require('./src/routes/automations');
-const Invoice        = require('./src/models/Invoice');
-const Service        = require('./src/models/Service');
-const Booking        = require('./src/models/Booking');
-const Event          = require('./src/models/Event');
-const EventTicket    = require('./src/models/EventTicket');
-const Automation     = require('./src/models/Automation');
-const AutomationLog  = require('./src/models/AutomationLog');
-const AutomationExecution = require('./src/models/AutomationExecution');
-const { ticketHtml } = require('./src/routes/events');
-const express        = require('express');
-const cors           = require('cors');
-const crypto         = require('crypto');
-const axios          = require('axios');
-const bcrypt         = require('bcryptjs');
-const jwt            = require('jsonwebtoken');
-const mongoose       = require('mongoose');
-const { getPlan, getPlanList, buildSubscriptionSummary, requireFeature } = require('./src/middleware/plan');
-const notificationRoutes = require('./src/routes/notifications');
-const notify = require('./src/utils/notify');
-const cron = require('node-cron');
-const { runReminders, runFollowups } = require('./src/routes/bookings');
-const messagingService = require('./src/services/messagingService');
-const AutomationScheduler = require('./src/services/automationScheduler');
-const ResendProvider = require('./src/services/providers/resendProvider');
-const AfricasTalkingProvider = require('./src/services/providers/africasTalkingProvider');
-const TwilioWhatsAppProvider = require('./src/services/providers/twilioWhatsAppProvider');
+const serviceRoutes = require('./src/routes/services');
+const bookingRoutes = require('./src/routes/bookings');
+const invoiceRoutes = require('./src/routes/invoices');
+// TODO: customer module not built yet (no route file or model) — re-enable once it exists
+// const customerRoutes = require('./src/routes/customers');
+const Invoice  = require('./src/models/Invoice');
+const Service  = require('./src/models/Service');
+const Booking  = require('./src/models/Booking');
+const express  = require('express');
+const cors     = require('cors');
+const crypto   = require('crypto');
+const axios    = require('axios');
+const bcrypt   = require('bcryptjs');
+const jwt      = require('jsonwebtoken');
+const mongoose = require('mongoose');
+const { getPlanList, buildSubscriptionSummary, requireFeature } = require('./src/middleware/plan');
 
 // ── Resend Email Configuration ──
 const { Resend } = require('resend');
-const resend     = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-
-// ── Initialize Messaging Service ──
-const smsProvider = process.env.AFRICAS_TALKING_API_KEY
-  ? new AfricasTalkingProvider(process.env.AFRICAS_TALKING_API_KEY, process.env.AFRICAS_TALKING_USERNAME)
-  : null;
-const whatsappProvider = process.env.TWILIO_ACCOUNT_SID
-  ? new TwilioWhatsAppProvider(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN, process.env.TWILIO_WHATSAPP_NUMBER_SID)
-  : null;
-
-messagingService.setProviders({
-  email: new ResendProvider(process.env.RESEND_API_KEY, EMAIL_FROM),
-  sms: smsProvider,
-  whatsapp: whatsappProvider,
-});
-
-if (process.env.AFRICAS_TALKING_API_KEY) {
-  console.log('✓ SMS provider: Africa\'s Talking configured');
-} else {
-  console.log('✗ SMS provider: Not configured (AFRICAS_TALKING_API_KEY not set)');
-}
-if (process.env.TWILIO_ACCOUNT_SID) {
-  console.log('✓ WhatsApp provider: Twilio configured');
-} else {
-  console.log('✗ WhatsApp provider: Not configured (TWILIO_ACCOUNT_SID not set)');
-}
-console.log('Messaging service initialized');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
-app.set('trust proxy', 1);
 
 // ── Environment guards ──
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -110,20 +55,20 @@ app.use('/webhook/paystack', express.raw({ type: 'application/json' }));
 // ── Security headers ──
 app.use(helmet());
 
-// ── CORS (Updated to allow floworax.pxxl.run) ──
+// ── CORS ──
 app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',
-    'https://floworax.pxxl.run',
-    'https://floworax.vercel.app',
     'https://floworax.com',
     'https://app.floworax.com',
-    ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    'https://paytracklite.vercel.app',
+    'https://flowora.vercel.app',
+    'https://floworax.vercel.app',
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
-  credentials: true,
 }));
 
 // ── Body parser with size limit ──
@@ -134,7 +79,7 @@ app.use(mongoSanitize());
 
 // ── Rate limiters ──
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10,
   message: { error: 'Too many attempts. Please try again in 15 minutes.' },
   standardHeaders: true,
@@ -169,31 +114,24 @@ const connectToDatabase = async () => {
 
 // ── Mongoose Schemas ──
 const userSchema = new mongoose.Schema({
-  email:            { type: String, required: true, unique: true, lowercase: true, trim: true },
-  businessName:     { type: String, required: true, trim: true },
-  passwordHash:     { type: String, required: true },
-  emailVerified:    { type: Boolean, default: false },
-  otpHash:          { type: String, default: null },
-  otpExpiry:        { type: Date,   default: null },
+  email:        { type: String, required: true, unique: true, lowercase: true, trim: true },
+  businessName: { type: String, required: true, trim: true },
+  passwordHash: { type: String, required: true },
+  emailVerified:  { type: Boolean, default: false },
+  otpHash:        { type: String, default: null },
+  otpExpiry:      { type: Date,   default: null },
   resetTokenHash:   { type: String, default: null },
   resetTokenExpiry: { type: Date,   default: null },
-  profileImage:     { type: String, default: null },
-  businessType:     { type: String, default: null },
-  phone:            { type: String, default: null },
-  address:          { type: String, default: null },
-  bankAccount:      { type: String, default: null },
-  currency:         { type: String, default: null },
-  timezone:         { type: String, default: null },
-  plan:             { type: String, enum: ['free', 'pro', 'business'], default: 'free' },
-  modules:          { type: [String], default: ['sales'] },
-  role:             { type: String, enum: ['user', 'admin'], default: 'user' },
-  lastLoginAt:      { type: Date, default: null },
-  payoutBankCode:         { type: String, default: null },
-  payoutBankName:         { type: String, default: null },
-  payoutAccountNumber:    { type: String, default: null },
-  payoutAccountName:      { type: String, default: null },
-  paystackSubaccountCode: { type: String, default: null },
-  createdAt:        { type: Date, default: Date.now },
+  profileImage: { type: String, default: null },
+  businessType: { type: String, default: null },
+  phone:        { type: String, default: null },
+  address:      { type: String, default: null },
+  bankAccount:  { type: String, default: null },
+  currency:     { type: String, default: null },
+  timezone:     { type: String, default: null },
+  plan:         { type: String, enum: ['free', 'pro', 'business'], default: 'free' },
+  modules:      { type: [String], default: ['sales'] },
+  createdAt:    { type: Date, default: Date.now },
 });
 
 const saleSchema = new mongoose.Schema({
@@ -214,13 +152,13 @@ const saleSchema = new mongoose.Schema({
 });
 
 const expenseSchema = new mongoose.Schema({
-  id:          { type: String, required: true, unique: true },
-  userId:      { type: String, required: true, index: true },
-  description: { type: String },
-  amount:      { type: Number, required: true },
-  category:    { type: String, default: 'Other' },
-  synced:      { type: Number, default: 0 },
-  createdAt:   { type: Date, default: Date.now },
+  id:           { type: String, required: true, unique: true },
+  userId:       { type: String, required: true, index: true },
+  description:  { type: String },
+  amount:       { type: Number, required: true },
+  category:     { type: String, default: 'Other' },
+  synced:       { type: Number, default: 0 },
+  createdAt:    { type: Date, default: Date.now },
 });
 
 const User    = mongoose.model('User', userSchema);
@@ -271,7 +209,7 @@ const isDisposableEmail = (email) => {
 // ── Email sending helper ──
 const sendOTPEmail = async (email, otp) => {
   if (!resend) {
-    console.log(`[DEV] OTP for ${email}: ${otp}`);
+    console.log(`[DEV] OTP for ${email}: ${otp}`); // no Resend key set — log instead of sending
     return;
   }
   const result = await resend.emails.send({
@@ -282,31 +220,26 @@ const sendOTPEmail = async (email, otp) => {
   });
   if (result.error) {
     console.error('Resend send failed:', result.error);
-    console.log(`[FALLBACK] OTP for ${email}: ${otp}`);
+    console.log(`[FALLBACK] OTP for ${email}: ${otp}`); // so you can still test even if email fails
   } else {
     console.log(`Resend accepted email for ${email}, id: ${result.data?.id}`);
   }
 };
 
 const formatUserResponse = (user) => ({
-  id:            user._id.toString(),
-  email:         user.email,
+  id:           user._id.toString(),
+  email:        user.email,
   emailVerified: user.emailVerified,
-  businessName:  user.businessName,
-  businessType:  user.businessType || null,
-  modules:       user.modules || ['sales'],
-  profileImage:  user.profileImage || null,
-  phone:         user.phone || null,
-  address:       user.address || null,
-  bankAccount:   user.bankAccount || null,
-  currency:      user.currency || null,
-  timezone:      user.timezone || null,
-  plan:          user.plan || 'free',
-  role:          user.role || 'user',
-  payoutBankName:      user.payoutBankName || null,
-  payoutAccountNumber: user.payoutAccountNumber || null,
-  payoutAccountName:   user.payoutAccountName || null,
-  payoutActive:        !!user.paystackSubaccountCode,
+  businessName: user.businessName,
+  businessType: user.businessType || null,
+  modules:      user.modules || ['sales'],
+  profileImage: user.profileImage || null,
+  phone:        user.phone || null,
+  address:      user.address || null,
+  bankAccount:  user.bankAccount || null,
+  currency:     user.currency || null,
+  timezone:     user.timezone || null,
+  plan:         user.plan || 'free',
 });
 
 // ── Health check ──
@@ -319,16 +252,17 @@ app.post('/api/auth/register', async (req, res) => {
     return res.status(400).json({ error: 'email, businessName and password are required' });
   if (password.length < 8)
     return res.status(400).json({ error: 'Password must be at least 8 characters' });
+
   try {
-    if (isDisposableEmail(email))
-      return res.status(400).json({ error: 'Disposable email addresses are not allowed. Please use a real email.' });
+    if (isDisposableEmail(email)) return res.status(400).json({ error: 'Disposable email addresses are not allowed. Please use a real email.' });
 
     const existing = await User.findOne({ email: email.toLowerCase().trim() });
     if (existing) return res.status(409).json({ error: 'An account with this email already exists' });
 
-    const otp       = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpHash   = await bcrypt.hash(otp, 10);
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    // Generate numeric 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = await bcrypt.hash(otp, 10);
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await User.create({
@@ -340,12 +274,13 @@ app.post('/api/auth/register', async (req, res) => {
       otpExpiry,
     });
 
+    // Send the verification code
     await sendOTPEmail(user.email, otp);
 
     const token = jwt.sign(
-      { id: user._id.toString(), email: user.email, businessName: user.businessName, role: user.role },
+      { id: user._id.toString(), email: user.email, businessName: user.businessName },
       JWT_SECRET,
-      { expiresIn: '30d' }
+      { expiresIn: '7d' }
     );
 
     console.log(`Registered: ${user.email}`);
@@ -369,13 +304,10 @@ app.post('/api/auth/login', async (req, res) => {
     const match = await bcrypt.compare(password, user.passwordHash);
     if (!match) return res.status(401).json({ error: 'Invalid email or password' });
 
-    // ── Update lastLoginAt ──
-    await User.findByIdAndUpdate(user._id, { lastLoginAt: new Date() });
-
     const token = jwt.sign(
-      { id: user._id.toString(), email: user.email, businessName: user.businessName, role: user.role },
+      { id: user._id.toString(), email: user.email, businessName: user.businessName },
       JWT_SECRET,
-      { expiresIn: '30d' }
+      { expiresIn: '7d' }
     );
 
     console.log(`Login: ${user.email}`);
@@ -386,48 +318,21 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// ── VERIFY EMAIL ──
-app.post('/api/auth/verify-email', requireAuth, async (req, res) => {
-  const { otp } = req.body;
-  if (!otp) return res.status(400).json({ error: 'Verification code is required' });
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    if (user.emailVerified) return res.status(400).json({ error: 'Email is already verified' });
-    if (!user.otpHash || !user.otpExpiry) return res.status(400).json({ error: 'No verification code found. Please request a new one.' });
-    if (user.otpExpiry < new Date()) return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
-
-    const match = await bcrypt.compare(otp, user.otpHash);
-    if (!match) return res.status(400).json({ error: 'Invalid verification code' });
-
-    user.emailVerified = true;
-    user.otpHash       = null;
-    user.otpExpiry     = null;
-    await user.save();
-
-    console.log(`Email verified: ${user.email}`);
-    res.json({ success: true, user: formatUserResponse(user) });
-  } catch (err) {
-    console.error('Verify email error:', err.stack || err);
-    res.status(500).json({ error: 'Verification failed' });
-  }
-});
-
 // ── RESEND OTP ──
-app.post('/api/auth/resend-otp', requireAuth, async (req, res) => {
+app.post('/api/auth/resend-otp', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
   try {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) return res.status(404).json({ error: 'No account found with this email' });
     if (user.emailVerified) return res.status(400).json({ error: 'This email is already verified' });
-
-    const otp       = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpHash   = await bcrypt.hash(otp, 10);
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = await bcrypt.hash(otp, 10);
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-    user.otpHash   = otpHash;
+    user.otpHash = otpHash;
     user.otpExpiry = otpExpiry;
     await user.save();
     await sendOTPEmail(user.email, otp);
-
     console.log(`Resent OTP to: ${user.email}`);
     res.json({ success: true, message: 'A new verification code has been sent.' });
   } catch (err) {
@@ -442,17 +347,21 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   if (!email) return res.status(400).json({ error: 'Email is required' });
   try {
     const user = await User.findOne({ email: email.toLowerCase().trim() });
-    if (!user) return res.json({ success: true, message: 'If an account exists, a reset link has been sent.' });
+    // Always return the same generic response, whether or not the account exists
+    if (!user) {
+      return res.json({ success: true, message: 'If an account exists, a reset link has been sent.' });
+    }
 
-    const rawToken    = crypto.randomBytes(32).toString('hex');
-    const tokenHash   = crypto.createHash('sha256').update(rawToken).digest('hex');
-    const tokenExpiry = new Date(Date.now() + 30 * 60 * 1000);
+    const rawToken   = crypto.randomBytes(32).toString('hex');
+    const tokenHash  = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const tokenExpiry = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
 
     user.resetTokenHash   = tokenHash;
     user.resetTokenExpiry = tokenExpiry;
     await user.save();
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${rawToken}`;
+
     if (!resend) {
       console.log(`[DEV] Password reset link for ${user.email}: ${resetLink}`);
     } else {
@@ -486,14 +395,14 @@ app.post('/api/auth/reset-password', async (req, res) => {
   try {
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const user = await User.findOne({
-      resetTokenHash:   tokenHash,
+      resetTokenHash: tokenHash,
       resetTokenExpiry: { $gt: new Date() },
     });
 
     if (!user) return res.status(400).json({ error: 'Invalid or expired reset link. Please request a new one.' });
 
-    user.passwordHash     = await bcrypt.hash(newPassword, 12);
-    user.resetTokenHash   = null;
+    user.passwordHash = await bcrypt.hash(newPassword, 12);
+    user.resetTokenHash = null;
     user.resetTokenExpiry = null;
     await user.save();
 
@@ -525,15 +434,15 @@ app.patch('/api/auth/profile', requireAuth, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    if (businessName !== undefined) user.businessName = businessName.trim().slice(0, 100);
-    if (businessType !== undefined) user.businessType = businessType ? businessType.trim() : null;
-    if (Array.isArray(modules))      user.modules      = modules;
-    if (phone)                      user.phone        = phone.trim().slice(0, 20);
-    if (address)                    user.address      = address.trim().slice(0, 300);
-    if (bankAccount)                user.bankAccount  = bankAccount.trim();
-    if (currency)                   user.currency     = currency.trim();
-    if (timezone)                   user.timezone     = timezone.trim();
-    if (profileImage && (profileImage.startsWith('http://') || profileImage.startsWith('https://'))) user.profileImage = profileImage.slice(0, 500);
+    if (businessName) user.businessName = businessName.trim();
+    if (businessType) user.businessType = businessType.trim();
+    if (Array.isArray(modules)) user.modules = modules;
+    if (phone)        user.phone        = phone.trim();
+    if (address)      user.address      = address.trim();
+    if (bankAccount)  user.bankAccount  = bankAccount.trim();
+    if (currency)     user.currency     = currency.trim();
+    if (timezone)     user.timezone     = timezone.trim();
+    if (profileImage) user.profileImage = profileImage;
 
     if (newPassword) {
       if (!currentPassword) return res.status(400).json({ error: 'Current password required' });
@@ -548,167 +457,6 @@ app.patch('/api/auth/profile', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Profile update error:', err.stack || err);
     res.status(500).json({ error: 'Profile update failed' });
-  }
-});
-
-// ── PAYOUTS: List Banks ──
-app.get('/api/payouts/banks', requireAuth, async (req, res) => {
-  try {
-    const { data } = await axios.get(`${PAYSTACK_BASE_URL}/bank?currency=NGN`, {
-      headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
-    });
-    res.json({ success: true, banks: data.data });
-  } catch (err) {
-    console.error('List banks error:', err.response?.data || err.message);
-    res.status(500).json({ error: 'Failed to fetch bank list' });
-  }
-});
-
-// ── PAYOUTS: Resolve Account Number ──
-app.post('/api/payouts/resolve-account', requireAuth, async (req, res) => {
-  const { accountNumber, bankCode } = req.body;
-  if (!accountNumber || !bankCode) return res.status(400).json({ error: 'accountNumber and bankCode are required' });
-  try {
-    const { data } = await axios.get(
-      `${PAYSTACK_BASE_URL}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
-      { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
-    );
-    res.json({ success: true, accountName: data.data.account_name });
-  } catch (err) {
-    console.error('Resolve account error:', err.response?.data || err.message);
-    res.status(400).json({ error: 'Could not verify this account number. Please check the details and try again.' });
-  }
-});
-
-// ── PAYOUTS: Create Subaccount ──
-app.post('/api/payouts/subaccount', requireAuth, async (req, res) => {
-  const { accountNumber, bankCode, bankName } = req.body;
-  if (!accountNumber || !bankCode || !bankName) return res.status(400).json({ error: 'accountNumber, bankCode and bankName are required' });
-
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    const resolveRes = await axios.get(
-      `${PAYSTACK_BASE_URL}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
-      { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
-    );
-    const accountName = resolveRes.data.data.account_name;
-
-    const subRes = await axios.post(
-      `${PAYSTACK_BASE_URL}/subaccount`,
-      {
-        business_name:     user.businessName,
-        settlement_bank:   bankCode,
-        account_number:    accountNumber,
-        percentage_charge: 0,
-      },
-      { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`, 'Content-Type': 'application/json' } }
-    );
-
-    user.payoutBankCode         = bankCode;
-    user.payoutBankName         = bankName;
-    user.payoutAccountNumber    = accountNumber;
-    user.payoutAccountName      = accountName;
-    user.paystackSubaccountCode = subRes.data.data.subaccount_code;
-    await user.save();
-
-    console.log(`Subaccount created for ${user.email}: ${user.paystackSubaccountCode}`);
-    res.json({ success: true, accountName, subaccountCode: user.paystackSubaccountCode });
-  } catch (err) {
-    console.error('Create subaccount error:', err.response?.data || err.message);
-    res.status(500).json({ error: 'Failed to set up payout account. Please double-check your bank details.' });
-  }
-});
-
-// ── PAYOUTS: Get Status ──
-app.get('/api/payouts/status', requireAuth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({
-      success: true,
-      payout: {
-        bankName:       user.payoutBankName || null,
-        accountNumber:  user.payoutAccountNumber || null,
-        accountName:    user.payoutAccountName || null,
-        subaccountCode: user.paystackSubaccountCode || null,
-        active:         !!user.paystackSubaccountCode,
-      },
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch payout status' });
-  }
-});
-
-// ── ADMIN DASHBOARD ──
-app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Access denied. Administrators only.' });
-  }
-  try {
-    const users = await User.find({}, '-password').sort({ createdAt: -1 });
-    const totalUsers = users.length;
-    const premiumUsers = users.filter(u => u.plan !== 'free' && u.plan !== 'basic').length;
-    const verifiedUsers = users.filter(u => u.emailVerified).length;
-
-    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
-    const [
-      totalSalesCount,
-      totalBookingsCount,
-      totalEventsCount,
-      newSignupsThisMonth,
-      activeUsers,
-      revenueAgg,
-      planBreakdownAgg,
-      topBusinessTypesAgg
-    ] = await Promise.all([
-      Sale.countDocuments({}),
-      Booking.countDocuments({}),
-      Event.countDocuments({}),
-      User.countDocuments({ createdAt: { $gte: startOfMonth } }),
-      User.countDocuments({ lastLoginAt: { $gte: thirtyDaysAgo } }),
-      Sale.aggregate([{ $group: { _id: null, total: { $sum: '$total' } } }]),
-      User.aggregate([{ $group: { _id: '$plan', count: { $sum: 1 } } }]),
-      User.aggregate([
-        { $match: { businessType: { $ne: null } } },
-        { $group: { _id: '$businessType', count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
-        { $limit: 5 }
-      ])
-    ]);
-
-    const totalRevenue = revenueAgg[0]?.total || 0;
-    const planBreakdown = planBreakdownAgg.reduce((acc, p) => {
-      acc[p._id || 'free'] = p.count;
-      return acc;
-    }, {});
-    const topBusinessTypes = topBusinessTypesAgg.map(t => ({ type: t._id, count: t.count }));
-    const recentSignups = users.slice(0, 10);
-
-    res.json({
-      success: true,
-      metrics: {
-        totalUsers,
-        activeUsers,
-        newSignupsThisMonth,
-        premiumUsers,
-        verifiedUsers,
-        totalRevenue,
-        totalSales: totalSalesCount,
-        totalBookings: totalBookingsCount,
-        totalEvents: totalEventsCount,
-        planBreakdown,
-        topBusinessTypes
-      },
-      recentSignups,
-      users
-    });
-  } catch (err) {
-    console.error('Admin Fetch Error:', err);
-    res.status(500).json({ error: 'Failed to retrieve admin system metrics.' });
   }
 });
 
@@ -729,7 +477,7 @@ app.post('/api/sales', requireAuth, requireFeature('sales'), async (req, res) =>
       reference:     reference || null,
       status:        status || (reference ? 'pending' : 'completed'),
       synced:        reference ? 0 : 1,
-      verified:      paymentMethod === 'cash' || !!(reference && status === 'completed'),
+      verified:      !!(reference && status === 'completed'),
       provider:      reference ? 'paystack' : 'cash',
       profit:        typeof profit === 'number' ? profit : 0,
       createdAt:     new Date(),
@@ -858,10 +606,11 @@ const buildFinancialSummary = async (userId) => {
     Expense.find({ userId }),
     Invoice.find({ userId }),
   ]);
+
   const totalRevenue  = completedSales.reduce((sum, s) => sum + (s.total || 0), 0);
   const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-  const grossProfit   = completedSales.reduce((sum, s) => sum + (typeof s.profit === 'number' ? s.profit : (s.total || 0)), 0);
-  const netProfit      = grossProfit - totalExpenses;
+  const netProfit     = totalRevenue - totalExpenses;
+
   const invoiceTotal       = invoices.reduce((sum, i) => sum + (i.amount || 0), 0);
   const invoicePaid        = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.amount || 0), 0);
   const invoiceOutstanding = invoiceTotal - invoicePaid;
@@ -870,9 +619,9 @@ const buildFinancialSummary = async (userId) => {
     totalRevenue,
     totalExpenses,
     netProfit,
-    cashFlow:         netProfit,
+    cashFlow: netProfit,
     transactionCount: completedSales.length,
-    invoiceTotals:    { total: invoiceTotal, paid: invoicePaid, outstanding: invoiceOutstanding },
+    invoiceTotals: { total: invoiceTotal, paid: invoicePaid, outstanding: invoiceOutstanding },
   };
 };
 
@@ -904,8 +653,8 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
       buildFinancialSummary(req.user.id),
       buildSubscriptionSummary(req.user.id),
       Sale.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(10),
-      Booking.find({ providerId: req.user.id, type: 'appointment', scheduledDate: { $gte: today }, status: { $in: ['pending', 'confirmed'] } }).sort({ scheduledDate: 1 }).limit(5),
-      Booking.find({ providerId: req.user.id, type: 'event', scheduledDate: { $gte: today }, status: { $in: ['pending', 'confirmed'] } }).sort({ scheduledDate: 1 }).limit(5),
+      Booking.find({ providerId: req.user.id, type: 'appointment', scheduledDate: { $gte: today }, status: { $in: ['pending','confirmed'] } }).sort({ scheduledDate: 1 }).limit(5),
+      Booking.find({ providerId: req.user.id, type: 'event', scheduledDate: { $gte: today }, status: { $in: ['pending','confirmed'] } }).sort({ scheduledDate: 1 }).limit(5),
       Invoice.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(5),
       Service.find({ userId: req.user.id, isActive: true }).limit(5),
     ]);
@@ -935,7 +684,7 @@ app.get('/api/subscription', requireAuth, async (req, res) => {
 });
 
 app.post('/api/subscription/upgrade', requireAuth, async (req, res) => {
-  const { planId, callbackUrl } = req.body;
+  const { planId } = req.body;
   if (!planId) return res.status(400).json({ error: 'planId is required' });
   const plan = getPlanList().find((p) => p.id === planId);
   if (!plan) return res.status(400).json({ error: 'Invalid plan selected' });
@@ -943,65 +692,12 @@ app.post('/api/subscription/upgrade', requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
-
-    if (plan.price === 0) {
-      user.plan = planId;
-      await user.save();
-      await notify(user._id, 'Subscription updated', `You're now on the ${plan.name || planId} plan.`, 'subscription');
-      return res.json({ success: true, subscription: await buildSubscriptionSummary(req.user.id), user: formatUserResponse(user) });
-    }
-
-    const reference = `sub-${user._id}-${Date.now()}`;
-    const payload = {
-      email:        user.email,
-      amount:       Math.round(plan.price * 100),
-      reference,
-      callback_url: callbackUrl || process.env.FRONTEND_URL,
-      metadata:     { type: 'subscription', planId, userId: user._id.toString() },
-    };
-
-    const { data } = await axios.post(
-      `${PAYSTACK_BASE_URL}/transaction/initialize`,
-      payload,
-      { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`, 'Content-Type': 'application/json' } }
-    );
-
-    res.json({
-      success:          true,
-      requiresPayment:  true,
-      authorizationUrl: data.data.authorization_url,
-      reference:        data.data.reference,
-    });
+    user.plan = planId;
+    await user.save();
+    res.json({ success: true, subscription: await buildSubscriptionSummary(req.user.id), user: formatUserResponse(user) });
   } catch (err) {
-    console.error('Upgrade error:', err.response?.data || err.message);
-    res.status(500).json({ error: 'Failed to start subscription upgrade' });
-  }
-});
-
-// ── VERIFY SUBSCRIPTION PAYMENT ──
-app.get('/api/subscription/verify/:reference', requireAuth, async (req, res) => {
-  const { reference } = req.params;
-  try {
-    const { isVerified } = await verifyPaystackTransaction(reference);
-    if (isVerified && reference.startsWith(`sub-${req.user.id}-`)) {
-      const { data } = await axios.get(
-        `${PAYSTACK_BASE_URL}/transaction/verify/${reference}`,
-        { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
-      );
-      const planId = data?.data?.metadata?.planId;
-      if (planId) {
-        const user = await User.findById(req.user.id);
-        user.plan = planId;
-        await user.save();
-        const plan = getPlanList().find((p) => p.id === planId);
-        await notify(user._id, 'Subscription upgraded', `Payment received — you're now on the ${plan?.name || planId} plan.`, 'subscription');
-        return res.json({ success: true, subscription: await buildSubscriptionSummary(req.user.id), user: formatUserResponse(user) });
-      }
-    }
-    res.json({ success: false, verified: false });
-  } catch (err) {
-    console.error('Subscription verify error:', err);
-    res.status(500).json({ error: 'Failed to verify subscription payment' });
+    console.error('Upgrade error:', err);
+    res.status(500).json({ error: 'Failed to upgrade subscription' });
   }
 });
 
@@ -1012,31 +708,15 @@ app.post('/api/payments/initialize', requireAuth, async (req, res) => {
   if (typeof amount !== 'number' || amount <= 0) return res.status(400).json({ error: 'amount must be a positive number' });
 
   try {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    const amountInKobo = Math.round(amount * 100);
-    const payload = {
-      email:        req.user.email,
-      amount:       amountInKobo,
-      reference:    saleId,
-      callback_url: callbackUrl || process.env.FRONTEND_URL,
-      metadata:     { saleId, userId: req.user.id, businessName: req.user.businessName },
-    };
-
-    if (user.paystackSubaccountCode) {
-      const plan = getPlan(user.plan);
-      const feePercent = typeof plan.platformFeePercent === 'number' ? plan.platformFeePercent : 0;
-      payload.subaccount = user.paystackSubaccountCode;
-      payload.bearer = 'subaccount';
-      if (feePercent > 0) {
-        payload.transaction_charge = Math.round(amountInKobo * (feePercent / 100));
-      }
-    }
-
     const { data } = await axios.post(
       `${PAYSTACK_BASE_URL}/transaction/initialize`,
-      payload,
+      {
+        email:        req.user.email,
+        amount:       Math.round(amount * 100),
+        reference:    saleId,
+        callback_url: callbackUrl || process.env.FRONTEND_URL,
+        metadata:     { saleId, userId: req.user.id, businessName: req.user.businessName },
+      },
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`, 'Content-Type': 'application/json' } }
     );
     res.json({ success: true, authorizationUrl: data.data.authorization_url, reference: data.data.reference });
@@ -1055,8 +735,6 @@ app.get('/api/payments/verify/:reference', requireAuth, async (req, res) => {
       { id: reference, userId: req.user.id },
       { synced: 1, verified: true, status: 'completed', provider: 'paystack' }
     );
-  } else {
-    await notify(req.user.id, 'Payment failed', `We couldn't verify payment for sale reference ${reference}.`, 'payment');
   }
 
   res.json({ success: isVerified, verified: isVerified, amount, reference });
@@ -1081,36 +759,11 @@ app.post('/webhook/paystack', (req, res, next) => {
     if (event === 'charge.success') {
       const { reference, amount, metadata } = data;
       console.log(`Payment confirmed: ${amount / 100} ref: ${reference}`);
-
-      if (metadata?.type === 'subscription' && metadata?.userId && metadata?.planId) {
-        await User.findByIdAndUpdate(metadata.userId, { plan: metadata.planId });
-        console.log(`Subscription upgraded via webhook: user ${metadata.userId} -> ${metadata.planId}`);
-
-      } else if (metadata?.ticketId || (reference && reference.startsWith('event-ticket-'))) {
-        const ticketId = metadata?.ticketId || reference.replace('event-ticket-', '');
-        const ticket = await EventTicket.findOneAndUpdate(
-          { _id: ticketId, paymentStatus: { $ne: 'paid' } },
-          { paymentStatus: 'paid', status: 'valid', paymentRef: reference },
-          { new: true }
-        );
-        if (ticket && resend) {
-          const ev = await Event.findById(ticket.eventId);
-          if (ev) {
-            await resend.emails.send({
-              from: EMAIL_FROM,
-              to: ticket.buyerEmail,
-              subject: `Your ticket for ${ev.title}`,
-              html: ticketHtml(ev, ticket),
-            });
-          }
-        }
-
-      } else if (metadata?.bookingId || (reference && reference.startsWith('booking-'))) {
+      if (metadata?.bookingId || (reference && reference.startsWith('booking-'))) {
         const bookingId = metadata?.bookingId || reference.replace('booking-', '');
         await Booking.findByIdAndUpdate(bookingId, {
           paymentStatus: 'paid', status: 'confirmed', paymentRef: reference,
         });
-
       } else {
         await Sale.findOneAndUpdate(
           { id: reference },
@@ -1123,60 +776,38 @@ app.post('/webhook/paystack', (req, res, next) => {
   }
 });
 
-// ── CONNECT ADDITIONAL DELEGATED ROUTERS ──
-app.use('/api/services',  serviceRoutes);
-app.use('/api/bookings',  bookingRoutes);
-app.use('/api/invoices',  invoiceRoutes);
-app.use('/api/customers', customerRoutes);
-app.use('/api/waitlist',  waitlistRoutes);
-app.use('/api/events',    eventRoutes);
-app.use('/api/automations', automationRoutes);
-app.use('/api/notifications', notificationRoutes);
+// ── Feature routes ──
+app.use('/api/services', serviceRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/invoices', invoiceRoutes);
+// TODO: re-enable once ./src/routes/customers.js and its model exist
+// app.use('/api/customers', customerRoutes);
 
-// ── Sentry error handler — must be registered after all routes ──
-if (process.env.SENTRY_DSN) {
-  Sentry.setupExpressErrorHandler(app);
-}
-
-// ── SCHEDULED REMINDERS ──
-if (process.env.ENABLE_CRON === 'true') {
-  cron.schedule('0 * * * *', async () => {
-    try {
-      const result = await runReminders();
-      if (result.sent > 0) console.log(`[cron] Sent ${result.sent} reminder email(s) for ${result.date}`);
-    } catch (err) {
-      console.error('[cron] Reminder job failed:', err.message);
-    }
-  });
-
-  cron.schedule('30 * * * *', async () => {
-    try {
-      const result = await runFollowups();
-      if (result.sent > 0) console.log(`[cron] Sent ${result.sent} follow-up email(s) for ${result.date}`);
-    } catch (err) {
-      console.error('[cron] Follow-up job failed:', err.message);
-    }
-  });
-
-  // ── Automation scheduler: runs every 5 minutes to process recurring/new-member automations ──
-  const automationScheduler = new AutomationScheduler(messagingService);
-  cron.schedule('*/5 * * * *', async () => {
-    try {
-      const result = await automationScheduler.runScheduler();
-      if (result.success && (result.schedulesSent > 0 || result.newMembersWelcomed > 0)) {
-        console.log(`[cron] Automations: ${result.schedulesSent} scheduled, ${result.newMembersWelcomed} welcomes`);
-      }
-    } catch (err) {
-      console.error('[cron] Automation scheduler job failed:', err.message);
-    }
-  });
-
-  console.log('Cron scheduler enabled: reminders hourly, follow-ups hourly (offset 30m), automations every 5m');
-}
-
-// Start Server Listen Setup
-connectToDatabase().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Backend Application listening securely on port ${PORT}`);
-  });
+// ── Global error handler ──
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.stack || err);
+  res.status(500).json({ error: 'Internal server error' });
 });
+
+// ── 404 handler ──
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// ── Start ──
+const startServer = async () => {
+  const dbConnected = await connectToDatabase();
+  if (!dbConnected) {
+    console.error('Server startup aborted: MongoDB connection failed.');
+    process.exit(1);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`\nFlowora Backend v2.0 running on port ${PORT}`);
+    console.log(`  Database : MongoDB`);
+    console.log(`  Auth     : JWT (bcrypt + 7d expiry)`);
+    console.log(`  Mode     : ${PAYSTACK_SECRET_KEY?.startsWith('sk_live') ? 'LIVE' : 'TEST'}\n`);
+  });
+};
+
+startServer();
