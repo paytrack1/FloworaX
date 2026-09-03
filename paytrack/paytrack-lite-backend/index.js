@@ -26,6 +26,7 @@ const customerRoutes = require('./src/routes/customers');
 const waitlistRoutes = require('./src/routes/waitlist');
 const eventRoutes    = require('./src/routes/events');
 const automationRoutes = require('./src/routes/automations');
+const staffRoutes = require('./src/routes/staff');
 const Invoice        = require('./src/models/Invoice');
 const Service        = require('./src/models/Service');
 const Booking        = require('./src/models/Booking');
@@ -1131,6 +1132,7 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/waitlist',  waitlistRoutes);
 app.use('/api/events',    eventRoutes);
 app.use('/api/automations', automationRoutes);
+app.use('/api/staff', staffRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // ── Sentry error handler — must be registered after all routes ──
