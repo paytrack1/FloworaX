@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Home, BarChart2, FileText, Settings, LogOut, Plus, Zap, TrendingDown, Calendar, Receipt, Users, Ticket, MessageSquare } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { getModulesForBusinessType } from '../store/modules';
@@ -12,6 +12,7 @@ const tabs = [
   { id: 'events',    label: 'Events',    icon: Ticket },
   { id: 'customers', label: 'Customers', icon: Users },
   { id: 'communications', label: 'Communications', icon: MessageSquare },
+  { id: 'team',      label: 'Team',      icon: Users },
   { id: 'settings',  label: 'Settings',  icon: Settings },
 ];
 const Sidebar = () => {

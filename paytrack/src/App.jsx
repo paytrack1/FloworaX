@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useStore } from './store/useStore';
 import Login from './pages/Login';
 import Welcome from './pages/Welcome';
@@ -13,6 +13,7 @@ import Invoices from './pages/Invoices';
 import Events from './pages/Events';
 import Customers from './pages/Customers';
 import Communications from './pages/Communications';
+import TeamManagement from './pages/TeamManagement';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import PublicBooking from './pages/PublicBooking';
@@ -47,7 +48,7 @@ const App = () => {
     if (isAuthenticated) init();
   }, [isAuthenticated, init]);
 
-  // ── Public routes ──
+  // â”€â”€ Public routes â”€â”€
   const path = window.location.pathname;
 
   if (path.startsWith('/book/') || path.startsWith('/booking/')) {
@@ -69,7 +70,7 @@ const App = () => {
     if (token) return <ResetPassword token={token} />;
   }
 
-  // ── Not logged in ──
+  // â”€â”€ Not logged in â”€â”€
   if (!isAuthenticated) {
     if (screen === 'welcome') {
       return (
@@ -82,12 +83,12 @@ const App = () => {
     return <Login mode={screen} />;
   }
 
-  // ── Email not verified ──
+  // â”€â”€ Email not verified â”€â”€
   if (user && !user.emailVerified) {
     return <VerifyEmail />;
   }
 
-  // ── Business type not set (ONLY this check — not phone/address etc) ──
+  // â”€â”€ Business type not set (ONLY this check â€” not phone/address etc) â”€â”€
   if (user && !user.businessType) {
     return <BusinessTypeOnboarding />;
   }
@@ -96,7 +97,7 @@ const App = () => {
     return <AdminDashboard />;
   }
 
-  // ── Page renderer ──
+  // â”€â”€ Page renderer â”€â”€
   const renderContent = () => {
     if (isSaleModalOpen) return <NewSale onBack={() => setSaleModal(false)} />;
     switch (activeTab) {
@@ -109,6 +110,7 @@ const App = () => {
       case 'events':    return <Events />;
       case 'customers': return <Customers />;
       case 'communications': return <Communications />;
+      case 'team': return <TeamManagement />;
       case 'settings':  return <Settings />;
       default:          return <Home />;
     }
