@@ -5,6 +5,7 @@ const Service = require('../models/Service');
 const axios   = require('axios');
 const requireAuth = require('../middleware/auth');
 const { requireFeature, requireProviderFeature } = require('../middleware/plan');
+const notify = require('../utils/notify');
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_BASE_URL   = 'https://api.paystack.co';
 const FRONTEND_URL        = process.env.FRONTEND_URL || 'https://floworax.vercel.app';
@@ -82,8 +83,21 @@ router.post('/public', async (req, res) => {
     });
     if (service.isFree) {
       await sendEmail(clientEmail, 'Your booking is confirmed', confirmationHtml(booking));
+      await notify(
+        service.userId,
+        'New booking confirmed',
+        `${clientName} booked ${service.title || 'a service'} for ${scheduledDate} at ${scheduledTime}.`,
+        'booking'
+      );
       return res.status(201).json({ success: true, booking, paymentRequired: false });
     }
+
+    await notify(
+      service.userId,
+      'New booking request',
+      `${clientName} requested ${service.title || 'a service'} for ${scheduledDate} at ${scheduledTime}. Awaiting payment.`,
+      'booking'
+    );
     const { data } = await axios.post(
       `${PAYSTACK_BASE_URL}/transaction/initialize`,
       {
@@ -112,6 +126,12 @@ async function confirmPaidBooking(bookingId, reference) {
   );
   if (booking) {
     await sendEmail(booking.clientEmail, 'Your booking is confirmed', confirmationHtml(booking));
+    await notify(
+      booking.providerId,
+      'Booking confirmed',
+      `Payment received — ${booking.clientName}'s booking for ${booking.scheduledDate} is now confirmed.`,
+      'booking'
+    );
   }
   return booking;
 }
@@ -178,17 +198,36 @@ router.get('/verify/:reference', async (req, res) => {
   }
 });
 
+// ── Core reminder/follow-up logic, reusable by both the HTTP endpoints
+//    below (for external/serverless cron pings) and the in-process
+//    node-cron scheduler wired up in index.js (for always-on hosting). ──
+async function runReminders() {
+  const t = new Date();
+  t.setUTCDate(t.getUTCDate() + 1);
+  const tomorrow = t.toISOString().slice(0, 10);
+  const bookings = await Booking.find({ scheduledDate: tomorrow, status: 'confirmed' });
+  for (const b of bookings) {
+    await sendEmail(b.clientEmail, 'Reminder: your booking is tomorrow', reminderHtml(b));
+  }
+  return { sent: bookings.length, date: tomorrow };
+}
+
+async function runFollowups() {
+  const t = new Date();
+  t.setUTCDate(t.getUTCDate() - 1);
+  const yesterday = t.toISOString().slice(0, 10);
+  const bookings = await Booking.find({ scheduledDate: yesterday, status: 'confirmed' });
+  for (const b of bookings) {
+    await sendEmail(b.clientEmail, 'Thanks for your booking', followupHtml(b));
+  }
+  return { sent: bookings.length, date: yesterday };
+}
+
 router.get('/run-reminders', async (req, res) => {
   if (!REMINDER_SECRET || req.query.key !== REMINDER_SECRET) return res.sendStatus(403);
   try {
-    const t = new Date();
-    t.setUTCDate(t.getUTCDate() + 1);
-    const tomorrow = t.toISOString().slice(0, 10);
-    const bookings = await Booking.find({ scheduledDate: tomorrow, status: 'confirmed' });
-    for (const b of bookings) {
-      await sendEmail(b.clientEmail, 'Reminder: your booking is tomorrow', reminderHtml(b));
-    }
-    res.json({ success: true, sent: bookings.length, date: tomorrow });
+    const result = await runReminders();
+    res.json({ success: true, ...result });
   } catch (err) {
     console.error('Reminder error:', err.message);
     res.status(500).json({ error: 'Failed to run reminders' });
@@ -198,14 +237,8 @@ router.get('/run-reminders', async (req, res) => {
 router.get('/run-followups', async (req, res) => {
   if (!REMINDER_SECRET || req.query.key !== REMINDER_SECRET) return res.sendStatus(403);
   try {
-    const t = new Date();
-    t.setUTCDate(t.getUTCDate() - 1);
-    const yesterday = t.toISOString().slice(0, 10);
-    const bookings = await Booking.find({ scheduledDate: yesterday, status: 'confirmed' });
-    for (const b of bookings) {
-      await sendEmail(b.clientEmail, 'Thanks for your booking', followupHtml(b));
-    }
-    res.json({ success: true, sent: bookings.length, date: yesterday });
+    const result = await runFollowups();
+    res.json({ success: true, ...result });
   } catch (err) {
     console.error('Follow-up error:', err.message);
     res.status(500).json({ error: 'Failed to run follow-ups' });
@@ -213,3 +246,5 @@ router.get('/run-followups', async (req, res) => {
 });
 
 module.exports = router;
+module.exports.runReminders = runReminders;
+module.exports.runFollowups = runFollowups;

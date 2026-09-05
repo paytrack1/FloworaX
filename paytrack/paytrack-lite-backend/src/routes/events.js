@@ -1,12 +1,13 @@
-const express  = require('express');
-const router   = express.Router();
-const crypto   = require('crypto');
-const axios    = require('axios');
+const express = require('express');
+const router  = express.Router();
+const crypto  = require('crypto');
+const axios   = require('axios');
 const mongoose = require('mongoose');
 const Event       = require('../models/Event');
 const EventTicket = require('../models/EventTicket');
 const requireAuth = require('../middleware/auth');
 const { requireFeature, requireProviderFeature, getPlan } = require('../middleware/plan');
+const notify = require('../utils/notify');
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_BASE_URL   = 'https://api.paystack.co';
@@ -165,7 +166,15 @@ async function confirmPaidTicket(ticketId, reference) {
   );
   if (ticket) {
     const event = await Event.findById(ticket.eventId);
-    if (event) await sendEmail(ticket.buyerEmail, `Your ticket for ${event.title}`, ticketHtml(event, ticket));
+    if (event) {
+      await sendEmail(ticket.buyerEmail, `Your ticket for ${event.title}`, ticketHtml(event, ticket));
+      await notify(
+        event.userId,
+        'New event registration',
+        `${ticket.buyerName} registered and paid for ${event.title}.`,
+        'event'
+      );
+    }
   }
   return ticket;
 }
@@ -202,6 +211,12 @@ router.post('/public/:id/register', async (req, res) => {
 
     if (isFree) {
       await sendEmail(ticket.buyerEmail, `Your ticket for ${event.title}`, ticketHtml(event, ticket));
+      await notify(
+        event.userId,
+        'New event registration',
+        `${buyerName} registered for ${event.title}.`,
+        'event'
+      );
       return res.status(201).json({ success: true, ticket, paymentRequired: false });
     }
 

@@ -55,23 +55,32 @@ router.post('/invite', requireAuth, async (req, res) => {
     await staff.save();
 
     const inviteLink = `${FRONTEND_URL}/accept-invite?token=${inviteToken}`;
+    let emailSent = false;
     if (!resend) {
       console.log(`[DEV] Staff invite link for ${normalizedEmail}: ${inviteLink}`);
     } else {
-      const result = await resend.emails.send({
-        from: EMAIL_FROM,
-        to: normalizedEmail,
-        subject: `You've been invited to join ${req.user.businessName || 'the team'} on Flowora`,
-        html: `<p>You've been invited to join ${req.user.businessName || 'a business'} on Flowora.</p>
-               <p><a href="${inviteLink}">Click here to accept and set your password</a>. This link expires in 48 hours.</p>`,
-      });
-      if (result.error) {
-        console.error('Staff invite email failed:', result.error);
+      try {
+        const result = await resend.emails.send({
+          from: EMAIL_FROM,
+          to: normalizedEmail,
+          subject: `You've been invited to join ${req.user.businessName || 'the team'} on Flowora`,
+          html: `<p>You've been invited to join ${req.user.businessName || 'a business'} on Flowora.</p>
+                 <p><a href="${inviteLink}">Click here to accept and set your password</a>. This link expires in 48 hours.</p>`,
+        });
+        if (result.error) {
+          console.error('Staff invite email failed:', result.error);
+        } else {
+          emailSent = true;
+        }
+      } catch (emailErr) {
+        console.error('Staff invite email threw:', emailErr.message);
+      }
+      if (!emailSent) {
         console.log(`[FALLBACK] Staff invite link for ${normalizedEmail}: ${inviteLink}`);
       }
     }
 
-    res.status(201).json({ success: true, staff: { id: staff._id, email: staff.email, role: staff.role } });
+    res.status(201).json({ success: true, emailSent, inviteLink, staff: { id: staff._id, email: staff.email, role: staff.role } });
   } catch (err) {
     console.error('Staff invite error:', err.message);
     res.status(500).json({ error: 'Failed to send invite' });

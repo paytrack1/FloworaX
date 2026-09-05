@@ -3,6 +3,7 @@ const router = express.Router();
 const Invoice = require('../models/Invoice');
 const requireAuth = require('../middleware/auth');
 const { requireFeature } = require('../middleware/plan');
+const notify = require('../utils/notify');
 
 router.post('/', requireAuth, requireFeature('invoices'), async (req, res) => {
   const { clientName, clientEmail, items, amount, dueDate, notes } = req.body;
@@ -46,6 +47,12 @@ router.patch('/:id/pay', requireAuth, requireFeature('invoices'), async (req, re
       { new: true }
     );
     if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
+    await notify(
+      req.user.id,
+      'Invoice paid',
+      `Invoice ${invoice.invoiceNumber} from ${invoice.clientName} has been marked as paid.`,
+      'invoice'
+    );
     res.json({ success: true, invoice });
   } catch {
     res.status(500).json({ error: 'Failed to update invoice' });
@@ -66,6 +73,14 @@ router.patch('/:id', requireAuth, requireFeature('invoices'), async (req, res) =
       { new: true }
     );
     if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
+    if (req.body.status === 'paid') {
+      await notify(
+        req.user.id,
+        'Invoice paid',
+        `Invoice ${invoice.invoiceNumber} from ${invoice.clientName} has been marked as paid.`,
+        'invoice'
+      );
+    }
     res.json({ success: true, invoice });
   } catch {
     res.status(500).json({ error: 'Failed to update invoice' });
