@@ -83,7 +83,7 @@ router.post('/invite', requireAuth, async (req, res) => {
     res.status(201).json({ success: true, emailSent, inviteLink, staff: { id: staff._id, email: staff.email, role: staff.role } });
   } catch (err) {
     console.error('Staff invite error:', err.message);
-    res.status(500).json({ error: 'Failed to send invite' });
+    res.status(500).json({ error: 'Failed to send invite', debugMessage: err.message, debugStack: err.stack });
   }
 });
 
