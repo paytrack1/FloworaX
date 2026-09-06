@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const { Resend } = require('resend');
 const Staff = require('../models/Staff');
 const requireAuth = require('../middleware/auth');
+const { requireFeature } = require('../middleware/plan');
 const { requireStaff } = require('../middleware/requireStaff');
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -16,14 +17,14 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 
 const INVITE_EXPIRY_MS = 48 * 60 * 60 * 1000; // 48 hours, per spec
 
-// Rate limits mirror the pattern in customers.js's publicJoinLimiter —
+// Rate limits mirror the pattern in customers.js's publicJoinLimiter â€”
 // accept-invite and login are unauthenticated, so they're the ones worth
 // protecting from brute-force/enumeration.
 const acceptInviteLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
 const staffLoginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 
-// ── POST /api/staff/invite — owner invites a staff member ──
-router.post('/invite', requireAuth, async (req, res) => {
+// â”€â”€ POST /api/staff/invite â€” owner invites a staff member â”€â”€
+router.post('/invite', requireAuth, requireFeature('staff'), async (req, res) => {
   try {
     const { email, name, role, permissions } = req.body;
     if (!email || !email.trim()) return res.status(400).json({ error: 'email is required' });
@@ -87,7 +88,7 @@ router.post('/invite', requireAuth, async (req, res) => {
   }
 });
 
-// ── POST /api/staff/accept-invite — staff sets their password (public) ──
+// â”€â”€ POST /api/staff/accept-invite â€” staff sets their password (public) â”€â”€
 router.post('/accept-invite', acceptInviteLimiter, async (req, res) => {
   try {
     const { token, name, password } = req.body;
@@ -115,7 +116,7 @@ router.post('/accept-invite', acceptInviteLimiter, async (req, res) => {
   }
 });
 
-// ── POST /api/staff/login — staff signs in (public) ──
+// â”€â”€ POST /api/staff/login â€” staff signs in (public) â”€â”€
 router.post('/login', staffLoginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -123,7 +124,7 @@ router.post('/login', staffLoginLimiter, async (req, res) => {
 
     const staff = await Staff.findOne({ email: email.toLowerCase().trim() });
     // Same message whether the account doesn't exist, isn't accepted yet, or
-    // the password is wrong — avoids leaking which case it is.
+    // the password is wrong â€” avoids leaking which case it is.
     if (!staff || !staff.accepted || !staff.passwordHash) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -158,7 +159,7 @@ router.post('/login', staffLoginLimiter, async (req, res) => {
   }
 });
 
-// ── GET /api/staff — owner lists their team ──
+// â”€â”€ GET /api/staff â€” owner lists their team â”€â”€
 router.get('/', requireAuth, async (req, res) => {
   try {
     const staff = await Staff.find({ ownerId: req.user.id }).select('-passwordHash -inviteToken').sort({ createdAt: -1 });
@@ -169,7 +170,7 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
-// ── PATCH /api/staff/:id/permissions ──
+// â”€â”€ PATCH /api/staff/:id/permissions â”€â”€
 router.patch('/:id/permissions', requireAuth, async (req, res) => {
   try {
     const { permissions, role } = req.body;
@@ -185,7 +186,7 @@ router.patch('/:id/permissions', requireAuth, async (req, res) => {
   }
 });
 
-// ── DELETE /api/staff/:id — owner removes staff ──
+// â”€â”€ DELETE /api/staff/:id â€” owner removes staff â”€â”€
 router.delete('/:id', requireAuth, async (req, res) => {
   try {
     const result = await Staff.findOneAndDelete({ _id: req.params.id, ownerId: req.user.id });

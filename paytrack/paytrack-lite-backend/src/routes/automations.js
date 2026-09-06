@@ -1,19 +1,20 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const Automation = require('../models/Automation');
 const AutomationLog = require('../models/AutomationLog');
 const AutomationExecution = require('../models/AutomationExecution');
 const Customer = require('../models/Customer');
 const requireAuth = require('../middleware/auth');
+const { requireFeature } = require('../middleware/plan');
 const messagingService = require('../services/messagingService');
 const { DAY_NAMES } = require('../utils/constants');
 
-// ── Helper: substitute template variables ──
+// â”€â”€ Helper: substitute template variables â”€â”€
 function interpolateTemplate(template, variables) {
   return messagingService.constructor.interpolateTemplate(template, variables);
 }
 
-// ── GET /api/automations - List automations ──
+// â”€â”€ GET /api/automations - List automations â”€â”€
 router.get('/', requireAuth, async (req, res) => {
   try {
     const automations = await Automation.find({ userId: req.user.id }).sort({ createdAt: -1 });
@@ -24,7 +25,7 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
-// ── GET /api/automations/logs - Message log ──
+// â”€â”€ GET /api/automations/logs - Message log â”€â”€
 router.get('/logs', requireAuth, async (req, res) => {
   try {
     const limit = Math.min(Number(req.query.limit) || 100, 500);
@@ -40,8 +41,8 @@ router.get('/logs', requireAuth, async (req, res) => {
   }
 });
 
-// ── POST /api/automations - Create automation ──
-router.post('/', requireAuth, async (req, res) => {
+// â”€â”€ POST /api/automations - Create automation â”€â”€
+router.post('/', requireAuth, requireFeature('communications'), async (req, res) => {
   const { name, description, trigger, dayOfWeek, startTime, endTime, timezone, reminder, audience, channel, messageTemplate } = req.body;
 
   if (!name || !messageTemplate) {
@@ -80,7 +81,7 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-// ── PATCH /api/automations/:id - Update automation ──
+// â”€â”€ PATCH /api/automations/:id - Update automation â”€â”€
 router.patch('/:id', requireAuth, async (req, res) => {
   const { name, description, trigger, dayOfWeek, startTime, endTime, timezone, reminder, audience, channel, messageTemplate } = req.body;
 
@@ -111,7 +112,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
   }
 });
 
-// ── DELETE /api/automations/:id - Delete automation ──
+// â”€â”€ DELETE /api/automations/:id - Delete automation â”€â”€
 router.delete('/:id', requireAuth, async (req, res) => {
   try {
     const automation = await Automation.findById(req.params.id);
@@ -129,7 +130,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
   }
 });
 
-// ── PATCH /api/automations/:id/pause - Pause automation ──
+// â”€â”€ PATCH /api/automations/:id/pause - Pause automation â”€â”€
 router.patch('/:id/pause', requireAuth, async (req, res) => {
   try {
     const automation = await Automation.findById(req.params.id);
@@ -147,7 +148,7 @@ router.patch('/:id/pause', requireAuth, async (req, res) => {
   }
 });
 
-// ── PATCH /api/automations/:id/resume - Resume automation ──
+// â”€â”€ PATCH /api/automations/:id/resume - Resume automation â”€â”€
 router.patch('/:id/resume', requireAuth, async (req, res) => {
   try {
     const automation = await Automation.findById(req.params.id);

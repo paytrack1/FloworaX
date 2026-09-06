@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
 const PLAN_CATALOG = {
   free: {
@@ -10,22 +10,14 @@ const PLAN_CATALOG = {
     badge: 'Best for starters',
     platformFeePercent: 2,
   },
-  pro: {
-    name: 'Pro',
-    price: 2000,
-    annualPrice: 20000,
-    features: ['sales', 'services', 'bookings', 'finance', 'reports', 'invoices', 'events'],
-    limits: { sales: 500, bookings: 200, services: 20, events: null },
-    badge: 'Most popular',
-    platformFeePercent: 0,
-  },
-  business: {
-    name: 'Business',
-    price: 4000,
-    annualPrice: 40000,
-    features: ['sales', 'services', 'bookings', 'finance', 'reports', 'invoices', 'events', 'staff'],
+  paid: {
+    name: 'Paid',
+    price: 7000,
+    annualPrice: 70000,
+    description: 'Everything unlocked: unlimited sales, bookings, invoices, events, staff management, and automated WhatsApp/SMS/Email reminders.',
+    features: ['sales', 'services', 'bookings', 'finance', 'reports', 'invoices', 'events', 'staff', 'communications'],
     limits: { sales: null, bookings: null, services: null, events: null },
-    badge: 'Enterprise',
+    badge: 'Everything unlocked',
     platformFeePercent: 0,
   },
 };
