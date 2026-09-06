@@ -2,6 +2,7 @@
 import { Home, BarChart2, FileText, Settings, LogOut, Plus, Zap, TrendingDown, Calendar, Receipt, Users, Ticket, MessageSquare } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { getModulesForBusinessType } from '../store/modules';
+import { getTerminology } from '../utils/terminology';
 const tabs = [
   { id: 'home',      label: 'Home',      icon: Home },
   { id: 'sales',     label: 'Sales',     icon: BarChart2 },
@@ -18,6 +19,7 @@ const tabs = [
 const Sidebar = () => {
   const { activeTab, setActiveTab,setSaleModal, logout, user } = useStore();
   const enabledModules = getModulesForBusinessType(user?.businessType);
+  const terms = getTerminology(user?.businessType);
   const visibleTabs = tabs.filter(({ id }) => id === 'reports' || enabledModules.includes(id));
 
   return (
@@ -48,7 +50,7 @@ const Sidebar = () => {
           return (
             <button key={id} onClick={() => setActiveTab(id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${isActive ? "bg-[#2F5FB3] text-white" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}>
               <Icon size={18} strokeWidth={isActive ? 2.5 : 1.8} />
-              <span className="font-bold text-sm">{label}</span>
+              <span className="font-bold text-sm">{id === 'customers' ? terms.customerPlural : label}</span>
               {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white/60" />}
             </button>
           );

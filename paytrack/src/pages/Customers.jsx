@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { fetchCustomers } from '../api/customers';
+import { getTerminology } from '../utils/terminology';
 import FSpinner from '../components/FSpinner';
 import FAlert   from '../components/FAlert';
 
 const formatNaira = (amount) =>
-  `₦${Number(amount || 0).toLocaleString('en-NG', { minimumFractionDigits: 0 })}`;
+  `â‚¦${Number(amount || 0).toLocaleString('en-NG', { minimumFractionDigits: 0 })}`;
 
 const formatDate = (dateStr) => {
-  if (!dateStr) return '—';
+  if (!dateStr) return 'â€”';
   return new Date(dateStr).toLocaleDateString('en-NG', {
     day: '2-digit', month: 'short', year: 'numeric',
   });
@@ -23,7 +24,7 @@ const AVATAR_COLORS = [
 const avatarColor = (email) =>
   AVATAR_COLORS[(email?.charCodeAt(0) || 0) % AVATAR_COLORS.length];
 
-// ─── Customer Detail Drawer ───────────────────────────────────────────────────
+// â”€â”€â”€ Customer Detail Drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CustomerDrawer = ({ customer, onClose }) => {
   if (!customer) return null;
 
@@ -54,7 +55,7 @@ const CustomerDrawer = ({ customer, onClose }) => {
               <p className="text-[#94A3B8] text-xs mt-0.5">{customer.phone}</p>
             )}
           </div>
-          <button onClick={onClose} className="text-[#94A3B8] text-xl font-bold p-2">✕</button>
+          <button onClick={onClose} className="text-[#94A3B8] text-xl font-bold p-2">âœ•</button>
         </div>
 
         {/* Stats */}
@@ -78,20 +79,20 @@ const CustomerDrawer = ({ customer, onClose }) => {
           {customer.email && (
             <a href={`mailto:${customer.email}`}
               className="flex-1 py-3 bg-[#EEF4FF] text-[#185FA5] rounded-xl font-bold text-sm text-center">
-              ✉️ Email
+              âœ‰ï¸ Email
             </a>
           )}
           {customer.phone && (
             <a href={`tel:${customer.phone}`}
               className="flex-1 py-3 bg-green-50 text-green-700 rounded-xl font-bold text-sm text-center">
-              📞 Call
+              ðŸ“ž Call
             </a>
           )}
           {customer.phone && (
             <a href={`https://wa.me/${customer.phone.replace(/\D/g,'')}`}
               target="_blank" rel="noreferrer"
               className="flex-1 py-3 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-sm text-center">
-              💬 WhatsApp
+              ðŸ’¬ WhatsApp
             </a>
           )}
         </div>
@@ -100,9 +101,10 @@ const CustomerDrawer = ({ customer, onClose }) => {
   );
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const Customers = () => {
-  const { token } = useStore();
+  const { token, user } = useStore();
+  const terms = getTerminology(user?.businessType);
   const [customers, setCustomers]   = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
@@ -125,7 +127,7 @@ const Customers = () => {
     load();
   }, [token]);
 
-  // ── Derived data ─────────────────────────────────────────────────────────
+  // â”€â”€ Derived data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const totalSpentAll = customers.reduce((s, c) => s + (c.totalSpent || 0), 0);
   const topSpender    = customers.reduce((top, c) => (!top || c.totalSpent > top.totalSpent ? c : top), null);
 
@@ -147,7 +149,7 @@ const Customers = () => {
 
       {/* Header */}
       <div className="p-6 bg-white border-b border-[#E2E8F0] shadow-sm">
-        <h1 className="text-xl font-black text-[#0F172A]">Customers</h1>
+        <h1 className="text-xl font-black text-[#0F172A]">{terms.customerPlural}</h1>
         <p className="text-[#94A3B8] text-xs font-medium mt-0.5">
           Everyone who has booked with you
         </p>
@@ -164,7 +166,7 @@ const Customers = () => {
           <p className="text-[#94A3B8] text-[11px] font-semibold uppercase mt-1">Revenue</p>
         </div>
         <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-sm text-center">
-          <p className="font-black text-sm text-amber-500 truncate">{topSpender?.name?.split(' ')[0] || '—'}</p>
+          <p className="font-black text-sm text-amber-500 truncate">{topSpender?.name?.split(' ')[0] || 'â€”'}</p>
           <p className="text-[#94A3B8] text-[11px] font-semibold uppercase mt-1">Top Client</p>
         </div>
       </div>
@@ -174,7 +176,7 @@ const Customers = () => {
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name, email or phone…"
+          placeholder="Search by name, email or phoneâ€¦"
           className="flex-1 border border-[#E2E8F0] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#185FA5] bg-white"
         />
         <select
@@ -198,7 +200,7 @@ const Customers = () => {
           <FAlert type="error" message={error} onDismiss={() => setError('')} />
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center py-16 gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-[#EEF4FF] flex items-center justify-center text-2xl">👥</div>
+            <div className="w-14 h-14 rounded-2xl bg-[#EEF4FF] flex items-center justify-center text-2xl">ðŸ‘¥</div>
             <p className="text-[#94A3B8] text-sm font-medium">
               {search ? 'No customers match your search.' : 'No customers yet.'}
             </p>
@@ -223,7 +225,7 @@ const Customers = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-[#0F172A] font-bold text-sm truncate">{c.name}</p>
                   <p className="text-[#94A3B8] text-xs font-medium mt-0.5 truncate">
-                    {c.email}{c.phone ? ` · ${c.phone}` : ''}
+                    {c.email}{c.phone ? ` Â· ${c.phone}` : ''}
                   </p>
                   <p className="text-[#CBD5E1] text-[11px] font-medium mt-0.5">
                     Last visit: {formatDate(c.lastBookingDate)}
