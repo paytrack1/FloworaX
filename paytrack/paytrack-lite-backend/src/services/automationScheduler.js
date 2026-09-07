@@ -1,11 +1,13 @@
-const Automation = require('../models/Automation');
+﻿const Automation = require('../models/Automation');
 const AutomationExecution = require('../models/AutomationExecution');
 const AutomationLog = require('../models/AutomationLog');
 const Customer = require('../models/Customer');
 const messagingService = require('./messagingService');
+const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const { DAY_NAMES } = require('../utils/constants');
 
-// ── Core automation scheduler logic ──
+// â”€â”€ Core automation scheduler logic â”€â”€
 // This runs periodically (e.g., every 5 minutes via cron) to send due reminders.
 
 class AutomationScheduler {
@@ -172,7 +174,7 @@ class AutomationScheduler {
     return { messagesSent };
   }
 
-  // ── Helper: determine if a schedule is due to send now ──
+  // â”€â”€ Helper: determine if a schedule is due to send now â”€â”€
   // For a Sunday service at 9am with "remind 1 day before at 10am",
   // this should return true on Saturday at 10am (checking within current hour).
   isScheduleDueNow(now, automation) {
@@ -190,7 +192,7 @@ class AutomationScheduler {
     return true;
   }
 
-  // ── Helper: get customers to send to based on audience mode ──
+  // â”€â”€ Helper: get customers to send to based on audience mode â”€â”€
   async getAudienceCustomers(automation) {
     const { userId } = automation;
     const { mode, newWithinDays, tag, customerIds } = automation.audience;
@@ -216,7 +218,7 @@ class AutomationScheduler {
     return [];
   }
 
-  // ── Helper: send a single message to a customer ──
+  // â”€â”€ Helper: send a single message to a customer â”€â”€
   async sendMessageToCustomer(automation, customer) {
     try {
       // Build template variables
@@ -240,11 +242,24 @@ class AutomationScheduler {
       );
 
       // Send via messaging service
-      const result = await this.messagingService.sendToCustomer(
-        customer,
-        automation.channel,
-        messageContent
-      );
+      let result;
+      if (automation.channel === 'sms' || automation.channel === 'whatsapp') {
+        const User = mongoose.model('User');
+        const owner = await User.findById(automation.userId);
+        const creditField = automation.channel === 'sms' ? 'smsCredits' : 'whatsappCredits';
+        const credits = owner ? owner[creditField] : null;
+        if (credits !== null && credits !== undefined && credits <= 0) {
+          result = { status: 'skipped_no_credits', errorReason: `Monthly ${automation.channel.toUpperCase()} credit limit reached` };
+        } else {
+          result = await this.messagingService.sendToCustomer(customer, automation.channel, messageContent);
+          if (result.status === 'sent' && credits !== null && credits !== undefined && owner) {
+            owner[creditField] = credits - 1;
+            await owner.save();
+          }
+        }
+      } else {
+        result = await this.messagingService.sendToCustomer(customer, automation.channel, messageContent);
+      }
 
       // Log result
       await new AutomationLog({
@@ -277,7 +292,7 @@ class AutomationScheduler {
     }
   }
 
-  // ── Helper: extract recipient (email/phone) from customer ──
+  // â”€â”€ Helper: extract recipient (email/phone) from customer â”€â”€
   getRecipient(customer, channel) {
     if (channel === 'email') return customer.email;
     if (channel === 'sms' || channel === 'whatsapp') return customer.phone;

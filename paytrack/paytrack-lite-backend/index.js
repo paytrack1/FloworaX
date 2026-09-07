@@ -194,6 +194,8 @@ const userSchema = new mongoose.Schema({
   payoutAccountNumber:    { type: String, default: null },
   payoutAccountName:      { type: String, default: null },
   paystackSubaccountCode: { type: String, default: null },
+  smsCredits:             { type: Number, default: null }, // null = unmetered; set to a number on Paid-plan activation
+  whatsappCredits:        { type: Number, default: null }, // null = unmetered; set to a number on Paid-plan activation
   createdAt:        { type: Date, default: Date.now },
 });
 
@@ -993,6 +995,10 @@ app.get('/api/subscription/verify/:reference', requireAuth, async (req, res) => 
       if (planId) {
         const user = await User.findById(req.user.id);
         user.plan = planId;
+        if (planId === 'paid') {
+          user.smsCredits = 150;
+          user.whatsappCredits = 60;
+        }
         await user.save();
         const plan = getPlanList().find((p) => p.id === planId);
         await notify(user._id, 'Subscription upgraded', `Payment received â€” you're now on the ${plan?.name || planId} plan.`, 'subscription');
@@ -1170,6 +1176,21 @@ if (process.env.ENABLE_CRON === 'true') {
       }
     } catch (err) {
       console.error('[cron] Automation scheduler job failed:', err.message);
+    }
+  });
+
+    // Monthly messaging-credit reset for Paid-plan users, checked daily at midnight
+  cron.schedule('0 0 * * *', async () => {
+    try {
+      const now = new Date();
+      if (now.getDate() !== 1) return;
+      const result = await User.updateMany(
+        { plan: 'paid' },
+        { $set: { smsCredits: 150, whatsappCredits: 60 } }
+      );
+      console.log(`[cron] Reset messaging credits for ${result.modifiedCount} Paid-plan user(s)`);
+    } catch (err) {
+      console.error('[cron] Credit reset job failed:', err.message);
     }
   });
 
