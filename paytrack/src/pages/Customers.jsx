@@ -9,7 +9,7 @@ const formatNaira = (amount) =>
   `â‚¦${Number(amount || 0).toLocaleString('en-NG', { minimumFractionDigits: 0 })}`;
 
 const formatDate = (dateStr) => {
-  if (!dateStr) return 'â€”';
+  if (!dateStr) return '-';
   return new Date(dateStr).toLocaleDateString('en-NG', {
     day: '2-digit', month: 'short', year: 'numeric',
   });
@@ -166,7 +166,7 @@ const Customers = () => {
           <p className="text-[#94A3B8] text-[11px] font-semibold uppercase mt-1">Revenue</p>
         </div>
         <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-sm text-center">
-          <p className="font-black text-sm text-amber-500 truncate">{topSpender?.name?.split(' ')[0] || 'â€”'}</p>
+          <p className="font-black text-sm text-amber-500 truncate">{topSpender?.name?.split(' ')[0] || '-'}</p>
           <p className="text-[#94A3B8] text-[11px] font-semibold uppercase mt-1">Top Client</p>
         </div>
       </div>
@@ -176,7 +176,7 @@ const Customers = () => {
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name, email or phoneâ€¦"
+          placeholder="Search by name, email or phone..."
           className="flex-1 border border-[#E2E8F0] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#185FA5] bg-white"
         />
         <select
@@ -200,7 +200,7 @@ const Customers = () => {
           <FAlert type="error" message={error} onDismiss={() => setError('')} />
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center py-16 gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-[#EEF4FF] flex items-center justify-center text-2xl">ðŸ‘¥</div>
+            <div className="w-14 h-14 rounded-2xl bg-[#EEF4FF] flex items-center justify-center text-2xl">👥</div>
             <p className="text-[#94A3B8] text-sm font-medium">
               {search ? 'No customers match your search.' : 'No customers yet.'}
             </p>
