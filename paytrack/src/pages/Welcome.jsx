@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Check, ChevronDown, Calendar, Receipt, TrendingDown, BarChart2, Users, Heart } from 'lucide-react';
 import screenshotHome from '../assets/screenshot-home.png';
 import screenshotBookings from '../assets/screenshot-bookings.png';
@@ -93,7 +93,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ── NAV ── */}
+      {/* â”€â”€ NAV â”€â”€ */}
       <nav className="px-6 lg:px-10 py-5 flex items-center justify-between max-w-6xl mx-auto">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 bg-[#185FA5] rounded-xl flex items-center justify-center text-white font-black text-sm">
@@ -109,7 +109,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         </button>
       </nav>
 
-      {/* ── HERO ── */}
+      {/* â”€â”€ HERO â”€â”€ */}
       <section className="px-6 lg:px-10 pt-10 pb-20 max-w-6xl mx-auto">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <div>
@@ -180,7 +180,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         </div>
       </section>
 
-      {/* ── WHO IT'S FOR (marquee) ── */}
+      {/* â”€â”€ WHO IT'S FOR (marquee) â”€â”€ */}
       <section className="py-4 max-w-6xl mx-auto overflow-hidden">
         <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-6 px-6">
           Built for service businesses like
@@ -212,7 +212,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         `}</style>
       </section>
 
-      {/* ── PROBLEMS ── */}
+      {/* â”€â”€ PROBLEMS â”€â”€ */}
       <section className="px-6 lg:px-10 py-20 max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <p className="text-[#185FA5] text-xs font-black uppercase tracking-[0.25em] mb-3">The problem</p>
@@ -233,7 +233,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         </div>
       </section>
 
-      {/* ── PRODUCT PREVIEW (mockup cards, not fake screenshots) ── */}
+      {/* â”€â”€ PRODUCT PREVIEW (mockup cards, not fake screenshots) â”€â”€ */}
       <section className="px-6 lg:px-10 py-20 bg-[#F8FAFF]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
@@ -276,7 +276,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         </div>
       </section>
 
-      {/* ── PRICING (real plan data) ── */}
+      {/* â”€â”€ PRICING (real plan data) â”€â”€ */}
       <section className="px-6 lg:px-10 py-20 max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <p className="text-[#185FA5] text-xs font-black uppercase tracking-[0.25em] mb-3">Pricing</p>
@@ -286,7 +286,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
           <p className="text-[#64748B] text-sm max-w-md mx-auto">No hidden fees. Cancel any time.</p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-2 max-w-3xl mx-auto">
           {/* Free */}
           <div className="bg-white rounded-3xl border border-[#E2E8F0] p-7 flex flex-col">
             <p className="text-xs font-black text-[#94A3B8] uppercase tracking-widest mb-2">Best for starters</p>
@@ -305,16 +305,16 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
             </button>
           </div>
 
-          {/* Pro */}
+          {/* Paid */}
           <div className="bg-[#0F172A] rounded-3xl p-7 flex flex-col relative overflow-hidden">
             <div className="absolute top-5 right-5 bg-[#185FA5] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
-              Most popular
+              Everything unlocked
             </div>
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Pro</p>
-            <p className="font-black text-white text-xl mb-1">Pro</p>
-            <p className="text-3xl font-black text-white mb-6">&#8358;2,000<span className="text-sm text-slate-400 font-bold">/month</span></p>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Paid</p>
+            <p className="font-black text-white text-xl mb-1">Paid</p>
+            <p className="text-3xl font-black text-white mb-6">&#8358;7,000<span className="text-sm text-slate-400 font-bold">/month</span></p>
             <ul className="space-y-3 mb-8 flex-1">
-              {['500 sales / month', '200 bookings / month', '20 active services', 'Invoices', 'Events', 'Advanced reports'].map((f) => (
+              {['Unlimited sales & bookings', 'Invoices & events', 'Automated reminders via WhatsApp, SMS & Email', 'Invite & manage staff', 'Advanced reports'].map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm text-slate-300">
                   <Check size={16} className="text-[#185FA5] flex-shrink-0 mt-0.5" />
                   {f}
@@ -326,27 +326,10 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
             </button>
             <p className="text-center text-slate-500 text-[11px] font-medium mt-3">Starts on Free &middot; upgrade anytime from Settings</p>
           </div>
-          <div className="bg-white rounded-3xl border border-[#E2E8F0] p-7 flex flex-col">
-            <p className="text-xs font-black text-[#94A3B8] uppercase tracking-widest mb-2">Enterprise</p>
-            <p className="font-black text-[#0F172A] text-xl mb-1">Business</p>
-            <p className="text-3xl font-black text-[#0F172A] mb-6">&#8358;4,000<span className="text-sm text-[#94A3B8] font-bold">/month</span></p>
-            <ul className="space-y-3 mb-8 flex-1">
-              {['Unlimited sales', 'Unlimited bookings', 'Unlimited services', 'Invoices & events', 'Staff features', 'Premium support'].map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-sm text-[#475569]">
-                  <Check size={16} className="text-[#185FA5] flex-shrink-0 mt-0.5" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <button onClick={onGetStarted} className="w-full bg-[#F1F5F9] text-[#0F172A] py-3.5 rounded-2xl font-black text-sm active:scale-95 transition-all">
-              Get Started
-            </button>
-            <p className="text-center text-[#94A3B8] text-[11px] font-medium mt-3">Starts on Free &middot; upgrade anytime from Settings</p>
-          </div>
         </div>
       </section>
 
-      {/* ── FAQ ── */}
+      {/* â”€â”€ FAQ â”€â”€ */}
       <section className="px-6 lg:px-10 py-20 bg-[#F8FAFF]">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-10">
@@ -377,7 +360,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         </div>
       </section>
 
-      {/* ── FINAL CTA ── */}
+      {/* â”€â”€ FINAL CTA â”€â”€ */}
       <section className="px-6 lg:px-10 py-20 max-w-6xl mx-auto text-center">
         <div className="bg-[#0F172A] rounded-3xl px-8 py-14 lg:py-16">
           <Heart size={28} className="text-[#185FA5] mx-auto mb-5" />
@@ -396,7 +379,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
+      {/* â”€â”€ FOOTER â”€â”€ */}
       <footer className="px-6 lg:px-10 py-8 max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#F1F5F9]">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 bg-[#185FA5] rounded-lg flex items-center justify-center text-white font-black text-[11px]">
