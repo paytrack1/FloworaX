@@ -4,7 +4,6 @@ const AutomationLog = require('../models/AutomationLog');
 const Customer = require('../models/Customer');
 const messagingService = require('./messagingService');
 const mongoose = require('mongoose');
-const mongoose = require('mongoose');
 const { DAY_NAMES } = require('../utils/constants');
 
 // â”€â”€ Core automation scheduler logic â”€â”€
