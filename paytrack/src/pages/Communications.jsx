@@ -40,7 +40,7 @@ const TABS = [
 ];
 
 const Communications = () => {
-  const { token, user } = useStore();
+  const { token, user, setActiveTab } = useStore();
   const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 
   const [tab, setTab] = useState('automations');
@@ -189,8 +189,17 @@ const Communications = () => {
       {success && <div className="mb-4"><FAlert type="success" message={success} onDismiss={() => setSuccess('')} autoDismiss={4000} /></div>}
 
       {!isPaidPlan && (
-        <div className="mb-4">
-          <FAlert type="info" message="You're on a lower-tier plan. Automations still work, but check Settings â†’ Plan if you need higher messaging limits." />
+        <div className="mb-4 bg-white rounded-2xl border border-[#185FA5]/20 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <p className="font-black text-[#0F172A]">Communications is a Paid-plan feature</p>
+            <p className="text-sm text-slate-500 mt-1">Upgrade to send automated reminders and messages, and to invite staff.</p>
+          </div>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className="bg-[#185FA5] text-white px-4 py-2.5 rounded-xl text-sm font-black active:scale-95 transition-transform flex-shrink-0"
+          >
+            Upgrade to Paid
+          </button>
         </div>
       )}
 
