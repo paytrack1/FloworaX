@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import FSpinner from '../components/FSpinner';
-import { Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt } from 'lucide-react';
+import { Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt, MessageCircle } from 'lucide-react';
 
 const MODULE_OPTIONS = [
   { key: 'customers', label: 'Customers', icon: Users, description: 'Manage your clients' },
@@ -11,15 +11,16 @@ const MODULE_OPTIONS = [
   { key: 'finance', label: 'Finance', icon: Wallet, description: 'Track income and expenses' },
   { key: 'reports', label: 'Reports', icon: BarChart2, description: 'See performance at a glance' },
   { key: 'invoices', label: 'Invoices', icon: Receipt, description: 'Bill clients and get paid' },
+  { key: 'communications', label: 'Communications', icon: MessageCircle, description: 'Automations, reminders & messaging' },
 ];
 
-const DEFAULT_MODULES = ['sales', 'customers', 'reports'];
+const DEFAULT_MODULES = ['sales', 'customers', 'reports', 'communications'];
 
 const getModulesForBusinessType = (businessType) => {
   const key = (businessType || '').toLowerCase();
-  if (['health_wellness', 'professional_services'].includes(key)) return ['bookings', 'customers', 'invoices', 'finance', 'reports', 'events'];
-  if (key === 'education_nonprofits') return ['events', 'customers', 'invoices', 'finance', 'reports'];
-  if (key === 'business_retail') return ['sales', 'customers', 'invoices', 'finance', 'reports'];
+  if (['health_wellness', 'professional_services'].includes(key)) return ['bookings', 'customers', 'invoices', 'finance', 'reports', 'events', 'communications'];
+  if (key === 'education_nonprofits') return ['events', 'customers', 'invoices', 'finance', 'reports', 'communications'];
+  if (key === 'business_retail') return ['sales', 'customers', 'invoices', 'finance', 'reports', 'communications'];
   if (key === 'complete_business_os') return MODULE_OPTIONS.map((option) => option.key);
   return DEFAULT_MODULES;
 };
