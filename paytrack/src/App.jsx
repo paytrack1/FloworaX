@@ -13,6 +13,7 @@ import Invoices from './pages/Invoices';
 import Events from './pages/Events';
 import Customers from './pages/Customers';
 import Communications from './pages/Communications';
+import MoreMenu from './pages/MoreMenu';
 import TeamManagement from './pages/TeamManagement';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
@@ -110,6 +111,7 @@ const App = () => {
       case 'events':    return <Events />;
       case 'customers': return <Customers />;
       case 'communications': return <Communications />;
+      case 'more': return <MoreMenu />;
       case 'team': return <TeamManagement />;
       case 'settings':  return <Settings />;
       default:          return <Home />;
@@ -171,14 +173,7 @@ const App = () => {
         </div>
 
         {/* Mobile FAB */}
-        {!isSaleModalOpen && (
-          <button
-            onClick={() => setSaleModal(true)}
-            className="lg:hidden fixed bottom-24 right-5 w-14 h-14 bg-[#185FA5] text-white rounded-2xl shadow-2xl shadow-blue-300/50 flex items-center justify-center z-50 active:scale-90 transition-transform"
-          >
-            <span className="text-3xl font-light leading-none">+</span>
-          </button>
-        )}
+        
       </main>
       <BottomNav />
     </div>
