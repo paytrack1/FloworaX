@@ -148,6 +148,19 @@ const apiLimiter = rateLimit({
   message: { error: 'Too many requests. Please slow down.' },
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        return decoded.id || decoded.staffId || req.ip;
+      } catch {
+        // invalid/expired token -- fall through to IP
+      }
+    }
+    return req.ip;
+  },
 });
 
 app.use('/api/auth/login',           authLimiter);
