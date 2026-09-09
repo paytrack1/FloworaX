@@ -1,168 +1,138 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
-const Automation = require('../models/Automation');
-const AutomationLog = require('../models/AutomationLog');
-const AutomationExecution = require('../models/AutomationExecution');
-const Customer = require('../models/Customer');
+const mongoose = require('mongoose');
 const requireAuth = require('../middleware/auth');
-const { requireFeature } = require('../middleware/plan');
-const messagingService = require('../services/messagingService');
-const { DAY_NAMES } = require('../utils/constants');
 
-// â”€â”€ Helper: substitute template variables â”€â”€
-function interpolateTemplate(template, variables) {
-  return messagingService.constructor.interpolateTemplate(template, variables);
-}
+// ── Automation Schema ──
+const automationSchema = new mongoose.Schema({
+  userId:          { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  name:            { type: String, required: true, trim: true },
+  description:     { type: String, default: '' },
+  trigger:         { type: String, enum: ['schedule', 'new_member'], default: 'schedule' },
+  dayOfWeek:       { type: Number, default: 0 },
+  startTime:       { type: String, default: '09:00' },
+  endTime:         { type: String, default: '' },
+  timezone:        { type: String, default: 'Africa/Lagos' },
+  reminder:        { daysBefore: { type: Number, default: 1 }, atTime: { type: String, default: '10:00' } },
+  audience:        {
+    mode:          { type: String, default: 'all' },
+    newWithinDays: { type: Number, default: 30 },
+    tag:           { type: String, default: '' },
+    customerIds:   [{ type: mongoose.Schema.Types.ObjectId }],
+  },
+  channel:         { type: String, enum: ['email', 'whatsapp', 'sms'], default: 'email' },
+  messageTemplate: { type: String, default: '' },
+  status:          { type: String, enum: ['active', 'paused'], default: 'active' },
+  lastRunAt:       { type: Date, default: null },
+  nextRunDisplay:  { type: String, default: null },
+  createdAt:       { type: Date, default: Date.now },
+});
 
-// â”€â”€ GET /api/automations - List automations â”€â”€
+const messageLogSchema = new mongoose.Schema({
+  userId:        { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  automationId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Automation', default: null },
+  customerId:    { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
+  messageType:   { type: String, default: 'automation' },
+  channel:       { type: String, default: 'email' },
+  recipient:     { type: String, default: '' },
+  status:        { type: String, enum: ['sent', 'failed', 'skipped_optout', 'skipped_no_contact', 'skipped_no_credits'], default: 'sent' },
+  failureReason: { type: String, default: null },
+  createdAt:     { type: Date, default: Date.now },
+});
+
+const Automation  = mongoose.models.Automation  || mongoose.model('Automation', automationSchema);
+const MessageLog  = mongoose.models.MessageLog  || mongoose.model('MessageLog', messageLogSchema);
+
+// GET all automations
 router.get('/', requireAuth, async (req, res) => {
   try {
     const automations = await Automation.find({ userId: req.user.id }).sort({ createdAt: -1 });
-    res.json({ automations });
+    res.json({ success: true, automations });
   } catch (err) {
-    console.error('Error fetching automations:', err.message);
     res.status(500).json({ error: 'Failed to fetch automations' });
   }
 });
 
-// â”€â”€ GET /api/automations/logs - Message log â”€â”€
+// GET message logs
 router.get('/logs', requireAuth, async (req, res) => {
   try {
-    const limit = Math.min(Number(req.query.limit) || 100, 500);
-    const logs = await AutomationLog.find({ userId: req.user.id })
+    const limit = parseInt(req.query.limit) || 100;
+    const logs = await MessageLog.find({ userId: req.user.id })
       .sort({ createdAt: -1 })
       .limit(limit)
-      .populate('customerId', 'name email phone')
-      .populate('automationId', 'name');
-    res.json({ logs });
+      .populate('automationId', 'name')
+      .populate('customerId', 'name');
+    res.json({ success: true, logs });
   } catch (err) {
-    console.error('Error fetching logs:', err.message);
-    res.status(500).json({ error: 'Failed to fetch message log' });
+    res.status(500).json({ error: 'Failed to fetch logs' });
   }
 });
 
-// â”€â”€ POST /api/automations - Create automation â”€â”€
-router.post('/', requireAuth, requireFeature('communications'), async (req, res) => {
-  const { name, description, trigger, dayOfWeek, startTime, endTime, timezone, reminder, audience, channel, messageTemplate } = req.body;
-
-  if (!name || !messageTemplate) {
-    return res.status(400).json({ error: 'name and messageTemplate are required' });
-  }
-
+// POST create automation
+router.post('/', requireAuth, async (req, res) => {
+  const { name, messageTemplate } = req.body;
+  if (!name || !messageTemplate) return res.status(400).json({ error: 'name and messageTemplate are required' });
   try {
-    const automation = await Automation.create({
-      userId: req.user.id,
-      name,
-      description,
-      trigger: trigger || 'schedule',
-      dayOfWeek: dayOfWeek ?? 0,
-      startTime: startTime || '09:00',
-      endTime: endTime || '',
-      timezone: timezone || 'Africa/Lagos',
-      reminder: {
-        daysBefore: reminder?.daysBefore ?? 1,
-        atTime: reminder?.atTime || '10:00',
-      },
-      audience: {
-        mode: audience?.mode || 'all',
-        newWithinDays: audience?.newWithinDays || 30,
-        tag: audience?.tag || '',
-        customerIds: audience?.customerIds || [],
-      },
-      channel: channel || 'email',
-      messageTemplate,
-      status: 'active',
-    });
-
-    res.status(201).json({ automation });
+    const automation = await Automation.create({ ...req.body, userId: req.user.id });
+    res.status(201).json({ success: true, automation });
   } catch (err) {
-    console.error('Error creating automation:', err.message);
     res.status(500).json({ error: 'Failed to create automation' });
   }
 });
 
-// â”€â”€ PATCH /api/automations/:id - Update automation â”€â”€
+// PATCH update automation
 router.patch('/:id', requireAuth, async (req, res) => {
-  const { name, description, trigger, dayOfWeek, startTime, endTime, timezone, reminder, audience, channel, messageTemplate } = req.body;
-
   try {
-    const automation = await Automation.findById(req.params.id);
+    const automation = await Automation.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      { $set: req.body },
+      { new: true }
+    );
     if (!automation) return res.status(404).json({ error: 'Automation not found' });
-    if (automation.userId.toString() !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
-
-    if (name !== undefined) automation.name = name;
-    if (description !== undefined) automation.description = description;
-    if (trigger !== undefined) automation.trigger = trigger;
-    if (dayOfWeek !== undefined) automation.dayOfWeek = dayOfWeek;
-    if (startTime !== undefined) automation.startTime = startTime;
-    if (endTime !== undefined) automation.endTime = endTime;
-    if (timezone !== undefined) automation.timezone = timezone;
-    if (reminder !== undefined) automation.reminder = { ...automation.reminder, ...reminder };
-    if (audience !== undefined) automation.audience = { ...automation.audience, ...audience };
-    if (channel !== undefined) automation.channel = channel;
-    if (messageTemplate !== undefined) automation.messageTemplate = messageTemplate;
-
-    automation.updatedAt = new Date();
-    await automation.save();
-
-    res.json({ automation });
+    res.json({ success: true, automation });
   } catch (err) {
-    console.error('Error updating automation:', err.message);
     res.status(500).json({ error: 'Failed to update automation' });
   }
 });
 
-// â”€â”€ DELETE /api/automations/:id - Delete automation â”€â”€
-router.delete('/:id', requireAuth, async (req, res) => {
-  try {
-    const automation = await Automation.findById(req.params.id);
-    if (!automation) return res.status(404).json({ error: 'Automation not found' });
-    if (automation.userId.toString() !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
-
-    await Automation.deleteOne({ _id: req.params.id });
-    await AutomationLog.deleteMany({ automationId: req.params.id });
-    await AutomationExecution.deleteMany({ automationId: req.params.id });
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Error deleting automation:', err.message);
-    res.status(500).json({ error: 'Failed to delete automation' });
-  }
-});
-
-// â”€â”€ PATCH /api/automations/:id/pause - Pause automation â”€â”€
+// PATCH pause automation
 router.patch('/:id/pause', requireAuth, async (req, res) => {
   try {
-    const automation = await Automation.findById(req.params.id);
+    const automation = await Automation.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      { status: 'paused' },
+      { new: true }
+    );
     if (!automation) return res.status(404).json({ error: 'Automation not found' });
-    if (automation.userId.toString() !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
-
-    automation.status = 'paused';
-    automation.updatedAt = new Date();
-    await automation.save();
-
-    res.json({ automation });
+    res.json({ success: true, automation });
   } catch (err) {
-    console.error('Error pausing automation:', err.message);
     res.status(500).json({ error: 'Failed to pause automation' });
   }
 });
 
-// â”€â”€ PATCH /api/automations/:id/resume - Resume automation â”€â”€
+// PATCH resume automation
 router.patch('/:id/resume', requireAuth, async (req, res) => {
   try {
-    const automation = await Automation.findById(req.params.id);
+    const automation = await Automation.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      { status: 'active' },
+      { new: true }
+    );
     if (!automation) return res.status(404).json({ error: 'Automation not found' });
-    if (automation.userId.toString() !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
-
-    automation.status = 'active';
-    automation.updatedAt = new Date();
-    await automation.save();
-
-    res.json({ automation });
+    res.json({ success: true, automation });
   } catch (err) {
-    console.error('Error resuming automation:', err.message);
     res.status(500).json({ error: 'Failed to resume automation' });
+  }
+});
+
+// DELETE automation
+router.delete('/:id', requireAuth, async (req, res) => {
+  try {
+    const automation = await Automation.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    if (!automation) return res.status(404).json({ error: 'Automation not found' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete automation' });
   }
 });
 

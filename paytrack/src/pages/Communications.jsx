@@ -549,7 +549,7 @@ const AutomationFormModal = ({ form, setForm, editingId, saving, onCancel, onSav
             disabled={saving || !form.name.trim() || !form.messageTemplate.trim()}
             className="flex-1 py-3 rounded-xl font-black text-white bg-[#185FA5] disabled:opacity-50"
           >
-            {saving ? 'Savingâ€¦' : editingId ? 'Save Changes' : 'Create Automation'}
+            {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Create Automation'}
           </button>
         </div>
       </div>
