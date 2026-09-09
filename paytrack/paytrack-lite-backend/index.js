@@ -198,7 +198,7 @@ const userSchema = new mongoose.Schema({
   bankAccount:      { type: String, default: null },
   currency:         { type: String, default: null },
   timezone:         { type: String, default: null },
-  plan:             { type: String, enum: ['free', 'pro', 'business'], default: 'free' },
+  plan:             { type: String, enum: ['free', 'pro', 'business', 'paid'], default: 'free' },
   modules:          { type: [String], default: ['sales'] },
   role:             { type: String, enum: ['user', 'admin'], default: 'user' },
   lastLoginAt:      { type: Date, default: null },
