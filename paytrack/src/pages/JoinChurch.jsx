@@ -115,6 +115,18 @@ const JoinChurch = () => {
           <input value={form.address} onChange={(e) => update({ address: e.target.value })} className={inputCls} />
         </div>
 
+        <div>
+          <label className="text-xs font-black uppercase tracking-wider text-slate-400 mb-1.5 block">How did you hear about us? (optional)</label>
+          <input value={form.howHeard} onChange={(e) => update({ howHeard: e.target.value })} placeholder="Friend, social media, walked in..." className={inputCls} />
+        </div>
+
+        <div>
+          <label className="text-xs font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Who invited you? (optional)</label>
+          <input value={form.invitedBy} onChange={(e) => update({ invitedBy: e.target.value })} className={inputCls} />
+        </div>
+
+        <Checkbox label="I'd like a follow-up visit or call" checked={form.wantsVisit} onChange={(v) => update({ wantsVisit: v })} />
+
         <div className="border-t border-slate-100 pt-4 space-y-3">
           <p className="text-xs font-black uppercase tracking-wider text-slate-400">How should we reach you?</p>
           <Checkbox label="Email updates" checked={form.emailOptIn} onChange={(v) => update({ emailOptIn: v })} />
