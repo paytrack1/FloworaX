@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import { apiFetch } from '../utils/apiFetch';
 import FAlert from '../components/FAlert';
@@ -40,8 +40,8 @@ const TABS = [
 ];
 
 const Communications = () => {
-  const { token, user, setActiveTab } = useStore();
-  const authHeaders = useMemo(() => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }), [token]);
+  const { token, user } = useStore();
+  const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 
   const [tab, setTab] = useState('automations');
   const [automations, setAutomations] = useState([]);
@@ -55,7 +55,7 @@ const Communications = () => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
 
-  const isPaidPlan = user?.plan === 'paid';
+  const isBusinessPlan = user?.plan === 'business' || user?.plan === 'pro';
 
   const loadAutomations = useCallback(async () => {
     if (!token) return;
@@ -67,7 +67,7 @@ const Communications = () => {
     } catch (err) {
       setError(err.message);
     }
-  }, [token, authHeaders]);
+  }, [token]);
 
   const loadLogs = useCallback(async () => {
     if (!token) return;
@@ -79,7 +79,7 @@ const Communications = () => {
     } catch (err) {
       setError(err.message);
     }
-  }, [token, authHeaders]);
+  }, [token]);
 
   useEffect(() => {
     (async () => {
@@ -182,24 +182,15 @@ const Communications = () => {
     <div className="pb-10">
       <div className="mb-6">
         <h1 className="text-2xl font-black text-[#0F172A] tracking-tight">Communications</h1>
-        <p className="text-sm text-slate-500 mt-1">Recurring reminders, member welcomes, and message history â€” all opt-in and auditable.</p>
+        <p className="text-sm text-slate-500 mt-1">Recurring reminders, member welcomes, and message history — all opt-in and auditable.</p>
       </div>
 
       {error && <div className="mb-4"><FAlert type="error" message={error} onDismiss={() => setError('')} /></div>}
       {success && <div className="mb-4"><FAlert type="success" message={success} onDismiss={() => setSuccess('')} autoDismiss={4000} /></div>}
 
-      {!isPaidPlan && (
-        <div className="mb-4 bg-white rounded-2xl border border-[#185FA5]/20 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div>
-            <p className="font-black text-[#0F172A]">Communications is a Paid-plan feature</p>
-            <p className="text-sm text-slate-500 mt-1">Upgrade to send automated reminders and messages, and to invite staff.</p>
-          </div>
-          <button
-            onClick={() => setActiveTab('settings')}
-            className="bg-[#185FA5] text-white px-4 py-2.5 rounded-xl text-sm font-black active:scale-95 transition-transform flex-shrink-0"
-          >
-            Upgrade to Paid
-          </button>
+      {!isBusinessPlan && (
+        <div className="mb-4">
+          <FAlert type="info" message="You're on a lower-tier plan. Automations still work, but check Settings → Plan if you need higher messaging limits." />
         </div>
       )}
 
@@ -248,7 +239,7 @@ const Communications = () => {
   );
 };
 
-// â”€â”€ Automations list â”€â”€
+// ── Automations list ──
 const AutomationsTab = ({ automations, onCreate, onEdit, onToggle, onDelete }) => (
   <div>
     <div className="flex justify-between items-center mb-4">
@@ -284,11 +275,11 @@ const AutomationsTab = ({ automations, onCreate, onEdit, onToggle, onDelete }) =
                     <p className="text-xs text-slate-500 mt-0.5">
                       {a.trigger === 'new_member'
                         ? 'Fires once, when a new member registers'
-                        : `Every ${DAY_NAMES[a.dayOfWeek]} at ${a.startTime} (${a.timezone}) Â· reminder ${a.reminder?.daysBefore ?? 1}d before at ${a.reminder?.atTime}`}
+                        : `Every ${DAY_NAMES[a.dayOfWeek]} at ${a.startTime} (${a.timezone}) · reminder ${a.reminder?.daysBefore ?? 1}d before at ${a.reminder?.atTime}`}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Audience: {audienceLabel(a.audience)} Â· {meta.label}
-                      {a.nextRunDisplay ? ` Â· Next: ${a.nextRunDisplay}` : ''}
+                      Audience: {audienceLabel(a.audience)} · {meta.label}
+                      {a.nextRunDisplay ? ` · Next: ${a.nextRunDisplay}` : ''}
                     </p>
                   </div>
                 </div>
@@ -301,11 +292,11 @@ const AutomationsTab = ({ automations, onCreate, onEdit, onToggle, onDelete }) =
 
               <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-50">
                 <button onClick={() => onEdit(a)} className="text-xs font-bold text-[#185FA5] hover:underline">Edit</button>
-                <span className="text-slate-200">Â·</span>
+                <span className="text-slate-200">·</span>
                 <button onClick={() => onToggle(a)} className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:underline">
                   {a.status === 'active' ? <><Pause size={12} /> Pause</> : <><Play size={12} /> Resume</>}
                 </button>
-                <span className="text-slate-200">Â·</span>
+                <span className="text-slate-200">·</span>
                 <button onClick={() => onDelete(a)} className="flex items-center gap-1 text-xs font-bold text-red-500 hover:underline">
                   <Trash2 size={12} /> Delete
                 </button>
@@ -322,18 +313,18 @@ function audienceLabel(audience) {
   if (!audience) return 'All opted-in members';
   switch (audience.mode) {
     case 'new': return `New members (last ${audience.newWithinDays || 30}d)`;
-    case 'group': return `Group: ${audience.tag || 'â€”'}`;
+    case 'group': return `Group: ${audience.tag || '—'}`;
     case 'selected': return `${audience.customerIds?.length || 0} selected member(s)`;
     default: return 'All opted-in members';
   }
 }
 
-// â”€â”€ Templates tab: quick reference + jump into an automation's message â”€â”€
+// ── Templates tab: quick reference + jump into an automation's message ──
 const TemplatesTab = ({ automations, onEdit }) => (
   <div className="space-y-4">
     <div className="bg-white rounded-2xl border border-slate-100 p-5">
       <p className="font-black text-[#0F172A] mb-2">Available variables</p>
-      <p className="text-xs text-slate-500 mb-3">Use these in any automation's message. Unknown variables are left blank â€” there's no code execution, just safe substitution.</p>
+      <p className="text-xs text-slate-500 mb-3">Use these in any automation's message. Unknown variables are left blank — there's no code execution, just safe substitution.</p>
       <div className="flex flex-wrap gap-2">
         {ALLOWED_VARS.map((v) => (
           <code key={v} className="text-xs font-mono bg-[#EEF4FF] text-[#185FA5] px-2 py-1 rounded-lg">{'{{' + v + '}}'}</code>
@@ -358,7 +349,7 @@ const TemplatesTab = ({ automations, onEdit }) => (
   </div>
 );
 
-// â”€â”€ Message log tab â”€â”€
+// ── Message log tab ──
 const STATUS_META = {
   sent:                { label: 'Sent',        icon: CheckCircle2, color: 'text-green-600' },
   failed:              { label: 'Failed',      icon: XCircle,      color: 'text-red-500' },
@@ -378,7 +369,7 @@ const MessageLogTab = ({ logs, onRefresh }) => (
       <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
         <Clock className="mx-auto text-slate-300 mb-3" size={36} />
         <p className="font-bold text-[#0F172A]">No messages sent yet</p>
-        <p className="text-sm text-slate-500 mt-1">Once an automation runs, every attempt shows up here â€” sent, failed, or skipped.</p>
+        <p className="text-sm text-slate-500 mt-1">Once an automation runs, every attempt shows up here — sent, failed, or skipped.</p>
       </div>
     ) : (
       <div className="bg-white rounded-2xl border border-slate-100 divide-y divide-slate-50 overflow-hidden">
@@ -392,11 +383,11 @@ const MessageLogTab = ({ logs, onRefresh }) => (
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-[#0F172A] truncate">
                     {log.customerId?.name || 'Unknown member'}
-                    <span className="text-slate-400 font-medium"> Â· {log.automationId?.name || log.messageType}</span>
+                    <span className="text-slate-400 font-medium"> · {log.automationId?.name || log.messageType}</span>
                   </p>
                   <p className="text-xs text-slate-400">
-                    {CHANNEL_META[log.channel]?.label || log.channel} Â· {log.recipient || 'no contact'}
-                    {log.failureReason ? ` Â· ${log.failureReason}` : ''}
+                    {CHANNEL_META[log.channel]?.label || log.channel} · {log.recipient || 'no contact'}
+                    {log.failureReason ? ` · ${log.failureReason}` : ''}
                   </p>
                 </div>
               </div>
@@ -412,7 +403,7 @@ const MessageLogTab = ({ logs, onRefresh }) => (
   </div>
 );
 
-// â”€â”€ Channels & credits tab â”€â”€
+// ── Channels & credits tab ──
 const ChannelsTab = ({ user }) => (
   <div className="space-y-4">
     <div className="bg-white rounded-2xl border border-slate-100 p-5">
@@ -445,12 +436,12 @@ const ChannelsTab = ({ user }) => (
       })}
     </div>
     <p className="text-xs text-slate-400 px-1">
-      Email sends through Resend. SMS and WhatsApp currently use mock/test providers for development. Configure real provider credentials on the backend for production delivery.
+      Email sends through your existing Resend account. SMS and WhatsApp need provider credentials configured on the backend before real delivery works — until then, sends are safely rejected rather than silently faked.
     </p>
   </div>
 );
 
-// â”€â”€ Create/Edit automation modal â”€â”€
+// ── Create/Edit automation modal ──
 const AutomationFormModal = ({ form, setForm, editingId, saving, onCancel, onSave }) => {
   const update = (patch) => setForm((f) => ({ ...f, ...patch }));
   const updateReminder = (patch) => setForm((f) => ({ ...f, reminder: { ...f.reminder, ...patch } }));
@@ -524,9 +515,9 @@ const AutomationFormModal = ({ form, setForm, editingId, saving, onCancel, onSav
 
           <Field label="Channel">
             <select value={form.channel} onChange={(e) => update({ channel: e.target.value })} className={inputCls}>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="sms">SMS</option>
               <option value="email">Email</option>
-              <option value="whatsapp">WhatsApp (mock)</option>
-              <option value="sms">SMS (mock)</option>
             </select>
           </Field>
 
@@ -549,7 +540,7 @@ const AutomationFormModal = ({ form, setForm, editingId, saving, onCancel, onSav
             disabled={saving || !form.name.trim() || !form.messageTemplate.trim()}
             className="flex-1 py-3 rounded-xl font-black text-white bg-[#185FA5] disabled:opacity-50"
           >
-            {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Create Automation'}
+            {saving ? 'Saving…' : editingId ? 'Save Changes' : 'Create Automation'}
           </button>
         </div>
       </div>
