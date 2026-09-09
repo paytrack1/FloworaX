@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { CheckCircle2, Users } from 'lucide-react';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
@@ -18,7 +18,7 @@ const JoinChurch = () => {
   const ownerId = window.location.pathname.split('/join/')[1]?.split('/')[0];
 
   const [form, setForm] = useState({
-    name: '', email: '', phone: '', address: '',
+    name: '', email: '', phone: '', address: '', howHeard: '', invitedBy: '', wantsVisit: false,
     emailOptIn: true, smsOptIn: false, whatsappOptIn: false,
   });
   const [submitting, setSubmitting] = useState(false);
@@ -128,7 +128,7 @@ const JoinChurch = () => {
           disabled={submitting}
           className="w-full py-3.5 rounded-xl font-black text-white bg-[#185FA5] disabled:opacity-50"
         >
-          {submitting ? 'Registering…' : 'Register'}
+          {submitting ? 'Registering...' : 'Register'}
         </button>
       </form>
     </Shell>

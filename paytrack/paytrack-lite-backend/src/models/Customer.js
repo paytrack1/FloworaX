@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
 const customerSchema = new mongoose.Schema({
   userId:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
@@ -9,7 +9,7 @@ const customerSchema = new mongoose.Schema({
   notes:     { type: String },
   tags:      { type: [String], default: [] },
 
-  // ── Communication consent ──
+  // â”€â”€ Communication consent â”€â”€
   // Default true for email (matches existing behavior elsewhere in the
   // app, e.g. booking confirmations), opt-in (default false) for
   // SMS/WhatsApp since those are more intrusive and cost real messaging
@@ -26,6 +26,11 @@ const customerSchema = new mongoose.Schema({
   // Set once a 'new_member' welcome automation has actually fired for this
   // customer, so it's easy to see (and audit) who got welcomed.
   welcomedAt: { type: Date, default: null },
+
+  // First-timer / intake details, captured on public self-registration.
+  howHeard:  { type: String, trim: true, default: null }, // e.g. "Friend", "Social media", "Walked in"
+  invitedBy: { type: String, trim: true, default: null },
+  wantsVisit: { type: Boolean, default: false }, // would like a follow-up visit or call
 
   createdAt: { type: Date, default: Date.now },
 });
