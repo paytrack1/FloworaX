@@ -3,31 +3,9 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const requireAuth = require('../middleware/auth');
 
-// ── Automation Schema ──
-const automationSchema = new mongoose.Schema({
-  userId:          { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-  name:            { type: String, required: true, trim: true },
-  description:     { type: String, default: '' },
-  trigger:         { type: String, enum: ['schedule', 'new_member'], default: 'schedule' },
-  dayOfWeek:       { type: Number, default: 0 },
-  startTime:       { type: String, default: '09:00' },
-  endTime:         { type: String, default: '' },
-  timezone:        { type: String, default: 'Africa/Lagos' },
-  reminder:        { daysBefore: { type: Number, default: 1 }, atTime: { type: String, default: '10:00' } },
-  audience:        {
-    mode:          { type: String, default: 'all' },
-    newWithinDays: { type: Number, default: 30 },
-    tag:           { type: String, default: '' },
-    customerIds:   [{ type: mongoose.Schema.Types.ObjectId }],
-  },
-  channel:         { type: String, enum: ['email', 'whatsapp', 'sms'], default: 'email' },
-  messageTemplate: { type: String, default: '' },
-  status:          { type: String, enum: ['active', 'paused'], default: 'active' },
-  lastRunAt:       { type: Date, default: null },
-  nextRunDisplay:  { type: String, default: null },
-  createdAt:       { type: Date, default: Date.now },
-});
+const Automation = require('../models/Automation');
 
+// Lazy-load or create MessageLog model
 const messageLogSchema = new mongoose.Schema({
   userId:        { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   automationId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Automation', default: null },
@@ -40,8 +18,7 @@ const messageLogSchema = new mongoose.Schema({
   createdAt:     { type: Date, default: Date.now },
 });
 
-const Automation  = mongoose.models.Automation  || mongoose.model('Automation', automationSchema);
-const MessageLog  = mongoose.models.MessageLog  || mongoose.model('MessageLog', messageLogSchema);
+const MessageLog = mongoose.models.MessageLog || mongoose.model('MessageLog', messageLogSchema);
 
 // GET all automations
 router.get('/', requireAuth, async (req, res) => {
@@ -76,6 +53,7 @@ router.post('/', requireAuth, async (req, res) => {
     const automation = await Automation.create({ ...req.body, userId: req.user.id });
     res.status(201).json({ success: true, automation });
   } catch (err) {
+    console.error('Create automation error:', err);
     res.status(500).json({ error: 'Failed to create automation' });
   }
 });
