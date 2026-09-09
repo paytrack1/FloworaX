@@ -1,13 +1,13 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { getModulesForBusinessType } from '../store/modules';
+import { getEnabledModules } from '../store/modules';
 import { getTerminology } from '../utils/terminology';
 import { splitNavItems } from '../constants/navItems';
 
 const MoreMenu = () => {
   const { user, setActiveTab } = useStore();
-  const enabledModules = getModulesForBusinessType(user?.businessType);
+  const enabledModules = getEnabledModules(user);
   const terms = getTerminology(user?.businessType);
   const { more } = splitNavItems(enabledModules);
 

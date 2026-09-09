@@ -1,13 +1,13 @@
 import React from 'react';
 import { MoreHorizontal } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { getModulesForBusinessType } from '../store/modules';
+import { getEnabledModules } from '../store/modules';
 import { getTerminology } from '../utils/terminology';
 import { splitNavItems } from '../constants/navItems';
 
 const BottomNav = () => {
   const { activeTab, setActiveTab, user } = useStore();
-  const enabledModules = getModulesForBusinessType(user?.businessType);
+  const enabledModules = getEnabledModules(user);
   const terms = getTerminology(user?.businessType);
   const { core, more } = splitNavItems(enabledModules);
 

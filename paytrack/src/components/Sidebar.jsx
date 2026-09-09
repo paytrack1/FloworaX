@@ -1,7 +1,7 @@
 ﻿import React from 'react';
 import { Home, BarChart2, FileText, Settings, LogOut, Plus, Zap, TrendingDown, Calendar, Receipt, Users, Ticket, MessageSquare } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { getModulesForBusinessType } from '../store/modules';
+import { getEnabledModules } from '../store/modules';
 import { getTerminology } from '../utils/terminology';
 const tabs = [
   { id: 'home',      label: 'Home',      icon: Home },
@@ -18,7 +18,7 @@ const tabs = [
 ];
 const Sidebar = () => {
   const { activeTab, setActiveTab,setSaleModal, logout, user } = useStore();
-  const enabledModules = getModulesForBusinessType(user?.businessType);
+  const enabledModules = getEnabledModules(user);
   const terms = getTerminology(user?.businessType);
   const visibleTabs = tabs.filter(({ id }) => id === 'reports' || enabledModules.includes(id));
 
