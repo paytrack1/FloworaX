@@ -43,15 +43,24 @@
 };
 
 /**
+ * Modules that are always available regardless of what the person picked
+ * in the onboarding checklist - they were never pickable options there
+ * (see MODULE_OPTIONS in BusinessTypeOnboarding.jsx), so they must be
+ * unioned in rather than overridden by user.modules.
+ */
+const ALWAYS_ON_MODULES = ['home', 'expenses', 'settings', 'team'];
+
+/**
  * The real source of truth for what's enabled for a given user: their own
- * saved module selection from onboarding/Settings (`user.modules`), which
- * takes priority whenever it exists. Falls back to a businessType-based
- * default only for accounts that never went through the module picker
- * (e.g. very old signups, or a missing/corrupted modules array).
+ * saved module selection from onboarding/Settings (`user.modules`), unioned
+ * with the always-on modules that were never part of that picker. Falls
+ * back to a businessType-based default only for accounts that never went
+ * through the module picker (e.g. very old signups, or a missing/corrupted
+ * modules array).
  */
 export const getEnabledModules = (user) => {
-  if (Array.isArray(user?.modules) && user.modules.length > 0) {
-    return user.modules;
-  }
-  return getModulesForBusinessType(user?.businessType);
+  const picked = Array.isArray(user?.modules) && user.modules.length > 0
+    ? user.modules
+    : getModulesForBusinessType(user?.businessType);
+  return [...new Set([...ALWAYS_ON_MODULES, ...picked])];
 };

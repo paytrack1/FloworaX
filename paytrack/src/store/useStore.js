@@ -1,7 +1,7 @@
 import { apiFetch } from '../utils/apiFetch';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { trackEvent } from '../utils/analytics';
+import { trackEvent, trackPageView } from '../utils/analytics';
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://flowora-backend-only.pxxl.run';
 
 const authHeaders = (token) => ({
@@ -18,6 +18,7 @@ export const useStore = create(
       pendingEmail: null,
       authError: null,
       activeTab: 'home',
+      previousTab: 'home',
       isSaleModalOpen: false,
       sales: [],
       transactions: [],
@@ -123,7 +124,16 @@ export const useStore = create(
       },
 
       clearAuthError: () => set({ authError: null }),
-      setActiveTab: (tab) => set({ activeTab: tab }),
+      setActiveTab: (tab) => {
+        const { activeTab } = get();
+        // Remember where we were before opening "more", so it can be cancelled back to that tab.
+        if (tab === 'more' && activeTab !== 'more') {
+          set({ activeTab: tab, previousTab: activeTab });
+        } else {
+          set({ activeTab: tab });
+        }
+        trackPageView(tab);
+      },
       setSaleModal: (open) => set({ isSaleModalOpen: open }),
       dashboard: null,
       adminData: null,
@@ -243,7 +253,7 @@ export const useStore = create(
         if (!token) return;
         set({ adminError: null });
         try {
-          const res = await apiFetch(`${BACKEND_URL}/api/auth/reset-password`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/admin/dashboard`, {
             headers: authHeaders(token),
           });
           const data = await res.json();
@@ -255,6 +265,56 @@ export const useStore = create(
         } catch (err) {
           console.error('Admin API error:', err);
           set({ adminError: err.message });
+        }
+      },
+
+      adminUpdateUserPlan: async (userId, plan) => {
+        const { token, adminData } = get();
+        if (!token) return { success: false, error: 'Not authenticated' };
+        try {
+          const res = await apiFetch(`${BACKEND_URL}/api/admin/users/${userId}/plan`, {
+            method: 'PATCH',
+            headers: authHeaders(token),
+            body: JSON.stringify({ plan }),
+          });
+          const data = await res.json();
+          if (!res.ok) return { success: false, error: data.error || 'Failed to update plan.' };
+          if (adminData) {
+            set({
+              adminData: {
+                ...adminData,
+                users: adminData.users.map((u) => (u._id === userId ? { ...u, plan } : u)),
+              },
+            });
+          }
+          return { success: true };
+        } catch (err) {
+          return { success: false, error: err.message };
+        }
+      },
+
+      adminSetUserSuspended: async (userId, suspended) => {
+        const { token, adminData } = get();
+        if (!token) return { success: false, error: 'Not authenticated' };
+        try {
+          const res = await apiFetch(`${BACKEND_URL}/api/admin/users/${userId}/suspend`, {
+            method: 'PATCH',
+            headers: authHeaders(token),
+            body: JSON.stringify({ suspended }),
+          });
+          const data = await res.json();
+          if (!res.ok) return { success: false, error: data.error || 'Failed to update account status.' };
+          if (adminData) {
+            set({
+              adminData: {
+                ...adminData,
+                users: adminData.users.map((u) => (u._id === userId ? { ...u, suspended } : u)),
+              },
+            });
+          }
+          return { success: true };
+        } catch (err) {
+          return { success: false, error: err.message };
         }
       },
       fetchDashboard: async () => {

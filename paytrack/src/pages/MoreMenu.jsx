@@ -1,21 +1,30 @@
 import React from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, X } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { getEnabledModules } from '../store/modules';
 import { getTerminology } from '../utils/terminology';
 import { splitNavItems } from '../constants/navItems';
 
 const MoreMenu = () => {
-  const { user, setActiveTab } = useStore();
+  const { user, setActiveTab, previousTab } = useStore();
   const enabledModules = getEnabledModules(user);
   const terms = getTerminology(user?.businessType);
   const { more } = splitNavItems(enabledModules);
 
   return (
     <div className="pb-10">
-      <div className="mb-6">
-        <h1 className="text-2xl font-black text-[#0F172A] tracking-tight">More</h1>
-        <p className="text-sm text-slate-500 mt-1">Everything else, in one place.</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black text-[#0F172A] tracking-tight">More</h1>
+          <p className="text-sm text-slate-500 mt-1">Everything else, in one place.</p>
+        </div>
+        <button
+          onClick={() => setActiveTab(previousTab || 'home')}
+          aria-label="Cancel and go back"
+          className="p-2.5 rounded-full bg-slate-100 text-slate-500 active:scale-95 transition-transform"
+        >
+          <X size={18} strokeWidth={2.5} />
+        </button>
       </div>
 
       <div className="space-y-2">
