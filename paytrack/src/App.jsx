@@ -25,6 +25,7 @@ import Contact from './pages/Contact';
 import Waitlist from './pages/Waitlist';
 import NotFound from './pages/NotFound';
 import BusinessTypeOnboarding from './pages/BusinessTypeOnboarding';
+import JoinChurch from './pages/JoinChurch';
 import BulkOffering from './pages/BulkOffering';
 import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
@@ -58,6 +59,10 @@ const App = () => {
 
   if (path.startsWith('/events/')) {
     return <EventRegistration />;
+  }
+
+  if (path.startsWith('/join/')) {
+    return <JoinChurch />;
   }
 
   if (path === '/terms') return <Terms />;
