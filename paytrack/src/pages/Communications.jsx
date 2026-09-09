@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useCallback } from 'react';
+﻿import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { apiFetch } from '../utils/apiFetch';
 import FAlert from '../components/FAlert';
@@ -41,7 +41,7 @@ const TABS = [
 
 const Communications = () => {
   const { token, user, setActiveTab } = useStore();
-  const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+  const authHeaders = useMemo(() => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }), [token]);
 
   const [tab, setTab] = useState('automations');
   const [automations, setAutomations] = useState([]);
