@@ -113,7 +113,7 @@ const BusinessTypeOnboarding = () => {
   };
 
   const handleContinue = async () => {
-    const requiredFields = ['businessName', 'businessType', 'phone', 'address', 'bankAccount', 'currency', 'timezone'];
+    const requiredFields = ['businessName', 'businessType', 'phone', 'address', 'currency', 'timezone'];
     const missing = requiredFields.filter((field) => !form[field]?.toString().trim());
     if (missing.length > 0) {
       setError('Please fill in all required fields before continuing.');
@@ -241,15 +241,6 @@ const BusinessTypeOnboarding = () => {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Bank Account</span>
-                <input
-                  value={form.bankAccount}
-                  onChange={(e) => handleChange('bankAccount', e.target.value)}
-                  className="mt-2 w-full rounded-3xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
-                  placeholder="Account name / number"
-                />
-              </label>
-              <label className="block">
                 <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Currency</span>
                 <select
                   value={form.currency}
@@ -261,21 +252,21 @@ const BusinessTypeOnboarding = () => {
                   ))}
                 </select>
               </label>
-            </div>
 
-            <label className="block">
-              <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Timezone</span>
-              <select
-                value={form.timezone}
-                onChange={(e) => handleChange('timezone', e.target.value)}
-                className="mt-2 w-full rounded-3xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
-              >
-                <option value="">Choose timezone</option>
-                {timezones.map((tz) => (
-                  <option key={tz} value={tz}>{tz}</option>
-                ))}
-              </select>
-            </label>
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Timezone</span>
+                <select
+                  value={form.timezone}
+                  onChange={(e) => handleChange('timezone', e.target.value)}
+                  className="mt-2 w-full rounded-3xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
+                >
+                  <option value="">Choose timezone</option>
+                  {timezones.map((tz) => (
+                    <option key={tz} value={tz}>{tz}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
 
             {error && (
               <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
