@@ -314,11 +314,11 @@ const AutomationsTab = ({ automations, onCreate, onEdit, onToggle, onDelete }) =
                     <p className="text-xs text-slate-500 mt-0.5">
                       {a.trigger === 'new_member'
                         ? 'Fires once, when a new member registers'
-                        : `Every ${DAY_NAMES[a.dayOfWeek]} at ${a.startTime} (${a.timezone}) Â· reminder ${a.reminder?.daysBefore ?? 1}d before at ${a.reminder?.atTime}`}
+                        : `Every ${DAY_NAMES[a.dayOfWeek]} at ${a.startTime} (${a.timezone}) | reminder ${a.reminder?.daysBefore ?? 1}d before at ${a.reminder?.atTime}`}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Audience: {audienceLabel(a.audience)} Â· {meta.label}
-                      {a.nextRunDisplay ? ` Â· Next: ${a.nextRunDisplay}` : ''}
+                      Audience: {audienceLabel(a.audience)} | {meta.label}
+                      {a.nextRunDisplay ? ` | Next: ${a.nextRunDisplay}` : ''}
                     </p>
                   </div>
                 </div>
@@ -331,11 +331,11 @@ const AutomationsTab = ({ automations, onCreate, onEdit, onToggle, onDelete }) =
 
               <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-50">
                 <button onClick={() => onEdit(a)} className="text-xs font-bold text-[#185FA5] hover:underline">Edit</button>
-                <span className="text-slate-200">Â·</span>
+                <span className="text-slate-200">|</span>
                 <button onClick={() => onToggle(a)} className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:underline">
                   {a.status === 'active' ? <><Pause size={12} /> Pause</> : <><Play size={12} /> Resume</>}
                 </button>
-                <span className="text-slate-200">Â·</span>
+                <span className="text-slate-200">|</span>
                 <button onClick={() => onDelete(a)} className="flex items-center gap-1 text-xs font-bold text-red-500 hover:underline">
                   <Trash2 size={12} /> Delete
                 </button>
@@ -352,7 +352,7 @@ function audienceLabel(audience) {
   if (!audience) return 'All opted-in members';
   switch (audience.mode) {
     case 'new': return `New members (last ${audience.newWithinDays || 30}d)`;
-    case 'group': return `Group: ${audience.tag || 'â€”'}`;
+    case 'group': return `Group: ${audience.tag || '-'}`;
     case 'selected': return `${audience.customerIds?.length || 0} selected member(s)`;
     default: return 'All opted-in members';
   }
@@ -363,7 +363,7 @@ const TemplatesTab = ({ automations, onEdit }) => (
   <div className="space-y-4">
     <div className="bg-white rounded-2xl border border-slate-100 p-5">
       <p className="font-black text-[#0F172A] mb-2">Available variables</p>
-      <p className="text-xs text-slate-500 mb-3">Use these in any automation's message. Unknown variables are left blank â€” there's no code execution, just safe substitution.</p>
+      <p className="text-xs text-slate-500 mb-3">Use these in any automation's message. Unknown variables are left blank - there is no code execution, just safe substitution.</p>
       <div className="flex flex-wrap gap-2">
         {ALLOWED_VARS.map((v) => (
           <code key={v} className="text-xs font-mono bg-[#EEF4FF] text-[#185FA5] px-2 py-1 rounded-lg">{'{{' + v + '}}'}</code>
@@ -408,7 +408,7 @@ const MessageLogTab = ({ logs, onRefresh }) => (
       <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
         <Clock className="mx-auto text-slate-300 mb-3" size={36} />
         <p className="font-bold text-[#0F172A]">No messages sent yet</p>
-        <p className="text-sm text-slate-500 mt-1">Once an automation runs, every attempt shows up here â€” sent, failed, or skipped.</p>
+        <p className="text-sm text-slate-500 mt-1">Once an automation runs, every attempt shows up here - sent, failed, or skipped.</p>
       </div>
     ) : (
       <div className="bg-white rounded-2xl border border-slate-100 divide-y divide-slate-50 overflow-hidden">
@@ -422,11 +422,11 @@ const MessageLogTab = ({ logs, onRefresh }) => (
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-[#0F172A] truncate">
                     {log.customerId?.name || 'Unknown member'}
-                    <span className="text-slate-400 font-medium"> Â· {log.automationId?.name || log.messageType}</span>
+                    <span className="text-slate-400 font-medium"> | {log.automationId?.name || log.messageType}</span>
                   </p>
                   <p className="text-xs text-slate-400">
-                    {CHANNEL_META[log.channel]?.label || log.channel} Â· {log.recipient || 'no contact'}
-                    {log.failureReason ? ` Â· ${log.failureReason}` : ''}
+                    {CHANNEL_META[log.channel]?.label || log.channel} | {log.recipient || 'no contact'}
+                    {log.failureReason ? ` | ${log.failureReason}` : ''}
                   </p>
                 </div>
               </div>
@@ -579,7 +579,7 @@ const AutomationFormModal = ({ form, setForm, editingId, saving, onCancel, onSav
             disabled={saving || !form.name.trim() || !form.messageTemplate.trim()}
             className="flex-1 py-3 rounded-xl font-black text-white bg-[#185FA5] disabled:opacity-50"
           >
-            {saving ? 'Savingâ€¦' : editingId ? 'Save Changes' : 'Create Automation'}
+            {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Create Automation'}
           </button>
         </div>
       </div>

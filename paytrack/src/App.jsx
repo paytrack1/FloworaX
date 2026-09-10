@@ -51,7 +51,7 @@ const App = () => {
     if (isAuthenticated) init();
   }, [isAuthenticated, init]);
 
-  // â”€â”€ Public routes â”€â”€
+  // --- Public routes ---
   const path = window.location.pathname;
 
   if (path.startsWith('/book/') || path.startsWith('/booking/')) {
@@ -77,7 +77,7 @@ const App = () => {
     if (token) return <ResetPassword token={token} />;
   }
 
-  // â”€â”€ Not logged in â”€â”€
+  // --- Not logged in ---
   if (!isAuthenticated) {
     if (screen === 'welcome') {
       return (
@@ -90,12 +90,12 @@ const App = () => {
     return <Login mode={screen} />;
   }
 
-  // â”€â”€ Email not verified â”€â”€
+  // --- Email not verified ---
   if (user && !user.emailVerified) {
     return <VerifyEmail />;
   }
 
-  // â”€â”€ Business type not set (ONLY this check â€” not phone/address etc) â”€â”€
+  // --- Business type not set (only this check, not phone or address) ---
   if (user && !user.businessType) {
     return <BusinessTypeOnboarding />;
   }
@@ -145,7 +145,7 @@ const AuthenticatedApp = ({ activeTab, setActiveTab, isSaleModalOpen, setSaleMod
     return () => window.removeEventListener('popstate', onPopState);
   }, [setActiveTab]);
 
-  // â”€â”€ Page renderer â”€â”€
+  // --- Page renderer ---
   const renderContent = () => {
     if (isSaleModalOpen) return <NewSale onBack={() => setSaleModal(false)} />;
     switch (activeTab) {

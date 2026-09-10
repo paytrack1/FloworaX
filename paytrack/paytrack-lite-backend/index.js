@@ -74,14 +74,14 @@ messagingService.setProviders({
 });
 
 if (process.env.AFRICAS_TALKING_API_KEY) {
-  console.log('âœ“ SMS provider: Africa\'s Talking configured');
+  console.log('[OK] SMS provider: Africa\'s Talking configured');
 } else {
-  console.log('âœ— SMS provider: Not configured (AFRICAS_TALKING_API_KEY not set)');
+  console.log('[OFF] SMS provider: Not configured (AFRICAS_TALKING_API_KEY not set)');
 }
 if (process.env.TWILIO_ACCOUNT_SID) {
-  console.log('âœ“ WhatsApp provider: Twilio configured');
+  console.log('[OK] WhatsApp provider: Twilio configured');
 } else {
-  console.log('âœ— WhatsApp provider: Not configured (TWILIO_ACCOUNT_SID not set)');
+  console.log('[OFF] WhatsApp provider: Not configured (TWILIO_ACCOUNT_SID not set)');
 }
 console.log('Messaging service initialized');
 
@@ -1027,7 +1027,7 @@ app.get('/api/subscription/verify/:reference', requireAuth, async (req, res) => 
         }
         await user.save();
         const plan = getPlanList().find((p) => p.id === planId);
-        await notify(user._id, 'Subscription upgraded', `Payment received â€” you're now on the ${plan?.name || planId} plan.`, 'subscription');
+        await notify(user._id, 'Subscription upgraded', `Payment received - you're now on the ${plan?.name || planId} plan.`, 'subscription');
         return res.json({ success: true, subscription: await buildSubscriptionSummary(req.user.id), user: formatUserResponse(user) });
       }
     }

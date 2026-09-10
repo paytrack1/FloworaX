@@ -1,10 +1,10 @@
 ﻿// Central place for words that should change based on what kind of business
 // the owner picked during onboarding (BusinessTypeOnboarding.jsx). Nothing
-// about data or routes changes here â€” this is display text only. A church's
+// about data or routes changes here - this is display text only. A church's
 // "Members" are stored in the exact same Customer collection as a regular
 // business's "Customers"; this file just decides what to call them on screen.
 //
-// To support another business type's wording, add a key here â€” nothing
+// To support another business type's wording, add a key here - nothing
 // else in the app needs to change.
 const TERMINOLOGY = {
   church: {

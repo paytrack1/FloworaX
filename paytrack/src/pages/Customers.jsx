@@ -6,7 +6,7 @@ import FSpinner from '../components/FSpinner';
 import FAlert   from '../components/FAlert';
 
 const formatNaira = (amount) =>
-  `â‚¦${Number(amount || 0).toLocaleString('en-NG', { minimumFractionDigits: 0 })}`;
+  `NGN ${Number(amount || 0).toLocaleString('en-NG', { minimumFractionDigits: 0 })}`;
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-';
@@ -55,7 +55,7 @@ const CustomerDrawer = ({ customer, onClose }) => {
               <p className="text-[#94A3B8] text-xs mt-0.5">{customer.phone}</p>
             )}
           </div>
-          <button onClick={onClose} className="text-[#94A3B8] text-xl font-bold p-2">âœ•</button>
+          <button onClick={onClose} className="text-[#94A3B8] text-xl font-bold p-2" aria-label="Close">X</button>
         </div>
 
         {/* Stats */}
@@ -79,20 +79,20 @@ const CustomerDrawer = ({ customer, onClose }) => {
           {customer.email && (
             <a href={`mailto:${customer.email}`}
               className="flex-1 py-3 bg-[#EEF4FF] text-[#185FA5] rounded-xl font-bold text-sm text-center">
-              âœ‰ï¸ Email
+              Email
             </a>
           )}
           {customer.phone && (
             <a href={`tel:${customer.phone}`}
               className="flex-1 py-3 bg-green-50 text-green-700 rounded-xl font-bold text-sm text-center">
-              ðŸ“ž Call
+              Call
             </a>
           )}
           {customer.phone && (
             <a href={`https://wa.me/${customer.phone.replace(/\D/g,'')}`}
               target="_blank" rel="noreferrer"
               className="flex-1 py-3 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-sm text-center">
-              ðŸ’¬ WhatsApp
+              WhatsApp
             </a>
           )}
         </div>
@@ -225,7 +225,7 @@ const Customers = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-[#0F172A] font-bold text-sm truncate">{c.name}</p>
                   <p className="text-[#94A3B8] text-xs font-medium mt-0.5 truncate">
-                    {c.email}{c.phone ? ` Â· ${c.phone}` : ''}
+                    {c.email}{c.phone ? ` | ${c.phone}` : ''}
                   </p>
                   <p className="text-[#CBD5E1] text-[11px] font-medium mt-0.5">
                     Last visit: {formatDate(c.lastBookingDate)}

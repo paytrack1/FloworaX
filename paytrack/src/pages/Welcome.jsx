@@ -93,7 +93,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* â”€â”€ NAV â”€â”€ */}
+      {/* --- NAV --- */}
       <nav className="px-6 lg:px-10 py-5 flex items-center justify-between max-w-6xl mx-auto">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 bg-[#185FA5] rounded-xl flex items-center justify-center text-white font-black text-sm">
@@ -109,7 +109,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         </button>
       </nav>
 
-      {/* â”€â”€ HERO â”€â”€ */}
+      {/* --- HERO --- */}
       <section className="px-6 lg:px-10 pt-10 pb-20 max-w-6xl mx-auto">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <div>
@@ -180,7 +180,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         </div>
       </section>
 
-      {/* â”€â”€ WHO IT'S FOR (marquee) â”€â”€ */}
+      {/* --- WHO IT'S FOR (marquee) --- */}
       <section className="py-4 max-w-6xl mx-auto overflow-hidden">
         <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-6 px-6">
           Built for service businesses like
@@ -212,7 +212,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         `}</style>
       </section>
 
-      {/* â”€â”€ PROBLEMS â”€â”€ */}
+      {/* --- PROBLEMS --- */}
       <section className="px-6 lg:px-10 py-20 max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <p className="text-[#185FA5] text-xs font-black uppercase tracking-[0.25em] mb-3">The problem</p>
@@ -233,7 +233,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         </div>
       </section>
 
-      {/* â”€â”€ PRODUCT PREVIEW (mockup cards, not fake screenshots) â”€â”€ */}
+      {/* --- PRODUCT PREVIEW (mockup cards, not fake screenshots) --- */}
       <section className="px-6 lg:px-10 py-20 bg-[#F8FAFF]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
@@ -276,7 +276,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         </div>
       </section>
 
-      {/* â”€â”€ PRICING (real plan data) â”€â”€ */}
+      {/* --- PRICING (real plan data) --- */}
       <section className="px-6 lg:px-10 py-20 max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <p className="text-[#185FA5] text-xs font-black uppercase tracking-[0.25em] mb-3">Pricing</p>
@@ -329,7 +329,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         </div>
       </section>
 
-      {/* â”€â”€ FAQ â”€â”€ */}
+      {/* --- FAQ --- */}
       <section className="px-6 lg:px-10 py-20 bg-[#F8FAFF]">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-10">
@@ -360,7 +360,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         </div>
       </section>
 
-      {/* â”€â”€ FINAL CTA â”€â”€ */}
+      {/* --- FINAL CTA --- */}
       <section className="px-6 lg:px-10 py-20 max-w-6xl mx-auto text-center">
         <div className="bg-[#0F172A] rounded-3xl px-8 py-14 lg:py-16">
           <Heart size={28} className="text-[#185FA5] mx-auto mb-5" />
@@ -379,7 +379,7 @@ const Welcome = ({ onGetStarted, onSignIn }) => {
         </div>
       </section>
 
-      {/* â”€â”€ FOOTER â”€â”€ */}
+      {/* --- FOOTER --- */}
       <footer className="px-6 lg:px-10 py-8 max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#F1F5F9]">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 bg-[#185FA5] rounded-lg flex items-center justify-center text-white font-black text-[11px]">

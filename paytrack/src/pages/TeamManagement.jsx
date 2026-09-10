@@ -64,7 +64,7 @@ const TeamManagement = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError('Could not copy automatically â€” select and copy the link manually.');
+      setError('Could not copy automatically - select and copy the link manually.');
     }
   };
 
@@ -89,7 +89,7 @@ const TeamManagement = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to send invite');
-      setSuccess(data.emailSent ? `Invite emailed to ${inviteForm.email}.` : `Invite created. Email delivery isn't confirmed â€” share the link directly for now.`);
+      setSuccess(data.emailSent ? `Invite emailed to ${inviteForm.email}.` : `Invite created. Email delivery is not confirmed - share the link directly for now.`);
       setLastInviteLink(data.inviteLink || '');
       setShowInvite(false);
       setInviteForm({ email: '', name: '', role: 'staff', permissions: [] });
@@ -151,7 +151,7 @@ const TeamManagement = () => {
           <Link2 size={16} className="text-[#185FA5]" />
           <p className="font-black text-[#0F172A]">Your join link</p>
         </div>
-        <p className="text-sm text-slate-500 mb-3">Share this with customers or members so they can register themselves â€” no login needed on their end.</p>
+        <p className="text-sm text-slate-500 mb-3">Share this with customers or members so they can register themselves - no login needed on their end.</p>
         <div className="flex items-center gap-2">
           <input readOnly value={joinLink} className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono text-slate-600 bg-slate-50 truncate" />
           <button
@@ -218,7 +218,7 @@ const TeamManagement = () => {
                 >
                   Edit permissions <ChevronDown size={12} className={editingId === member._id ? 'rotate-180 transition-transform' : 'transition-transform'} />
                 </button>
-                <span className="text-slate-200">Â·</span>
+                <span className="text-slate-200">|</span>
                 <button onClick={() => removeStaff(member)} className="flex items-center gap-1 text-xs font-bold text-red-500 hover:underline">
                   <Trash2 size={12} /> Remove
                 </button>
@@ -332,7 +332,7 @@ const TeamManagement = () => {
                 disabled={inviting || !inviteForm.email.trim()}
                 className="flex-1 py-3 rounded-xl font-black text-white bg-[#185FA5] disabled:opacity-50"
               >
-                {inviting ? 'Sendingâ€¦' : 'Send Invite'}
+                {inviting ? 'Sending...' : 'Send Invite'}
               </button>
             </div>
           </div>
