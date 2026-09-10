@@ -188,8 +188,12 @@ class AutomationScheduler {
   // For a Sunday service at 9am with "remind 1 day before at 10am",
   // this should return true on Saturday at 10am (checking within current hour).
   isScheduleDueNow(now, automation) {
-    const { dayOfWeek, reminder } = automation;
-    const reminderDay = (dayOfWeek - (automation.reminder.daysBefore || 1) + 7) % 7;
+    const { dayOfWeek } = automation;
+    const leadMinutes = Number(automation.reminder?.leadMinutes ?? 60);
+    const [startHour, startMinute] = automation.startTime.split(':').map(Number);
+    const reminderTotalMinutes = startHour * 60 + startMinute - leadMinutes;
+    const reminderDay = (dayOfWeek + Math.floor(reminderTotalMinutes / 1440) + 14) % 7;
+    const reminderMinutes = (reminderTotalMinutes % 1440 + 1440) % 1440;
     const localNow = this.getDateParts(now, automation.timezone);
     const currentDay = localNow.weekday;
 
@@ -197,9 +201,7 @@ class AutomationScheduler {
     if (currentDay !== reminderDay) return false;
 
     // Cron runs every minute, so match the configured local minute directly.
-    const [reminderHour, reminderMinute] = reminder.atTime.split(':').map(Number);
     const currentMinutes = localNow.hour * 60 + localNow.minute;
-    const reminderMinutes = reminderHour * 60 + reminderMinute;
     if (currentMinutes !== reminderMinutes) return false;
 
     return true;

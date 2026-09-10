@@ -21,10 +21,9 @@ const automationSchema = new mongoose.Schema({
   endTime: { type: String, default: '' }, // Optional end time for the session
   timezone: { type: String, default: 'Africa/Lagos' }, // IANA timezone
 
-  // Reminder timing (how many days before, at what time)
+  // Reminder timing relative to the scheduled service start time.
   reminder: {
-    daysBefore: { type: Number, default: 1 },
-    atTime: { type: String, default: '10:00' }, // HH:mm
+    leadMinutes: { type: Number, default: 60 },
   },
 
   // ── Audience targeting ──

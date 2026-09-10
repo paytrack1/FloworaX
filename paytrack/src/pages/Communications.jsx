@@ -26,7 +26,7 @@ const EMPTY_FORM = {
   startTime: '09:00',
   endTime: '',
   timezone: 'Africa/Lagos',
-  reminder: { daysBefore: 1, atTime: '10:00' },
+  reminder: { leadMinutes: 60 },
   audience: { mode: 'all', newWithinDays: 30, tag: '', customerIds: [] },
   channel: 'whatsapp',
   messageTemplate: 'Hello {{firstName}}, this is a reminder that {{serviceName}} is tomorrow at {{startTime}}. See you there!',
@@ -116,7 +116,7 @@ const Communications = () => {
       startTime: a.startTime || '09:00',
       endTime: a.endTime || '',
       timezone: a.timezone || user?.timezone || 'Africa/Lagos',
-      reminder: { daysBefore: a.reminder?.daysBefore ?? 1, atTime: a.reminder?.atTime || '10:00' },
+      reminder: { leadMinutes: a.reminder?.leadMinutes ?? 60 },
       audience: {
         mode: a.audience?.mode || 'all',
         newWithinDays: a.audience?.newWithinDays || 30,
@@ -314,7 +314,7 @@ const AutomationsTab = ({ automations, onCreate, onEdit, onToggle, onDelete }) =
                     <p className="text-xs text-slate-500 mt-0.5">
                       {a.trigger === 'new_member'
                         ? 'Fires once, when a new member registers'
-                        : `Every ${DAY_NAMES[a.dayOfWeek]} at ${a.startTime} (${a.timezone}) | reminder ${a.reminder?.daysBefore ?? 1}d before at ${a.reminder?.atTime}`}
+                        : `Every ${DAY_NAMES[a.dayOfWeek]} at ${a.startTime} (${a.timezone}) | reminder ${formatLeadTime(a.reminder?.leadMinutes)}`}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">
                       Audience: {audienceLabel(a.audience)} | {meta.label}
@@ -355,6 +355,12 @@ function audienceLabel(audience) {
     case 'group': return `Group: ${audience.tag || '-'}`;
     case 'selected': return `${audience.customerIds?.length || 0} selected member(s)`;
     default: return 'All opted-in members';
+  }
+
+  function formatLeadTime(minutes = 60) {
+    if (minutes >= 1440 && minutes % 1440 === 0) return `${minutes / 1440}d before`;
+    if (minutes >= 60 && minutes % 60 === 0) return `${minutes / 60}h before`;
+    return `${minutes}m before`;
   }
 }
 
@@ -528,11 +534,12 @@ const AutomationFormModal = ({ form, setForm, editingId, saving, onCancel, onSav
               </Field>
 
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Remind (days before)">
-                  <input type="number" min={0} value={form.reminder.daysBefore} onChange={(e) => updateReminder({ daysBefore: Number(e.target.value) })} className={inputCls} />
-                </Field>
-                <Field label="Reminder send time">
-                  <input type="time" value={form.reminder.atTime} onChange={(e) => updateReminder({ atTime: e.target.value })} className={inputCls} />
+                <Field label="Reminder lead time">
+                  <select value={form.reminder.leadMinutes} onChange={(e) => updateReminder({ leadMinutes: Number(e.target.value) })} className={inputCls}>
+                    <option value={60}>1 hour before</option>
+                    <option value={1440}>1 day before</option>
+                    <option value={15}>15 minutes before</option>
+                  </select>
                 </Field>
               </div>
             </>
