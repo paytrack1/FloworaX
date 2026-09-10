@@ -59,12 +59,23 @@ const publicJoinLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Looks an owner up by their slug first (e.g. "gracecommunity"), falling
+// back to the raw ObjectId so links shared before slugs existed keep working.
+const findOwnerByIdentifier = async (User, identifier, projection) => {
+  const bySlug = await User.findOne({ slug: identifier }, projection);
+  if (bySlug) return bySlug;
+  if (mongoose.Types.ObjectId.isValid(identifier)) {
+    return User.findById(identifier, projection);
+  }
+  return null;
+};
+
 // GET /api/customers/public/:ownerId -- lets the public Join page confirm
 // the link is valid and show the business/church name before the form.
 router.get('/public/:ownerId', async (req, res) => {
   try {
     const User = mongoose.model('User');
-    const owner = await User.findById(req.params.ownerId).select('businessName businessType');
+    const owner = await findOwnerByIdentifier(User, req.params.ownerId, 'businessName businessType');
     if (!owner) return res.status(404).json({ error: 'This registration link is invalid.' });
     res.json({ success: true, businessName: owner.businessName, businessType: owner.businessType });
   } catch {
@@ -86,7 +97,7 @@ router.post('/public/:ownerId', publicJoinLimiter, async (req, res) => {
 
   try {
     const User = mongoose.model('User');
-    const owner = await User.findById(req.params.ownerId);
+    const owner = await findOwnerByIdentifier(User, req.params.ownerId);
     if (!owner) return res.status(404).json({ error: 'This registration link is invalid.' });
 
     const customer = await Customer.create({

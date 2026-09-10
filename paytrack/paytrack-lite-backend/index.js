@@ -185,6 +185,7 @@ const connectToDatabase = async () => {
 const userSchema = new mongoose.Schema({
   email:            { type: String, required: true, unique: true, lowercase: true, trim: true },
   businessName:     { type: String, required: true, trim: true },
+  slug:             { type: String, unique: true, sparse: true, index: true }, // readable join-link id, e.g. "gracecommunity" - sparse so old accounts without one don't collide on null
   passwordHash:     { type: String, required: true },
   emailVerified:    { type: Boolean, default: false },
   otpHash:          { type: String, default: null },
@@ -242,6 +243,40 @@ const expenseSchema = new mongoose.Schema({
 const User    = mongoose.model('User', userSchema);
 const Sale    = mongoose.model('Sale', saleSchema);
 const Expense = mongoose.model('Expense', expenseSchema);
+
+// â”€â”€ Church/business join-link slugs â”€â”€
+// Turns "Grace Community Church" into "gracecommunity", checking for
+// collisions and appending a number if needed. Existing accounts keep
+// working via their raw ObjectId link (see findOwnerByIdentifier below);
+// this only assigns a slug going forward / when one is missing.
+const slugify = (name) =>
+  (name || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+    .slice(0, 30) || 'church';
+
+const generateUniqueSlug = async (businessName, excludeUserId) => {
+  const base = slugify(businessName);
+  let slug = base;
+  let counter = 1;
+  // eslint-disable-next-line no-await-in-loop
+  while (await User.findOne({ slug, _id: { $ne: excludeUserId } })) {
+    slug = `${base}${counter}`;
+    counter += 1;
+  }
+  return slug;
+};
+
+// Looks an owner up by their slug first, falling back to raw ObjectId so
+// links shared before slugs existed keep working forever.
+const findOwnerByIdentifier = async (identifier, projection) => {
+  const bySlug = await User.findOne({ slug: identifier }, projection);
+  if (bySlug) return bySlug;
+  if (mongoose.Types.ObjectId.isValid(identifier)) {
+    return User.findById(identifier, projection);
+  }
+  return null;
+};
 
 // â”€â”€ Auth middleware â”€â”€
 const requireAuth = (req, res, next) => {
@@ -309,6 +344,7 @@ const formatUserResponse = (user) => ({
   email:         user.email,
   emailVerified: user.emailVerified,
   businessName:  user.businessName,
+  slug:          user.slug || null,
   businessType:  user.businessType || null,
   modules:       user.modules || ['sales'],
   profileImage:  user.profileImage || null,
@@ -347,9 +383,11 @@ app.post('/api/auth/register', async (req, res) => {
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
     const passwordHash = await bcrypt.hash(password, 12);
+    const slug = await generateUniqueSlug(businessName);
     const user = await User.create({
       email:        email.toLowerCase().trim(),
       businessName: businessName.trim(),
+      slug,
       passwordHash,
       plan: 'free',
       otpHash,
@@ -387,6 +425,10 @@ app.post('/api/auth/login', async (req, res) => {
 
     // â”€â”€ Update lastLoginAt â”€â”€
     await User.findByIdAndUpdate(user._id, { lastLoginAt: new Date() });
+    if (!user.slug) {
+      user.slug = await generateUniqueSlug(user.businessName, user._id);
+      await User.findByIdAndUpdate(user._id, { slug: user.slug }); // backfill for accounts predating slugs, without triggering full validation
+    }
 
     const token = jwt.sign(
       { id: user._id.toString(), email: user.email, businessName: user.businessName, role: user.role },
@@ -526,6 +568,10 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user.slug) {
+      user.slug = await generateUniqueSlug(user.businessName, user._id);
+      await User.findByIdAndUpdate(user._id, { slug: user.slug });
+    }
     res.json({ success: true, user: formatUserResponse(user) });
   } catch (err) {
     console.error('Get me error:', err.stack || err);
@@ -542,6 +588,7 @@ app.patch('/api/auth/profile', requireAuth, async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (businessName !== undefined) user.businessName = businessName.trim().slice(0, 100);
+    if (!user.slug) user.slug = await generateUniqueSlug(user.businessName, user._id); // backfill for accounts created before slugs existed
     if (businessType !== undefined) user.businessType = businessType ? businessType.trim() : null;
     if (Array.isArray(modules))      user.modules      = modules;
     if (phone)                      user.phone        = phone.trim().slice(0, 20);

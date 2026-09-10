@@ -23,7 +23,9 @@ const TeamManagement = () => {
   const { token, user } = useStore();
   const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 
-  const joinLink = user?.id ? `${window.location.origin}/join/${user.id}` : '';
+  const joinLink = user?.slug
+    ? `${window.location.origin}/join/${user.slug}`
+    : (user?.id ? `${window.location.origin}/join/${user.id}` : '');
 
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);

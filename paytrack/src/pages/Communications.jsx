@@ -59,7 +59,9 @@ const Communications = () => {
   const [saving, setSaving] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
-  const joinLink = user?.id ? `${window.location.origin}/join/${user.id}` : '';
+  const joinLink = user?.slug
+    ? `${window.location.origin}/join/${user.slug}`
+    : (user?.id ? `${window.location.origin}/join/${user.id}` : '');
   const copyJoinLink = async () => {
     if (!joinLink) return;
     await navigator.clipboard.writeText(joinLink);
