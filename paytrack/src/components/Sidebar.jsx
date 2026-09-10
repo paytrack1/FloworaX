@@ -13,7 +13,6 @@ const tabs = [
   { id: 'events',    label: 'Events',    icon: Ticket },
   { id: 'customers', label: 'Customers', icon: Users },
   { id: 'communications', label: 'Communications', icon: MessageSquare },
-  { id: 'team',      label: 'Team',      icon: Users },
   { id: 'settings',  label: 'Settings',  icon: Settings },
 ];
 const Sidebar = () => {
