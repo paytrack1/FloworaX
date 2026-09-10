@@ -49,6 +49,7 @@ router.get('/logs', requireAuth, async (req, res) => {
 router.post('/', requireAuth, async (req, res) => {
   const { name, messageTemplate } = req.body;
   if (!name || !messageTemplate) return res.status(400).json({ error: 'name and messageTemplate are required' });
+  if (req.body.channel === 'sms') return res.status(400).json({ error: 'SMS messaging is coming soon.' });
   try {
     const automation = await Automation.create({ ...req.body, userId: req.user.id });
     res.status(201).json({ success: true, automation });
@@ -61,6 +62,7 @@ router.post('/', requireAuth, async (req, res) => {
 // PATCH update automation
 router.patch('/:id', requireAuth, async (req, res) => {
   try {
+    if (req.body.channel === 'sms') return res.status(400).json({ error: 'SMS messaging is coming soon.' });
     const automation = await Automation.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
       { $set: req.body },

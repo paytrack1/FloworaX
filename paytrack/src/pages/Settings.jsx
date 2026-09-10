@@ -2,7 +2,7 @@
 import FAlert   from '../components/FAlert';
 import FSpinner from '../components/FSpinner';
 import { useStore } from '../store/useStore';
-import { Camera, ChevronRight, Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt, Store, CreditCard, RefreshCw, Download, HelpCircle } from 'lucide-react';
+import { Camera, ChevronRight, Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt, Store, CreditCard, RefreshCw, Download, HelpCircle, Trash2 } from 'lucide-react';
 
 const MODULE_OPTIONS = [
   { key: 'customers', label: 'Customers', icon: Users, description: 'Manage your clients' },
@@ -15,7 +15,7 @@ const MODULE_OPTIONS = [
 ];
 
 const Settings = () => {
-  const { logout, user, setProfileImage, sales, dashboard, plans, planError, fetchPlans, upgradePlan, updateBusinessProfile } = useStore();
+  const { logout, user, setProfileImage, sales, dashboard, plans, planError, fetchPlans, upgradePlan, updateBusinessProfile, clearSales } = useStore();
   const [exportStatus, setExportStatus] = useState('');
   const [syncMsg, setSyncMsg] = useState('');
   const [showSupport, setShowSupport] = useState(false);
@@ -27,6 +27,7 @@ const Settings = () => {
   const [planMessage, setPlanMessage] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileError, setProfileError] = useState('');
+  const [clearSalesStatus, setClearSalesStatus] = useState('');
   const [profileForm, setProfileForm] = useState({
     businessName: user?.businessName || '',
     businessType: user?.businessType || '',
@@ -99,6 +100,20 @@ const Settings = () => {
       setTimeout(() => setExportStatus(''), 3000);
     } catch {
       setExportStatus('Export failed. Try again.');
+    }
+  };
+
+  const handleClearSales = async () => {
+    if (!sales?.length) {
+      setClearSalesStatus('No sales to clear.');
+      return;
+    }
+    if (!window.confirm(`Delete all ${sales.length} recorded sales? This cannot be undone.`)) return;
+    try {
+      const result = await clearSales();
+      setClearSalesStatus(`${result.deletedCount || 0} sales cleared.`);
+    } catch (err) {
+      setClearSalesStatus(err.message || 'Failed to clear sales.');
     }
   };
 
@@ -260,6 +275,16 @@ const Settings = () => {
           <p className="text-blue-700 text-sm font-medium text-center">{syncMsg}</p>
         </div>
       )}
+
+      <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+        <p className="text-red-800 font-bold text-sm">Test data</p>
+        <p className="text-red-600 text-xs mt-1 mb-3">Clear only your recorded sales to start testing from a clean account.</p>
+        <button onClick={handleClearSales} className="inline-flex items-center gap-2 bg-red-600 text-white text-sm font-bold px-4 py-2.5 rounded-xl">
+          <Trash2 size={16} />
+          Clear sales data
+        </button>
+        {clearSalesStatus && <p className="text-red-700 text-xs font-semibold mt-2">{clearSalesStatus}</p>}
+      </div>
 
       {/* SUPPORT */}
       {showSupport && (

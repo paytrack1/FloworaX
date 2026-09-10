@@ -256,6 +256,19 @@ export const useStore = create(
         }
       },
 
+      clearSales: async () => {
+        const { token } = get();
+        if (!token) throw new Error('Authentication required');
+        const res = await apiFetch(`${BACKEND_URL}/api/sales`, {
+          method: 'DELETE',
+          headers: authHeaders(token),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Failed to clear sales');
+        set({ sales: [], transactions: [] });
+        return data;
+      },
+
       
 
       fetchAdminDashboard: async () => {

@@ -801,6 +801,16 @@ app.get('/api/sales', requireAuth, async (req, res) => {
   }
 });
 
+app.delete('/api/sales', requireAuth, async (req, res) => {
+  try {
+    const result = await Sale.deleteMany({ userId: req.user.id });
+    res.json({ success: true, deletedCount: result.deletedCount || 0 });
+  } catch (err) {
+    console.error('Clear sales error:', err);
+    res.status(500).json({ error: 'Failed to clear sales' });
+  }
+});
+
 // â”€â”€ CREATE EXPENSE â”€â”€
 app.post('/api/expenses', requireAuth, async (req, res) => {
   const { description, amount, category } = req.body;
@@ -1033,6 +1043,7 @@ app.post('/api/payments/initialize', requireAuth, async (req, res) => {
   const { amount, saleId, callbackUrl } = req.body;
   if (!amount || !saleId) return res.status(400).json({ error: 'amount and saleId are required' });
   if (typeof amount !== 'number' || amount <= 0) return res.status(400).json({ error: 'amount must be a positive number' });
+  if (!PAYSTACK_SECRET_KEY) return res.status(503).json({ error: 'Paystack is not configured. Add a test secret key (sk_test_...) to the backend environment.' });
 
   try {
     const user = await User.findById(req.user.id);
