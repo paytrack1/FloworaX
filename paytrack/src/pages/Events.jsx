@@ -1,0 +1,312 @@
+import React, { useState, useEffect } from 'react';
+import FSpinner from '../components/FSpinner';
+import FAlert from '../components/FAlert';
+import {
+  Plus,
+  MapPin,
+  Calendar,
+  Clock,
+  Ticket,
+  UserCheck,
+  Users,
+  X,
+  AlertCircle
+} from "lucide-react";
+import { useStore } from "../store/useStore";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+export default function Events() {
+  const { token } = useStore();
+  const authHeaders = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+
+  const [events, setEvents] = useState([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [scanningEventId, setScanningEventId] = useState(null);
+  const [scanResult, setScanResult] = useState("");
+  const [ticketInput, setTicketInput] = useState("");
+  const [form, setForm] = useState({ title: "", date: "", time: "", location: "", capacity: "", price: "" });
+  const [saving, setSaving] = useState(false);
+
+  const [formError, setFormError] = useState("");
+  const [editingEventId, setEditingEventId] = useState(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
+  useEffect(() => { fetchEvents(); }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/events`, { headers: authHeaders });
+      const data = await res.json();
+      if (data.success) setEvents(data.events);
+    } catch (err) {
+      console.error("Failed to fetch events:", err);
+    }
+  };
+
+  const handleCreateEvent = async () => {
+    if (!form.title.trim() || !form.date || !form.time.trim()) {
+      setFormError("Title, date, and time are required.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const isEditing = !!editingEventId;
+      const url = isEditing ? `${BACKEND_URL}/api/events/${editingEventId}` : `${BACKEND_URL}/api/events`;
+      const method = isEditing ? "PATCH" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: authHeaders,
+        body: JSON.stringify({ ...form, capacity: Number(form.capacity) || 0, price: Number(form.price) || 0 }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (isEditing) {
+          setEvents(prev => prev.map(evt => evt._id === editingEventId ? { ...evt, ...data.event } : evt));
+        } else {
+          setEvents(prev => [...prev, data.event]);
+        }
+        setShowCreateModal(false);
+        setEditingEventId(null);
+        setForm({ title: "", date: "", time: "", location: "", capacity: "", price: "" });
+      } else {
+        setFormError(data.error || "Failed to save event.");
+      }
+    } catch (err) {
+      console.error("Failed to save event:", err);
+      setFormError("Failed to save event.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditClick = (event) => {
+    setEditingEventId(event._id);
+    setForm({
+      title: event.title || "",
+      date: event.date || "",
+      time: event.time || "",
+      location: event.location || "",
+      capacity: event.capacity ?? "",
+      price: event.price ?? "",
+    });
+    setFormError("");
+    setShowCreateModal(true);
+  };
+
+  const handleDeleteEvent = async (eventId) => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/events/${eventId}`, {
+        method: "DELETE",
+        headers: authHeaders,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEvents(prev => prev.filter(evt => evt._id !== eventId));
+      }
+    } catch (err) {
+      console.error("Failed to cancel event:", err);
+    } finally {
+      setConfirmingDeleteId(null);
+    }
+  };
+
+  const handleCheckIn = async (eventId) => {
+    if (!ticketInput.trim()) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/events/${eventId}/checkin`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({ ticketCode: ticketInput.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScanResult(`Checked in ${ticketInput}! Success.`);
+        setEvents(prev => prev.map(evt =>
+          evt._id === eventId ? { ...evt, checkedInCount: (evt.checkedInCount || 0) + 1 } : evt
+        ));
+      } else {
+        setScanResult(data.error || "Check-in failed");
+      }
+    } catch (err) {
+      setScanResult("Check-in failed");
+      console.error("Check-in error:", err);
+    }
+    setTicketInput("");
+  };
+
+
+  const handleShare = async (event) => {
+    const url = `${window.location.origin}/events/${event._id}`;
+    const text = `You are invited to ${event.title}! Register here: ${url}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: event.title, text, url });
+      } catch (err) {
+        console.error("Share cancelled or failed:", err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        setScanResult("Link copied to clipboard!");
+        setTimeout(() => setScanResult(""), 3000);
+      } catch (err) {
+        console.error("Copy failed:", err);
+      }
+    }
+  };
+  return (
+    <div className="p-6 max-w-6xl mx-auto space-y-6 bg-slate-50 min-h-screen">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-extrabold text-[#0A1F44]">Events & Tickets</h1>
+          <p className="text-sm text-gray-500">Manage your conferences, ticketing, and real-time check-ins</p>
+        </div>
+        <button
+          onClick={() => { setFormError(""); setEditingEventId(null); setForm({ title: "", date: "", time: "", location: "", capacity: "", price: "" }); setShowCreateModal(true); }}
+          className="bg-[#0A1F44] text-white px-4 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition-all flex items-center gap-2"
+        >
+          <Plus size={18} />
+          Create Event
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {events.map((event) => (
+          <div key={event._id} className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-start">
+                <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700">
+                  {event.price === 0 ? "Free" : `?${event.price}`}
+                </span>
+                <span className="text-xs text-gray-400 flex items-center gap-1">
+                  <Calendar size={12} /> {event.date} at {event.time}
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-[#0A1F44] mt-3">{event.title}</h3>
+              <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                <MapPin size={14} className="text-gray-400" /> {event.location}
+              </p>
+
+              <div className="mt-6 grid grid-cols-2 gap-4 border-t border-b border-gray-100 py-4">
+                <div>
+                  <p className="text-xs text-gray-400 uppercase font-semibold flex items-center gap-1">
+                    <Ticket size={12} /> Tickets Issued
+                  </p>
+                  <p className="text-2xl font-bold text-[#0A1F44] mt-1">{event.ticketCount || 0} <span className="text-xs text-gray-400">/ {event.capacity || "8"}</span></p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 uppercase font-semibold flex items-center gap-1">
+                    <UserCheck size={12} /> Checked In
+                  </p>
+                  <p className="text-2xl font-bold text-indigo-600 mt-1">{event.checkedInCount || 0} <span className="text-xs text-gray-400">/ {event.ticketCount || 0}</span></p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => { setScanningEventId(event._id); setScanResult(""); }}
+                className="flex-1 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2"
+              >
+                <UserCheck size={16} /> Scan Tickets
+              </button>
+              <button className="flex-1 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2">
+                <Users size={16} /> Attendee List
+              </button>
+            </div>
+            <div className="mt-3 flex gap-3">
+              <button onClick={() => handleEditClick(event)} className="flex-1 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg text-sm font-bold transition-all">
+                Edit
+              </button>
+              <button onClick={() => setConfirmingDeleteId(event._id)} className="flex-1 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-bold transition-all">
+                Cancel Event
+              </button>
+            </div>
+            <button onClick={() => handleShare(event)} className="mt-3 w-full py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2">Share Event</button>
+          </div>
+        ))}
+      </div>
+
+      {scanningEventId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button onClick={() => setScanningEventId(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+              <X size={20} />
+            </button>
+            <h3 className="text-lg font-bold text-[#0A1F44] mb-4">Scan/Enter Ticket Code</h3>
+            <div className="bg-slate-50 h-48 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-gray-200 mb-4">
+              <Ticket size={32} className="text-indigo-400 animate-pulse" />
+              <span className="text-xs text-gray-400 mt-2">Camera scanner ready</span>
+            </div>
+            <div className="space-y-3">
+              <input
+                type="text"
+                placeholder="Enter Ticket Code (e.g. TKT-73891)"
+                value={ticketInput}
+                onChange={(e) => setTicketInput(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <button
+                onClick={() => handleCheckIn(scanningEventId)}
+                className="w-full bg-[#0A1F44] text-white py-2 rounded-lg font-bold text-sm hover:opacity-95 transition-all"
+              >
+                Submit Manual Ticket
+              </button>
+              {scanResult && (
+                <p className="p-3 text-center text-xs font-semibold rounded bg-emerald-50 text-emerald-700 mt-2 border border-emerald-100 flex items-center justify-center gap-1.5">
+                  <AlertCircle size={14} />
+                  {scanResult}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmingDeleteId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+                <AlertCircle size={20} className="text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-[#0A1F44]">Cancel this event?</h3>
+            </div>
+            <p className="text-sm text-gray-500 mb-6">Attendees will no longer be able to register, and this can't be undone.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmingDeleteId(null)} className="flex-1 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm font-bold transition-all">
+                Keep Event
+              </button>
+              <button onClick={() => handleDeleteEvent(confirmingDeleteId)} className="flex-1 py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-lg text-sm font-bold transition-all">
+                Yes, Cancel It
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button onClick={() => { setShowCreateModal(false); setEditingEventId(null); setForm({ title: "", date: "", time: "", location: "", capacity: "", price: "" }); }} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+              <X size={20} />
+            </button>
+            <h3 className="text-lg font-bold text-[#0A1F44] mb-4">{editingEventId ? "Edit Event" : "Create Event"}</h3>
+            <div className="space-y-3">
+              <input type="text" placeholder="Event title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm" />
+              <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm" />
+              <input type="text" placeholder="Time (e.g. 10:00 AM)" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm" />
+              <input type="text" placeholder="Location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm" />
+              <input type="number" placeholder="Capacity" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm" />
+              <input type="number" placeholder="Price (0 for free)" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm" />
+              <FAlert type="error" message={formError} onDismiss={() => setFormError("")} />
+              <button onClick={handleCreateEvent} disabled={saving} className="w-full bg-[#185FA5] text-white py-3 rounded-xl font-bold text-sm disabled:opacity-60 flex items-center justify-center gap-3">
+                {saving ? <FSpinner size="sm" /> : editingEventId ? "Save Changes" : "Create Event"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

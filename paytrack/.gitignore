@@ -1,0 +1,10 @@
+node_modules/
+.env
+dist/
+build/
+.DS_Store
+
+FloworaX/
+FloworaX-OLD/
+flowora-backend-only/
+flowora-backend-only-OLD/

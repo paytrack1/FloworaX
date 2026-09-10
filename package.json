@@ -1,0 +1,8 @@
+{
+  "name": "floworax-root",
+  "version": "1.0.0",
+  "scripts": {
+    "install": "cd paytrack && npm install",
+    "build": "cd paytrack && npm run build"
+  }
+}
