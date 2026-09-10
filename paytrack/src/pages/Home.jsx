@@ -22,7 +22,7 @@ const Home = () => {
   const dashboardMetrics = [
     { title: 'Revenue', value: dashboard?.summary?.totalRevenue ? `₦${dashboard.summary.totalRevenue.toLocaleString()}` : '₦0', subtitle: 'Monthly total', accent: 'from-blue-500 to-cyan-500' },
     { title: 'Expenses', value: dashboard?.summary?.totalExpenses ? `₦${dashboard.summary.totalExpenses.toLocaleString()}` : '₦0', subtitle: 'This month', accent: 'from-red-500 to-rose-500' },
-    { title: 'Profit', value: dashboard?.summary?.netProfit ? `₦${dashboard.summary.netProfit.toLocaleString()}` : '₦0', subtitle: 'Net income', accent: 'from-green-500 to-emerald-500' },
+    { title: 'Profit', value: dashboard?.summary?.netProfit ? `₦${dashboard.summary.netProfit.toLocaleString()}` : '₦0', subtitle: 'This month', accent: 'from-green-500 to-emerald-500' },
     { title: 'Transactions', value: dashboard?.summary?.transactionCount ?? '0', subtitle: 'Completed this month', accent: 'from-violet-500 to-indigo-500' },
     { title: 'Bookings', value: dashboard?.subscription?.usage?.monthlyBookings ?? '0', subtitle: 'Monthly bookings', accent: 'from-amber-500 to-orange-500' },
     { title: 'Services', value: dashboard?.subscription?.usage?.activeServices ?? '0', subtitle: 'Active services', accent: 'from-sky-500 to-blue-500' },

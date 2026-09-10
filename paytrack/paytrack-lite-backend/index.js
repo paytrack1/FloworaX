@@ -869,15 +869,18 @@ app.get('/api/expenses', requireAuth, async (req, res) => {
 
 // â”€â”€ FINANCIAL SUMMARY â”€â”€
 const buildFinancialSummary = async (userId) => {
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+
   const [completedSales, expenses, invoices] = await Promise.all([
-    Sale.find({ userId, status: 'completed', verified: true }),
-    Expense.find({ userId }),
+    Sale.find({ userId, status: 'completed', verified: true, createdAt: { $gte: monthStart } }),
+    Expense.find({ userId, createdAt: { $gte: monthStart } }),
     Invoice.find({ userId }),
   ]);
   const totalRevenue  = completedSales.reduce((sum, s) => sum + (s.total || 0), 0);
   const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-  const grossProfit   = completedSales.reduce((sum, s) => sum + (typeof s.profit === 'number' ? s.profit : (s.total || 0)), 0);
-  const netProfit      = grossProfit - totalExpenses;
+  const netProfit      = totalRevenue - totalExpenses;
   const invoiceTotal       = invoices.reduce((sum, i) => sum + (i.amount || 0), 0);
   const invoicePaid        = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.amount || 0), 0);
   const invoiceOutstanding = invoiceTotal - invoicePaid;

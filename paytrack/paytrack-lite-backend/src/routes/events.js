@@ -54,7 +54,7 @@ async function generateUniqueTicketCode() {
 
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const events = await Event.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    const events = await Event.find({ userId: req.user.id, status: 'active' }).sort({ createdAt: -1 });
     const withCounts = await Promise.all(events.map(async (ev) => {
       const [ticketCount, usedCount] = await Promise.all([
         EventTicket.countDocuments({ eventId: ev._id, status: { $ne: 'cancelled' } }),
