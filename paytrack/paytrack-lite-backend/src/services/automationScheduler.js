@@ -21,7 +21,7 @@ class AutomationScheduler {
 
     try {
       // 1. Process recurring ('schedule' trigger) automations
-      const scheduleResult = await this.processScheduleAutomations(now, dateStr);
+      const scheduleResult = await this.processScheduleAutomations(now);
 
       // 2. Process new-member ('new_member' trigger) automations
       const newMemberResult = await this.processNewMemberAutomations();
@@ -43,7 +43,7 @@ class AutomationScheduler {
   }
 
   // Process recurring schedule-based automations
-  async processScheduleAutomations(now, dateStr) {
+  async processScheduleAutomations(now) {
     let messagesSent = 0;
 
     // Find all active schedule-trigger automations
@@ -56,6 +56,7 @@ class AutomationScheduler {
       try {
         const isSendingNow = this.isScheduleDueNow(now, automation);
         if (!isSendingNow) continue;
+        const dateStr = this.getDateParts(now, automation.timezone).date;
 
         // Check idempotency: has this automation already executed for this occurrence?
         const existing = await AutomationExecution.findOne({
@@ -187,18 +188,63 @@ class AutomationScheduler {
   // For a Sunday service at 9am with "remind 1 day before at 10am",
   // this should return true on Saturday at 10am (checking within current hour).
   isScheduleDueNow(now, automation) {
-    const { dayOfWeek, reminder, timezone } = automation;
+    const { dayOfWeek, reminder } = automation;
     const reminderDay = (dayOfWeek - (automation.reminder.daysBefore || 1) + 7) % 7;
-    const currentDay = now.getDay();
+    const localNow = this.getDateParts(now, automation.timezone);
+    const currentDay = localNow.weekday;
 
     // Check if today is the reminder day
     if (currentDay !== reminderDay) return false;
 
-    // Check if current hour matches the reminder send time
-    const [reminderHour] = automation.reminder.atTime.split(':').map(Number);
-    if (now.getHours() !== reminderHour) return false;
+    // Cron runs every five minutes, so allow the configured minute through
+    // the next four minutes instead of sending at the beginning of the hour.
+    const [reminderHour, reminderMinute] = reminder.atTime.split(':').map(Number);
+    const currentMinutes = localNow.hour * 60 + localNow.minute;
+    const reminderMinutes = reminderHour * 60 + reminderMinute;
+    if (currentMinutes < reminderMinutes || currentMinutes >= reminderMinutes + 5) return false;
 
     return true;
+  }
+
+  getDateParts(date, timezone = process.env.TZ || 'UTC') {
+    let parts;
+    try {
+      parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        weekday: 'short',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      }).formatToParts(date).reduce((result, part) => {
+        result[part.type] = part.value;
+        return result;
+      }, {});
+    } catch {
+      parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: process.env.TZ || 'UTC',
+        weekday: 'short',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      }).formatToParts(date).reduce((result, part) => {
+        result[part.type] = part.value;
+        return result;
+      }, {});
+    }
+
+    const weekdays = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+    return {
+      date: `${parts.year}-${parts.month}-${parts.day}`,
+      weekday: weekdays[parts.weekday],
+      hour: Number(parts.hour),
+      minute: Number(parts.minute),
+    };
   }
 
   // â”€â”€ Helper: get customers to send to based on audience mode â”€â”€
