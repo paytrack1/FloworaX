@@ -19,7 +19,6 @@ export const NAV_ITEM_PRIORITY = [
   { id: 'customers',       labelKey: 'customerPlural', label: 'Customers', icon: Users },
   { id: 'expenses',        labelKey: null,            label: 'Expenses',  icon: TrendingDown },
   { id: 'communications',  labelKey: null,            label: 'Communications', icon: MessageSquare },
-  { id: 'team',            labelKey: null,            label: 'Team',      icon: Users },
   { id: 'settings',        labelKey: null,            label: 'Settings',  icon: Settings },
 ];
 

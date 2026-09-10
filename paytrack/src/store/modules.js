@@ -18,7 +18,7 @@
     contractor: [...base, 'sales', 'invoices'],
 
     // Finance and Expense Tracking
-    church:     [...base, 'sales'],
+    church:     [...base, 'sales', 'finance', 'reports'],
     ngo:        [...base, 'sales'],
 
     clinic:     [...base, 'bookings', 'sales', 'invoices'],

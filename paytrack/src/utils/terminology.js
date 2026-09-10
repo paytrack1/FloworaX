@@ -12,6 +12,9 @@ const TERMINOLOGY = {
     customerSingular: 'Member',
     bookingPlural: 'Services',
     bookingSingular: 'Service',
+    transactionAction: 'Record Offering',
+    transactionTitle: 'New Offering',
+    transactionItem: 'Offering type',
   },
 };
 
@@ -20,6 +23,9 @@ const DEFAULT_TERMINOLOGY = {
   customerSingular: 'Customer',
   bookingPlural: 'Bookings',
   bookingSingular: 'Booking',
+  transactionAction: 'New Sale',
+  transactionTitle: 'New Transaction',
+  transactionItem: 'Item name',
 };
 
 export function getTerminology(businessType) {

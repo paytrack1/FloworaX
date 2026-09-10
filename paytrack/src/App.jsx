@@ -34,6 +34,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import NotificationBell from './components/NotificationBell';
 import { Plus } from 'lucide-react';
 import { useEffect } from 'react';
+import { getTerminology } from './utils/terminology';
 
 const App = () => {
   const [screen, setScreen] = React.useState('welcome');
@@ -123,6 +124,7 @@ const VALID_TABS = new Set([
 ]);
 
 const AuthenticatedApp = ({ activeTab, setActiveTab, isSaleModalOpen, setSaleModal, user }) => {
+  const terms = getTerminology(user?.businessType);
   // On first mount, if the URL already points at a valid tab (e.g. the person
   // bookmarked /settings or hit back/forward before a reload), honor it.
   useEffect(() => {
@@ -225,7 +227,7 @@ const AuthenticatedApp = ({ activeTab, setActiveTab, isSaleModalOpen, setSaleMod
           className="lg:hidden fixed right-5 bottom-24 z-30 inline-flex items-center gap-2 rounded-full bg-[#185FA5] px-4 py-3 text-sm font-black text-white shadow-lg shadow-blue-900/30 active:scale-95 transition-transform"
         >
           <Plus size={18} strokeWidth={3} />
-          New sale
+          {terms.transactionAction}
         </button>
 
       </main>

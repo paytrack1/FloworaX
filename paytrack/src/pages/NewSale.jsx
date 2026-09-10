@@ -3,9 +3,11 @@ import FAlert from '../components/FAlert';
 import FSpinner from '../components/FSpinner';
 import { X, CheckCircle, CreditCard, Smartphone, Banknote } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { getTerminology } from '../utils/terminology';
 
 const NewSale = ({ onBack }) => {
   const { addSale, user } = useStore();
+  const terms = getTerminology(user?.businessType);
 
   const [itemName, setItemName] = useState('');
   const [total, setTotal] = useState('');
@@ -63,7 +65,7 @@ const NewSale = ({ onBack }) => {
       {/* Header */}
       <div className="bg-white p-6 flex justify-between items-center border-b border-slate-100">
         <div>
-          <h2 className="text-xl font-black text-[#0F172A]">New Transaction</h2>
+          <h2 className="text-xl font-black text-[#0F172A]">{terms.transactionTitle}</h2>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             {user?.businessName || 'Store'} Ledger
           </p>
@@ -79,7 +81,7 @@ const NewSale = ({ onBack }) => {
       <form onSubmit={handleSubmit} className="p-6 space-y-6 flex-1 overflow-y-auto pb-32">
         {/* ITEM NAME */}
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase text-slate-500 ml-1">Items Sold</label>
+          <label className="text-[10px] font-black uppercase text-slate-500 ml-1">{terms.transactionItem}</label>
           <input
             type="text"
             value={itemName}

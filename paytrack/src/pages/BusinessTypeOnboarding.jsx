@@ -19,6 +19,7 @@ const DEFAULT_MODULES = ['sales', 'customers', 'reports', 'communications'];
 const getModulesForBusinessType = (businessType) => {
   const key = (businessType || '').toLowerCase();
   if (['health_wellness', 'professional_services'].includes(key)) return ['bookings', 'customers', 'invoices', 'finance', 'reports', 'events', 'communications'];
+  if (key === 'church') return ['customers', 'events', 'sales', 'finance', 'reports', 'communications'];
   if (key === 'education_nonprofits') return ['events', 'customers', 'invoices', 'finance', 'reports', 'communications'];
   if (key === 'business_retail') return ['sales', 'customers', 'invoices', 'finance', 'reports', 'communications'];
   if (key === 'complete_business_os') return MODULE_OPTIONS.map((option) => option.key);
@@ -43,9 +44,16 @@ const options = [
   {
     value: 'education_nonprofits',
     title: '🎓 Education & Nonprofits',
-    description: 'Schools, NGOs, and churches that manage events, registrations, donations, and reports.',
-    categories: ['Schools', 'NGOs', 'Churches'],
+    description: 'Schools and NGOs that manage events, registrations, donations, and reports.',
+    categories: ['Schools', 'NGOs'],
     features: ['Events', 'Registrations', 'Donations', 'Reports'],
+  },
+  {
+    value: 'church',
+    title: 'Church / Ministry',
+    description: 'Manage members, offerings, events, finance, and church communications.',
+    categories: ['Churches', 'Ministries'],
+    features: ['Members', 'Offerings', 'Events', 'Communications'],
   },
   {
     value: 'business_retail',
@@ -96,6 +104,7 @@ const BusinessTypeOnboarding = () => {
   const handleChange = (field, value) => {
     setError('');
     setForm((prev) => ({ ...prev, [field]: value }));
+    if (field === 'businessType') setSelectedModules(getModulesForBusinessType(value));
   };
 
   const handleLogoUpload = (e) => {

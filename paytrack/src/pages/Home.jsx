@@ -3,11 +3,22 @@ import FSpinner from '../components/FSpinner';
 import DashboardCard from '../components/DashboardCard';
 import { useStore } from '../store/useStore';
 import BulkOffering from './BulkOffering';
+import { Copy, ExternalLink, Check, Link2 } from 'lucide-react';
 
 const Home = () => {
   const [showBulk, setShowBulk] = useState(false);
   const { user, dashboard, fetchDashboard } = useStore();
   const [refreshing, setRefreshing] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const isChurch = user?.businessType?.toLowerCase() === 'church';
+  const joinLink = user?.id ? `${window.location.origin}/join/${user.id}` : '';
+
+  const copyJoinLink = async () => {
+    if (!joinLink) return;
+    await navigator.clipboard.writeText(joinLink);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
 
   useEffect(() => { fetchDashboard(); }, []);
 
@@ -50,6 +61,27 @@ const Home = () => {
           >
             <span className="text-xl">🙏</span> Bulk Offering Entry
           </button>
+        </div>
+      )}
+      {isChurch && (
+        <div className="px-6 mt-4">
+          <div className="rounded-2xl border border-[#D8E6FA] bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-2">
+              <Link2 size={17} className="text-[#185FA5]" />
+              <p className="font-black text-[#0F172A]">Your church registration link</p>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">Share this link so people can join without creating a Flowora account.</p>
+            <div className="mt-3 flex items-center gap-2">
+              <input readOnly value={joinLink} className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono text-slate-600" />
+              <button onClick={copyJoinLink} className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-xl bg-[#185FA5] px-3 py-2 text-xs font-black text-white">
+                {linkCopied ? <Check size={14} /> : <Copy size={14} />}
+                {linkCopied ? 'Copied' : 'Copy'}
+              </button>
+              <a href={joinLink} target="_blank" rel="noreferrer" aria-label="View church registration page" className="rounded-xl bg-[#EEF4FF] p-2 text-[#185FA5]">
+                <ExternalLink size={16} />
+              </a>
+            </div>
+          </div>
         </div>
       )}
       <div className="px-6 mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">

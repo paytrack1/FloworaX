@@ -37,7 +37,7 @@ const Sidebar = () => {
       <div className="px-4 mb-6">
         <button onClick={() => setSaleModal(true)} className="w-full bg-[#2F5FB3] hover:bg-[#3668c7] text-white py-3.5 rounded-2xl font-black flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-blue-900/30">
           <Plus size={18} strokeWidth={3} />
-          NEW SALE
+          {terms.transactionAction}
         </button>
       </div>
       <div className="px-4 mb-4">
