@@ -196,12 +196,11 @@ class AutomationScheduler {
     // Check if today is the reminder day
     if (currentDay !== reminderDay) return false;
 
-    // Cron runs every five minutes, so allow the configured minute through
-    // the next four minutes instead of sending at the beginning of the hour.
+    // Cron runs every minute, so match the configured local minute directly.
     const [reminderHour, reminderMinute] = reminder.atTime.split(':').map(Number);
     const currentMinutes = localNow.hour * 60 + localNow.minute;
     const reminderMinutes = reminderHour * 60 + reminderMinute;
-    if (currentMinutes < reminderMinutes || currentMinutes >= reminderMinutes + 5) return false;
+    if (currentMinutes !== reminderMinutes) return false;
 
     return true;
   }

@@ -1193,9 +1193,9 @@ if (process.env.ENABLE_CRON === 'true') {
     }
   });
 
-  // â”€â”€ Automation scheduler: runs every 5 minutes to process recurring/new-member automations â”€â”€
+  // â”€â”€ Automation scheduler: runs every minute for exact reminder times â”€â”€
   const automationScheduler = new AutomationScheduler(messagingService);
-  cron.schedule('*/5 * * * *', async () => {
+  cron.schedule('* * * * *', async () => {
     try {
       const result = await automationScheduler.runScheduler();
       if (result.success && (result.schedulesSent > 0 || result.newMembersWelcomed > 0)) {
@@ -1221,7 +1221,7 @@ if (process.env.ENABLE_CRON === 'true') {
     }
   });
 
-  console.log('Cron scheduler enabled: reminders hourly, follow-ups hourly (offset 30m), automations every 5m');
+  console.log('Cron scheduler enabled: reminders hourly, follow-ups hourly (offset 30m), automations every minute');
 }
 
 // Start Server Listen Setup
