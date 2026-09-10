@@ -67,5 +67,9 @@ export const getEnabledModules = (user) => {
   const picked = Array.isArray(user?.modules) && user.modules.length > 0
     ? user.modules
     : getModulesForBusinessType(user?.businessType);
-  return [...new Set([...ALWAYS_ON_MODULES, ...picked])];
+  const isChurch = user?.businessType?.toLowerCase() === 'church';
+  const churchModules = isChurch
+    ? ['customers', 'events', 'sales', 'finance', 'reports', 'communications']
+    : [];
+  return [...new Set([...ALWAYS_ON_MODULES, ...picked, ...churchModules])];
 };
