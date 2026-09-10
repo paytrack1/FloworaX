@@ -32,6 +32,7 @@ import ResetPassword from './pages/ResetPassword';
 import EventRegistration from './pages/EventRegistration';
 import AdminDashboard from './pages/AdminDashboard';
 import NotificationBell from './components/NotificationBell';
+import { Plus } from 'lucide-react';
 import { useEffect } from 'react';
 
 const App = () => {
@@ -218,8 +219,15 @@ const AuthenticatedApp = ({ activeTab, setActiveTab, isSaleModalOpen, setSaleMod
           <div className="max-w-5xl mx-auto">{renderContent()}</div>
         </div>
 
-        {/* Mobile FAB */}
-        
+        <button
+          type="button"
+          onClick={() => setSaleModal(true)}
+          className="lg:hidden fixed right-5 bottom-24 z-30 inline-flex items-center gap-2 rounded-full bg-[#185FA5] px-4 py-3 text-sm font-black text-white shadow-lg shadow-blue-900/30 active:scale-95 transition-transform"
+        >
+          <Plus size={18} strokeWidth={3} />
+          New sale
+        </button>
+
       </main>
       <BottomNav />
     </div>
