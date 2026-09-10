@@ -105,13 +105,13 @@ const Settings = () => {
 
   const handleClearSales = async () => {
     if (!sales?.length) {
-      setClearSalesStatus('No sales to clear.');
+      setClearSalesStatus('No recorded sales found.');
       return;
     }
-    if (!window.confirm(`Delete all ${sales.length} recorded sales? This cannot be undone.`)) return;
+    if (!window.confirm(`Clear all ${sales.length} recorded sales? This removes the sale records and their revenue, profit, and transaction totals. This cannot be undone.`)) return;
     try {
       const result = await clearSales();
-      setClearSalesStatus(`${result.deletedCount || 0} sales cleared.`);
+      setClearSalesStatus(`${result.deletedCount || 0} sale records cleared. Revenue, profit, and transaction totals reset.`);
     } catch (err) {
       setClearSalesStatus(err.message || 'Failed to clear sales.');
     }

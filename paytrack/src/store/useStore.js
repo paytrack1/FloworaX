@@ -266,6 +266,7 @@ export const useStore = create(
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || 'Failed to clear sales');
         set({ sales: [], transactions: [] });
+        await get().fetchDashboard();
         return data;
       },
 
