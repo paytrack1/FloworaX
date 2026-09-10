@@ -18,7 +18,7 @@ const BottomNav = () => {
     <button
       key={id}
       onClick={onClick}
-      className="flex flex-col items-center gap-1 px-2 py-1"
+      className="flex flex-shrink-0 flex-col items-center gap-1 px-2.5 py-1"
     >
       <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-[#EEF4FF]' : 'bg-transparent'}`}>
         <Icon
@@ -34,8 +34,8 @@ const BottomNav = () => {
   );
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#E2E8F0] z-40">
-      <div className="flex justify-around items-center px-1 py-2 pb-6">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 max-w-full overflow-x-auto bg-white border-t border-[#E2E8F0] z-40">
+      <div className="flex min-w-max items-center justify-start gap-1 px-2 py-2 pb-6">
         {core.map(({ id, label, labelKey, icon: Icon }) =>
           renderTab(id, labelKey ? terms[labelKey] : label, Icon, activeTab === id, () => setActiveTab(id))
         )}

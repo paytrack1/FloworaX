@@ -56,4 +56,5 @@ body {
   display: flex;
   justify-content: center; /* Centers the app on big screens */
   min-height: 100vh;
+  overflow-x: hidden;
 }

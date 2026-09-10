@@ -165,9 +165,9 @@ const AuthenticatedApp = ({ activeTab, setActiveTab, isSaleModalOpen, setSaleMod
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F0F4FF] font-sans">
+    <div className="flex min-h-screen min-w-0 overflow-x-hidden bg-[#F0F4FF] font-sans">
       <Sidebar />
-      <main className="flex-1 lg:ml-64 min-h-screen relative">
+      <main className="min-w-0 flex-1 lg:ml-64 min-h-screen relative">
 
         {/* Desktop header */}
         <div className="hidden lg:flex max-w-5xl mx-auto px-8 pt-12 pb-8 justify-between items-center">
