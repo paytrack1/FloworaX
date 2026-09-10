@@ -47,8 +47,13 @@
  * in the onboarding checklist - they were never pickable options there
  * (see MODULE_OPTIONS in BusinessTypeOnboarding.jsx), so they must be
  * unioned in rather than overridden by user.modules.
+ *
+ * NOTE: 'team' is intentionally excluded here for now (hidden from nav
+ * until the business needs staff management at scale) - the TeamManagement
+ * page and backend routes are untouched, just not linked from nav. Add
+ * 'team' back to this list to re-enable it later.
  */
-const ALWAYS_ON_MODULES = ['home', 'expenses', 'settings', 'team'];
+const ALWAYS_ON_MODULES = ['home', 'expenses', 'settings'];
 
 /**
  * The real source of truth for what's enabled for a given user: their own
