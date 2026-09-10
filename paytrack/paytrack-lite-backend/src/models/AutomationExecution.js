@@ -20,12 +20,15 @@ const automationExecutionSchema = new mongoose.Schema({
 
   // Status of this execution
   // 'pending': queued, ready to send
-  // 'sent': all messages dispatched (may have failures, but we processed them)
+  // 'sent': all audience messages were delivered successfully
   // 'failed': something went wrong (e.g., database error, no matching audience)
   status: { type: String, enum: ['pending', 'sent', 'failed'], default: 'pending', index: true },
 
   // Count of messages actually sent as part of this execution
   messagesSent: { type: Number, default: 0 },
+
+  // Schedule recipients that failed and should be retried on the next run.
+  failedCustomerIds: { type: [mongoose.Schema.Types.ObjectId], default: [] },
 
   // Error details if status='failed'
   errorReason: { type: String, default: null },

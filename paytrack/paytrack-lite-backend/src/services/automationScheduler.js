@@ -80,26 +80,36 @@ class AutomationScheduler {
           });
         }
 
-        // Get audience
-        const customers = await this.getAudienceCustomers(automation);
+        // Retry only recipients that failed in the previous scheduler run.
+        const audience = await this.getAudienceCustomers(automation);
+        const customers = execution.failedCustomerIds?.length
+          ? audience.filter((customer) => execution.failedCustomerIds.some((id) => id.toString() === customer._id.toString()))
+          : audience;
 
         // Send to each customer
         let sentCount = 0;
+        const failedCustomerIds = [];
         for (const customer of customers) {
           const sent = await this.sendMessageToCustomer(automation, customer);
-          if (sent) sentCount++;
-          messagesSent++;
+          if (sent) {
+            sentCount++;
+            messagesSent++;
+          } else {
+            failedCustomerIds.push(customer._id);
+          }
         }
 
-        // Mark execution as sent
-        execution.status = 'sent';
-        execution.messagesSent = sentCount;
+        // Keep incomplete executions pending so failed recipients are retried.
+        execution.status = failedCustomerIds.length ? 'pending' : 'sent';
+        execution.messagesSent = (execution.messagesSent || 0) + sentCount;
+        execution.failedCustomerIds = failedCustomerIds;
         execution.executedAt = new Date();
         await execution.save();
 
-        // Update automation's lastExecutedAt
-        automation.lastExecutedAt = new Date();
-        await automation.save();
+        if (!failedCustomerIds.length) {
+          automation.lastExecutedAt = new Date();
+          await automation.save();
+        }
 
       } catch (err) {
         console.error(`[AutomationScheduler] Error processing automation ${automation._id}:`, err.message);
