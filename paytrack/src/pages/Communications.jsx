@@ -5,7 +5,7 @@ import FAlert from '../components/FAlert';
 import FSpinner from '../components/FSpinner';
 import {
   MessageSquare, Plus, Pause, Play, Trash2, X, ChevronRight,
-  Mail, Smartphone, CheckCircle2, XCircle, Clock, Coins,
+  Mail, Smartphone, CheckCircle2, XCircle, Clock, Coins, Link2, Copy, Check,
 } from 'lucide-react';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://flowora-backend-only.pxxl.run';
@@ -41,7 +41,10 @@ const TABS = [
 
 const Communications = () => {
   const { token, user, setActiveTab } = useStore();
-  const authHeaders = useMemo(() => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }), [token]);
+  const authHeaders = useMemo(
+    () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }),
+    [token]
+  );
 
   const [tab, setTab] = useState('automations');
   const [automations, setAutomations] = useState([]);
@@ -54,6 +57,15 @@ const Communications = () => {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const joinLink = user?.id ? `${window.location.origin}/join/${user.id}` : '';
+  const copyJoinLink = async () => {
+    if (!joinLink) return;
+    await navigator.clipboard.writeText(joinLink);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
 
   const isPaidPlan = user?.plan === 'paid';
 
@@ -182,11 +194,29 @@ const Communications = () => {
     <div className="pb-10">
       <div className="mb-6">
         <h1 className="text-2xl font-black text-[#0F172A] tracking-tight">Communications</h1>
-        <p className="text-sm text-slate-500 mt-1">Recurring reminders, member welcomes, and message history â€” all opt-in and auditable.</p>
+        <p className="text-sm text-slate-500 mt-1">Recurring reminders, member welcomes, and message history — all opt-in and auditable.</p>
       </div>
 
       {error && <div className="mb-4"><FAlert type="error" message={error} onDismiss={() => setError('')} /></div>}
       {success && <div className="mb-4"><FAlert type="success" message={success} onDismiss={() => setSuccess('')} autoDismiss={4000} /></div>}
+
+      {/* Join link */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-5 mb-6">
+        <div className="flex items-center gap-2 mb-1">
+          <Link2 size={16} className="text-[#185FA5]" />
+          <p className="font-black text-[#0F172A]">Your join link</p>
+        </div>
+        <p className="text-sm text-slate-500 mb-3">Share this with customers or members so they can register themselves — no login needed on their end.</p>
+        <div className="flex items-center gap-2">
+          <input readOnly value={joinLink} className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono text-slate-600 bg-slate-50 truncate" />
+          <button
+            onClick={copyJoinLink}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-black text-white bg-[#185FA5] active:scale-95 transition-transform flex-shrink-0"
+          >
+            {linkCopied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy</>}
+          </button>
+        </div>
+      </div>
 
       {!isPaidPlan && (
         <div className="mb-4 bg-white rounded-2xl border border-[#185FA5]/20 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -549,7 +579,7 @@ const AutomationFormModal = ({ form, setForm, editingId, saving, onCancel, onSav
             disabled={saving || !form.name.trim() || !form.messageTemplate.trim()}
             className="flex-1 py-3 rounded-xl font-black text-white bg-[#185FA5] disabled:opacity-50"
           >
-            {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Create Automation'}
+            {saving ? 'Savingâ€¦' : editingId ? 'Save Changes' : 'Create Automation'}
           </button>
         </div>
       </div>

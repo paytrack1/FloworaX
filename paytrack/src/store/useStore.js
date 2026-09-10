@@ -124,15 +124,25 @@ export const useStore = create(
       },
 
       clearAuthError: () => set({ authError: null }),
-      setActiveTab: (tab) => {
+      setActiveTab: (tab, options = {}) => {
         const { activeTab } = get();
         // Remember where we were before opening "more", so it can be cancelled back to that tab.
+        const updates = { activeTab: tab };
         if (tab === 'more' && activeTab !== 'more') {
-          set({ activeTab: tab, previousTab: activeTab });
-        } else {
-          set({ activeTab: tab });
+          updates.previousTab = activeTab;
         }
+        set(updates);
         trackPageView(tab);
+
+        // Keep the URL bar in sync, but never push a new history entry when
+        // this call originated FROM a URL/back-forward change (options.skipHistory) -
+        // doing so would create a loop / break the browser's back button.
+        if (!options.skipHistory && typeof window !== 'undefined') {
+          const newPath = tab === 'home' ? '/' : `/${tab}`;
+          if (window.location.pathname !== newPath) {
+            window.history.pushState({}, '', newPath);
+          }
+        }
       },
       setSaleModal: (open) => set({ isSaleModalOpen: open }),
       dashboard: null,

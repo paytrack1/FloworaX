@@ -103,6 +103,47 @@ const App = () => {
     return <AdminDashboard />;
   }
 
+  return (
+    <AuthenticatedApp
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      isSaleModalOpen={isSaleModalOpen}
+      setSaleModal={setSaleModal}
+      user={user}
+    />
+  );
+};
+
+// URL <-> tab syncing lives in its own component so the early-return public
+// routes above never mount this (and never register the popstate listener).
+const VALID_TABS = new Set([
+  'home', 'sales', 'reports', 'expenses', 'bookings', 'invoices', 'events',
+  'customers', 'communications', 'more', 'team', 'settings',
+]);
+
+const AuthenticatedApp = ({ activeTab, setActiveTab, isSaleModalOpen, setSaleModal, user }) => {
+  // On first mount, if the URL already points at a valid tab (e.g. the person
+  // bookmarked /settings or hit back/forward before a reload), honor it.
+  useEffect(() => {
+    const initialPath = window.location.pathname.replace(/^\//, '');
+    // Only honor an explicit deep link (e.g. /settings) - a bare "/" should
+    // preserve whatever tab was last active, not force everyone to Home.
+    if (initialPath && VALID_TABS.has(initialPath) && initialPath !== activeTab) {
+      setActiveTab(initialPath, { skipHistory: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Keep the tab in sync with browser back/forward navigation.
+  useEffect(() => {
+    const onPopState = () => {
+      const tabFromPath = window.location.pathname.replace(/^\//, '') || 'home';
+      if (VALID_TABS.has(tabFromPath)) setActiveTab(tabFromPath, { skipHistory: true });
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [setActiveTab]);
+
   // â”€â”€ Page renderer â”€â”€
   const renderContent = () => {
     if (isSaleModalOpen) return <NewSale onBack={() => setSaleModal(false)} />;
