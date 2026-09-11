@@ -8,7 +8,7 @@ import {
   Mail, Smartphone, CheckCircle2, XCircle, Clock, Coins, Link2, Copy, Check,
 } from 'lucide-react';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://flowora-backend-only.pxxl.run';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://api.floworax.com.ng';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const CHANNEL_META = {

@@ -7,7 +7,7 @@ import {
   Users, Copy, Check, Plus, X, Trash2, Shield, ChevronDown, Link2,
 } from 'lucide-react';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://flowora-backend-only.pxxl.run';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://api.floworax.com.ng';
 
 const PERMISSION_OPTIONS = [
   { key: 'sales', label: 'Sales' },

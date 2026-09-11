@@ -2,7 +2,7 @@ import { apiFetch } from '../utils/apiFetch';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { trackEvent, trackPageView } from '../utils/analytics';
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://flowora-backend-only.pxxl.run';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://api.floworax.com.ng';
 
 const authHeaders = (token) => ({
   'Content-Type': 'application/json',
