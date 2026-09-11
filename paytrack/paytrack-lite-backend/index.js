@@ -111,7 +111,7 @@ app.use('/webhook/paystack', express.raw({ type: 'application/json' }));
 // â”€â”€ Security headers â”€â”€
 app.use(helmet());
 
-// â”€â”€ CORS (Updated to allow floworax.pxxl.run) â”€â”€
+// â”€â”€ CORS â”€â”€
 app.use(cors({
   origin: [
     'http://localhost:5173',
@@ -121,6 +121,8 @@ app.use(cors({
     'https://floworax.vercel.app',
     'https://floworax.com',
     'https://app.floworax.com',
+    'https://floworax.com.ng',
+    'https://www.floworax.com.ng',
     ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
