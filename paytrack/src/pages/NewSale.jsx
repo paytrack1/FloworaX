@@ -54,7 +54,7 @@ const NewSale = ({ onBack }) => {
       onBack();
     } catch (err) {
       console.error("Sale Error:", err);
-      setSaleError("Store Error: Could not save sale.");
+      setSaleError(err.message || "Could not save sale.");
     } finally {
       setSaving(false);
     }

@@ -4,9 +4,9 @@ const PLAN_CATALOG = {
   free: {
     name: 'Free',
     price: 0,
-    description: 'Start for free with core sales, services, bookings, finance, reports, and a taste of events.',
-    features: ['sales', 'services', 'bookings', 'finance', 'reports', 'events'],
-    limits: { sales: 50, bookings: 40, services: 8, events: 3 },
+    description: 'Start for free with core sales, services, bookings, invoices, finance, reports, and a taste of events.',
+    features: ['sales', 'services', 'bookings', 'invoices', 'finance', 'reports', 'events'],
+    limits: { sales: 50, bookings: 40, services: 8, events: 3, invoices: 5 },
     badge: 'Best for starters',
     platformFeePercent: 2,
   },
@@ -16,7 +16,7 @@ const PLAN_CATALOG = {
     annualPrice: 70000,
     description: 'Everything unlocked: unlimited sales, bookings, invoices, events, staff management, and automated WhatsApp/SMS/Email reminders.',
     features: ['sales', 'services', 'bookings', 'finance', 'reports', 'invoices', 'events', 'staff', 'communications'],
-    limits: { sales: null, bookings: null, services: null, events: null },
+    limits: { sales: null, bookings: null, services: null, events: null, invoices: null },
     badge: 'Everything unlocked',
     platformFeePercent: 0,
   },
@@ -48,6 +48,14 @@ async function countMonthlyBookings(userId) {
   });
 }
 
+async function countMonthlyInvoices(userId) {
+  const Invoice = mongoose.model('Invoice');
+  return Invoice.countDocuments({
+    userId,
+    createdAt: { $gte: getMonthStart() },
+  });
+}
+
 async function countActiveServices(userId) {
   const Service = mongoose.model('Service');
   return Service.countDocuments({ userId, isActive: true });
@@ -64,11 +72,12 @@ async function buildSubscriptionSummary(userId) {
   if (!user) return null;
 
   const plan = getPlan(user.plan);
-  const [monthlySales, monthlyBookings, activeServices, activeEvents] = await Promise.all([
+  const [monthlySales, monthlyBookings, activeServices, activeEvents, monthlyInvoices] = await Promise.all([
     countMonthlySales(userId),
     countMonthlyBookings(userId),
     countActiveServices(userId),
     countActiveEvents(userId),
+    countMonthlyInvoices(userId),
   ]);
 
   return {
@@ -78,6 +87,7 @@ async function buildSubscriptionSummary(userId) {
       monthlyBookings,
       activeServices,
       activeEvents,
+      monthlyInvoices,
     },
     limits: plan.limits,
     features: plan.features,
@@ -105,6 +115,7 @@ async function countUsageFor(normalizedFeature, userId) {
   if (normalizedFeature === 'bookings') return countMonthlyBookings(userId);
   if (normalizedFeature === 'services') return countActiveServices(userId);
   if (normalizedFeature === 'events') return countActiveEvents(userId);
+  if (normalizedFeature === 'invoices') return countMonthlyInvoices(userId);
   return 0;
 }
 
