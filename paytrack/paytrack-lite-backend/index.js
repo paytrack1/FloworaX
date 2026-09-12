@@ -466,8 +466,13 @@ app.post('/api/auth/verify-email', requireAuth, async (req, res) => {
     user.otpExpiry     = null;
     await user.save();
 
-    console.log(`Email verified: ${user.email}`);
-    res.json({ success: true, user: formatUserResponse(user) });
+        const token = jwt.sign(
+      { id: user._id.toString(), email: user.email, businessName: user.businessName, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+console.log(`Email verified: ${user.email}`);
+       res.json({ success: true, token, user: formatUserResponse(user) });
   } catch (err) {
     console.error('Verify email error:', err.stack || err);
     res.status(500).json({ error: 'Verification failed' });
