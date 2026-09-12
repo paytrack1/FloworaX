@@ -56,11 +56,11 @@ router.get('/', requireAuth, async (req, res) => {
   try {
     const events = await Event.find({ userId: req.user.id, status: 'active' }).sort({ createdAt: -1 });
     const withCounts = await Promise.all(events.map(async (ev) => {
-      const [ticketCount, usedCount] = await Promise.all([
+      const [ticketCount, checkedInCount] = await Promise.all([
         EventTicket.countDocuments({ eventId: ev._id, status: { $ne: 'cancelled' } }),
         EventTicket.countDocuments({ eventId: ev._id, status: 'used' }),
       ]);
-      return { ...ev.toObject(), ticketCount, usedCount };
+      return { ...ev.toObject(), ticketCount, checkedInCount };
     }));
     res.json({ success: true, events: withCounts });
   } catch (err) {
@@ -180,7 +180,7 @@ async function confirmPaidTicket(ticketId, reference) {
 }
 
 router.post('/public/:id/register', async (req, res) => {
-  const { buyerName, buyerEmail } = req.body;
+  const { buyerName, buyerEmail, invitedBy } = req.body;
   if (!buyerName || !buyerEmail)
     return res.status(400).json({ error: 'buyerName and buyerEmail are required' });
 
@@ -203,6 +203,7 @@ router.post('/public/:id/register', async (req, res) => {
       eventId: event._id,
       buyerName: buyerName.trim(),
       buyerEmail: buyerEmail.trim(),
+      invitedBy: invitedBy ? invitedBy.trim().slice(0, 100) : null,
       ticketCode,
       paidAmount: event.price || 0,
       paymentStatus: isFree ? 'free' : 'pending',

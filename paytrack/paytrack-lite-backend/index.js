@@ -50,6 +50,7 @@ const cron = require('node-cron');
 const { runReminders, runFollowups } = require('./src/routes/bookings');
 const messagingService = require('./src/services/messagingService');
 const AutomationScheduler = require('./src/services/automationScheduler');
+const { runEventReminders } = require('./src/services/eventReminders');
 const ResendProvider = require('./src/services/providers/resendProvider');
 const AfricasTalkingProvider = require('./src/services/providers/africasTalkingProvider');
 const TwilioWhatsAppProvider = require('./src/services/providers/twilioWhatsAppProvider');
@@ -1252,6 +1253,18 @@ if (process.env.ENABLE_CRON === 'true') {
       }
     } catch (err) {
       console.error('[cron] Automation scheduler job failed:', err.message);
+    }
+  });
+
+  // â”€â”€ Event reminders: day-before, hour-before, and post-event thank-you emails â”€â”€
+  cron.schedule('*/5 * * * *', async () => {
+    try {
+      const result = await runEventReminders();
+      if (result.dayBeforeSent > 0 || result.hourBeforeSent > 0 || result.thankYouSent > 0) {
+        console.log(`[cron] Event reminders: ${result.dayBeforeSent} day-before, ${result.hourBeforeSent} hour-before, ${result.thankYouSent} thank-you`);
+      }
+    } catch (err) {
+      console.error('[cron] Event reminders job failed:', err.message);
     }
   });
 

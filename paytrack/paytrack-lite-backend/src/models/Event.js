@@ -10,6 +10,11 @@ const eventSchema = new mongoose.Schema({
   capacity:    { type: Number, default: 0 },
   price:       { type: Number, default: 0 },
   status:      { type: String, enum: ['active', 'cancelled'], default: 'active' },
+  remindersSent: {
+    dayBefore: { type: Boolean, default: false },
+    hourBefore: { type: Boolean, default: false },
+    thankYou:  { type: Boolean, default: false },
+  },
   createdAt:   { type: Date, default: Date.now },
 });
 
