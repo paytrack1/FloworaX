@@ -6,7 +6,7 @@ const PLAN_CATALOG = {
     price: 0,
     description: 'Start for free with core sales, services, bookings, invoices, finance, reports, and a taste of events.',
     features: ['sales', 'services', 'bookings', 'invoices', 'finance', 'reports', 'events'],
-    limits: { sales: 50, bookings: 40, services: 8, events: 3, invoices: 5 },
+    limits: { sales: 50, bookings: 10, services: 8, events: 3, invoices: 5 },
     badge: 'Best for starters',
     platformFeePercent: 2,
   },
