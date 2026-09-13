@@ -366,6 +366,7 @@ const formatUserResponse = (user) => ({
 
 // ── Health check ──
 app.get('/', (req, res) => res.json({ status: 'Flowora API running' }));
+app.get('/test-query', (req, res) => res.json({ query: req.query, url: req.url }));
 
 // ── REGISTER ──
 app.post('/api/auth/register', async (req, res) => {
