@@ -1222,6 +1222,7 @@ app.use('/api/events',    eventRoutes);
 app.use('/api/automations', automationRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/webhook/whatsapp', require('./src/routes/whatsappWebhook'));
 
 // ── Sentry error handler — must be registered after all routes ──
 if (process.env.SENTRY_DSN) {
