@@ -28,7 +28,7 @@ const EMPTY_FORM = {
   timezone: 'Africa/Lagos',
   reminder: { leadMinutes: 60 },
   audience: { mode: 'all', newWithinDays: 30, tag: '', customerIds: [] },
-  channel: 'whatsapp',
+  channel: 'email',
   messageTemplate: 'Hello {{firstName}}, this is a reminder that {{serviceName}} is tomorrow at {{startTime}}. See you there!',
 };
 
@@ -483,7 +483,7 @@ const ChannelsTab = ({ user }) => (
       })}
     </div>
     <p className="text-xs text-slate-400 px-1">
-      Email sends through Resend. WhatsApp messaging is coming soon.
+      Email sends through Resend. SMS and WhatsApp are coming soon.
     </p>
   </div>
 );
@@ -564,7 +564,7 @@ const AutomationFormModal = ({ form, setForm, editingId, saving, onCancel, onSav
           <Field label="Channel">
             <select value={form.channel} onChange={(e) => update({ channel: e.target.value })} className={inputCls}>
               <option value="email">Email</option>
-              <option value="sms">SMS</option>
+              <option value="sms" disabled>SMS (Coming soon)</option>
               <option value="whatsapp" disabled>WhatsApp (Coming soon)</option>
             </select>
           </Field>
