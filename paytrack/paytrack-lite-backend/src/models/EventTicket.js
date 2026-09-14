@@ -4,6 +4,7 @@ const eventTicketSchema = new mongoose.Schema({
   eventId:       { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true, index: true },
   buyerName:     { type: String, required: true, trim: true },
   buyerEmail:    { type: String, required: true, trim: true },
+  invitedBy:     { type: String, trim: true, default: null },
   ticketCode:    { type: String, required: true, unique: true },
   status:        { type: String, enum: ['pending', 'valid', 'used', 'cancelled'], default: 'valid' },
   paymentStatus: { type: String, enum: ['free', 'pending', 'paid'], default: 'free' },

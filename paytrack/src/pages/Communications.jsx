@@ -475,7 +475,7 @@ const ChannelsTab = ({ user }) => (
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${meta.bg}`}>
                 <Icon size={16} className={meta.color} />
               </div>
-              <p className="font-bold text-[#0F172A] text-sm">{meta.label}{key === 'sms' ? ' (Coming soon)' : ''}</p>
+              <p className="font-bold text-[#0F172A] text-sm">{meta.label}{key === 'whatsapp' ? ' (Coming soon)' : ''}</p>
             </div>
             <p className="text-xs text-slate-400">Provider status shown when you send your first {meta.label} message</p>
           </div>
@@ -483,7 +483,7 @@ const ChannelsTab = ({ user }) => (
       })}
     </div>
     <p className="text-xs text-slate-400 px-1">
-      Email sends through Resend. SMS messaging is coming soon.
+      Email sends through Resend. WhatsApp messaging is coming soon.
     </p>
   </div>
 );
@@ -564,8 +564,8 @@ const AutomationFormModal = ({ form, setForm, editingId, saving, onCancel, onSav
           <Field label="Channel">
             <select value={form.channel} onChange={(e) => update({ channel: e.target.value })} className={inputCls}>
               <option value="email">Email</option>
-              <option value="whatsapp">WhatsApp (mock)</option>
-              <option value="sms" disabled>SMS (Coming soon)</option>
+              <option value="sms">SMS</option>
+              <option value="whatsapp" disabled>WhatsApp (Coming soon)</option>
             </select>
           </Field>
 

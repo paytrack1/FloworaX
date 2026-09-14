@@ -130,8 +130,8 @@ const JoinChurch = () => {
         <div className="border-t border-slate-100 pt-4 space-y-3">
           <p className="text-xs font-black uppercase tracking-wider text-slate-400">How should we reach you?</p>
           <Checkbox label="Email updates" checked={form.emailOptIn} onChange={(v) => update({ emailOptIn: v })} />
-          <Checkbox label="SMS reminders (Coming soon)" checked={false} disabled />
-          <Checkbox label="WhatsApp reminders" checked={form.whatsappOptIn} onChange={(v) => update({ whatsappOptIn: v })} />
+          <Checkbox label="SMS reminders" checked={form.smsOptIn} onChange={(v) => update({ smsOptIn: v })} />
+          <Checkbox label="WhatsApp reminders (Coming soon)" checked={false} disabled />
           <p className="text-[11px] text-slate-400">You can opt out at any time by contacting us. We'll only message you on the channels you select above.</p>
         </div>
 

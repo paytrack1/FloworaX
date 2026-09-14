@@ -20,7 +20,7 @@ const EventRegistration = () => {
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(!isSuccessRoute);
-  const [form, setForm] = useState({ buyerName: '', buyerEmail: '' });
+  const [form, setForm] = useState({ buyerName: '', buyerEmail: '', invitedBy: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
@@ -156,6 +156,10 @@ const EventRegistration = () => {
         <div>
           <label className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.2em] text-[#94A3B8]">Email</label>
           <input type="email" value={form.buyerEmail} onChange={(e) => setForm({ ...form, buyerEmail: e.target.value })} className="w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm text-[#0F172A] outline-none focus:border-[#185FA5]" placeholder="you@email.com" />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.2em] text-[#94A3B8]">Who invited you? <span className="normal-case font-medium text-[#CBD5E1]">(optional)</span></label>
+          <input value={form.invitedBy} onChange={(e) => setForm({ ...form, invitedBy: e.target.value })} className="w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm text-[#0F172A] outline-none focus:border-[#185FA5]" placeholder="A friend's name" />
         </div>
         {error && <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>}
         <button onClick={submit} disabled={submitting} className="w-full rounded-2xl bg-[#185FA5] px-4 py-3 text-sm font-black text-white disabled:opacity-60">
