@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import FAlert from '../components/FAlert';
 import FSpinner from '../components/FSpinner';
+import UpgradeModal from '../components/UpgradeModal';
 import { X, CheckCircle, CreditCard, Smartphone, Banknote } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { getTerminology } from '../utils/terminology';
@@ -16,6 +17,8 @@ const NewSale = ({ onBack }) => {
   const [reference, setReference] = useState('');
   const [isDraft, setIsDraft] = useState(false);
   const [saleError, setSaleError] = useState('');
+  const [upgradeModule, setUpgradeModule] = useState(null);
+  const [upgradeMessage, setUpgradeMessage] = useState('');
   const [saving, setSaving] = useState(false);
 
   const cleanReference = (raw) => {
@@ -61,6 +64,14 @@ const NewSale = ({ onBack }) => {
   };
 
   return (
+    <>
+      {upgradeModule && (
+        <UpgradeModal
+          module={upgradeModule}
+          limitMessage={upgradeMessage}
+          onClose={() => { setUpgradeModule(null); setUpgradeMessage(''); }}
+        />
+      )}
     <div className="flex flex-col h-screen bg-[#F8FAFC] z-[100] relative">
       {/* Header */}
       <div className="bg-white p-6 flex justify-between items-center border-b border-slate-100">

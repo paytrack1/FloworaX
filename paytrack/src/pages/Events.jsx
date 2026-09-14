@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import FSpinner from '../components/FSpinner';
+import UpgradeModal from '../components/UpgradeModal';
 import FAlert from '../components/FAlert';
 import {
   Plus,
@@ -30,6 +31,8 @@ export default function Events() {
   const [attendeesLoading, setAttendeesLoading] = useState(false);
   const [form, setForm] = useState({ title: "", date: "", time: "", location: "", capacity: "", price: "" });
   const [saving, setSaving] = useState(false);
+  const [upgradeModule, setUpgradeModule] = useState(null);
+  const [upgradeMessage, setUpgradeMessage] = useState('');
 
   const [formError, setFormError] = useState("");
   const [editingEventId, setEditingEventId] = useState(null);
@@ -171,6 +174,14 @@ export default function Events() {
     }
   };
   return (
+    <>
+      {upgradeModule && (
+        <UpgradeModal
+          module={upgradeModule}
+          limitMessage={upgradeMessage}
+          onClose={() => { setUpgradeModule(null); setUpgradeMessage(''); }}
+        />
+      )}
     <div className="p-6 max-w-6xl mx-auto space-y-6 bg-slate-50 min-h-screen">
       <div className="flex justify-between items-center">
         <div>

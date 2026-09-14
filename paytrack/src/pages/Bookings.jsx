@@ -93,6 +93,14 @@ const Bookings = () => {
   const past      = bookings.filter(b => b.status === 'completed' || b.status === 'cancelled');
 
   return (
+    <>
+      {upgradeModule && (
+        <UpgradeModal
+          module={upgradeModule}
+          limitMessage={upgradeMessage}
+          onClose={() => { setUpgradeModule(null); setUpgradeMessage(''); }}
+        />
+      )}
     <div className="bg-[#F5F7FA] min-h-screen pb-32">
       {/* Header */}
       <div className="p-6 bg-white border-b border-[#E2E8F0] shadow-sm flex justify-between items-center">
