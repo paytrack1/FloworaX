@@ -23,6 +23,12 @@ export const createBooking = async (token, bookingData) => {
     body: JSON.stringify(bookingData),
   });
   const data = await res.json();
+  if (res.status === 403) {
+    const err = new Error(data.error || 'Limit reached');
+    err.isLimitError = true;
+    err.module = 'bookings';
+    throw err;
+  }
   if (!res.ok) throw new Error(data.error || 'Unable to create booking');
   return data.booking;
 };

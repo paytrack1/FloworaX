@@ -1,5 +1,4 @@
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-
 const authHeaders = (token) => ({
   'Content-Type': 'application/json',
   Authorization: `Bearer ${token}`,
@@ -23,6 +22,18 @@ export const createInvoice = async (token, invoiceData) => {
     body: JSON.stringify(invoiceData),
   });
   const data = await res.json();
+  if (res.status === 403) {
+    const err = new Error(data.error || 'Limit reached');
+    err.isLimitError = true;
+    err.module = 'invoices';
+    throw err;
+  }
+  if (res.status === 403) {
+    const err = new Error(data.error || 'Limit reached');
+    err.isLimitError = true;
+    err.module = 'invoices';
+    throw err;
+  }
   if (!res.ok) throw new Error(data.error || 'Unable to create invoice');
   return data.invoice;
 };

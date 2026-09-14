@@ -23,6 +23,12 @@ export const createExpense = async (token, expenseData) => {
     body: JSON.stringify(expenseData),
   });
   const data = await res.json();
+  if (res.status === 403) {
+    const err = new Error(data.error || 'Limit reached');
+    err.isLimitError = true;
+    err.module = 'expenses';
+    throw err;
+  }
   if (!res.ok) throw new Error(data.error || 'Unable to create expense');
   return data.expense;
 };

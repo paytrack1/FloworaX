@@ -23,6 +23,12 @@ export const createSale = async (token, saleData) => {
     body: JSON.stringify(saleData),
   });
   const data = await res.json();
+  if (res.status === 403) {
+    const err = new Error(data.error || 'Limit reached');
+    err.isLimitError = true;
+    err.module = 'sales';
+    throw err;
+  }
   if (!res.ok) throw new Error(data.error || 'Unable to create sale');
   return data.sale;
 };

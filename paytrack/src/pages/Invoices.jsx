@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import FAlert   from '../components/FAlert';
 import FSpinner from '../components/FSpinner';
+import UpgradeModal from '../components/UpgradeModal';
 import { useStore } from '../store/useStore';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
@@ -165,6 +166,8 @@ const Invoices = () => {
   const [showForm, setShowForm]     = useState(false);
   const [saving, setSaving]         = useState(false);
   const [error, setError]           = useState('');
+  const [upgradeModule, setUpgradeModule] = useState(null);
+  const [upgradeMessage, setUpgradeMessage] = useState('');
   const [form, setForm]             = useState({ ...EMPTY_FORM, invoiceNumber: generateInvoiceNumber() });
   const [preview, setPreview]       = useState(null);
 
@@ -248,6 +251,9 @@ const Invoices = () => {
       if (data.success) {
         setInvoices([data.invoice, ...invoices]);
         resetForm();
+      } else if (res.status === 403) {
+        setUpgradeMessage(data.error || 'You have reached your free invoice limit.');
+        setUpgradeModule('invoices');
       } else { setError(data.error || 'Failed to create invoice'); }
     } catch { setError('Failed to create invoice'); }
     finally { setSaving(false); }
@@ -287,6 +293,14 @@ const Invoices = () => {
   const totalPending = invoices.filter(i => i.status === 'sent' || i.status === 'draft').length;
 
   return (
+    <>
+      {upgradeModule && (
+        <UpgradeModal
+          module={upgradeModule}
+          limitMessage={upgradeMessage}
+          onClose={() => { setUpgradeModule(null); setUpgradeMessage(''); }}
+        />
+      )}
     <div className="bg-[#F5F7FA] min-h-screen pb-32">
 
       {/* Header */}
