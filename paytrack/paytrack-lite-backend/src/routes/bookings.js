@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router  = express.Router();
 const Booking = require('../models/Booking');
 const Service = require('../models/Service');
@@ -75,13 +75,24 @@ router.post('/public', async (req, res) => {
     const providerAllowed = await requireProviderFeature(service.userId, 'bookings');
     if (!providerAllowed.allowed) return res.status(providerAllowed.status).json({ error: providerAllowed.error });
 
+    // Treat as free if explicitly marked free OR price is zero/empty
+    const isFreeService = Boolean(service.isFree) || Number(service.price) <= 0;
+
     const booking = await Booking.create({
-      serviceId, providerId: service.userId, clientName, clientEmail, clientPhone,
-      scheduledDate, scheduledTime, amount: service.price,
-      paymentStatus: service.isFree ? 'free' : 'pending',
-      status: service.isFree ? 'confirmed' : 'pending', notes,
+      serviceId,
+      providerId: service.userId,
+      clientName,
+      clientEmail,
+      clientPhone,
+      scheduledDate,
+      scheduledTime,
+      amount: isFreeService ? 0 : service.price,
+      paymentStatus: isFreeService ? 'free' : 'pending',
+      status: isFreeService ? 'confirmed' : 'pending',
+      notes,
     });
-    if (service.isFree) {
+
+    if (isFreeService) {
       await sendEmail(clientEmail, 'Your booking is confirmed', confirmationHtml(booking));
       await notify(
         service.userId,
