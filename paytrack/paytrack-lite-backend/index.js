@@ -1,9 +1,9 @@
-﻿const dns = require('dns');
+const dns = require('dns');
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 require('dotenv').config();
 
-// â”€â”€ Error monitoring (Sentry) â”€â”€
+// ── Error monitoring (Sentry) ──
 const Sentry = require('@sentry/node');
 if (process.env.SENTRY_DSN) {
   Sentry.init({
@@ -14,7 +14,7 @@ if (process.env.SENTRY_DSN) {
   console.log('Sentry error monitoring enabled');
 }
 
-// â”€â”€ Security â”€â”€
+// ── Security ──
 const helmet        = require('helmet');
 const rateLimit     = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -55,12 +55,12 @@ const ResendProvider = require('./src/services/providers/resendProvider');
 const AfricasTalkingProvider = require('./src/services/providers/africasTalkingProvider');
 const TwilioWhatsAppProvider = require('./src/services/providers/twilioWhatsAppProvider');
 
-// â”€â”€ Resend Email Configuration â”€â”€
+// ── Resend Email Configuration ──
 const { Resend } = require('resend');
 const resend     = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
-// â”€â”€ Initialize Messaging Service â”€â”€
+// ── Initialize Messaging Service ──
 const smsProvider = process.env.AFRICAS_TALKING_API_KEY
   ? new AfricasTalkingProvider(process.env.AFRICAS_TALKING_API_KEY, process.env.AFRICAS_TALKING_USERNAME)
   : null;
@@ -90,7 +90,7 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);
 
-// â”€â”€ Environment guards â”€â”€
+// ── Environment guards ──
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   console.error('FATAL: JWT_SECRET environment variable is not set. Refusing to start.');
@@ -106,13 +106,13 @@ if (!MONGODB_URI) {
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_BASE_URL   = 'https://api.paystack.co';
 
-// â”€â”€ Raw body for Paystack webhook (must be before express.json) â”€â”€
+// ── Raw body for Paystack webhook (must be before express.json) ──
 app.use('/webhook/paystack', express.raw({ type: 'application/json' }));
 
-// â”€â”€ Security headers â”€â”€
+// ── Security headers ──
 app.use(helmet());
 
-// â”€â”€ CORS â”€â”€
+// ── CORS ──
 app.use(cors({
   origin: [
     'http://localhost:5173',
@@ -130,13 +130,13 @@ app.use(cors({
   credentials: true,
 }));
 
-// â”€â”€ Body parser with size limit â”€â”€
+// ── Body parser with size limit ──
 app.use(express.json({ limit: '10kb' }));
 
-// â”€â”€ MongoDB injection sanitization â”€â”€
+// ── MongoDB injection sanitization ──
 app.use(mongoSanitize());
 
-// â”€â”€ Rate limiters â”€â”€
+// ── Rate limiters ──
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -172,7 +172,7 @@ app.use('/api/auth/register',        authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
 app.use('/api/',                     apiLimiter);
 
-// â”€â”€ Connect to MongoDB â”€â”€
+// ── Connect to MongoDB ──
 const connectToDatabase = async () => {
   try {
     await mongoose.connect(MONGODB_URI);
@@ -184,7 +184,7 @@ const connectToDatabase = async () => {
   }
 };
 
-// â”€â”€ Mongoose Schemas â”€â”€
+// ── Mongoose Schemas ──
 const userSchema = new mongoose.Schema({
   email:            { type: String, required: true, unique: true, lowercase: true, trim: true },
   businessName:     { type: String, required: true, trim: true },
@@ -203,6 +203,7 @@ const userSchema = new mongoose.Schema({
   currency:         { type: String, default: null },
   timezone:         { type: String, default: null },
   plan:             { type: String, enum: ['free', 'pro', 'business', 'paid'], default: 'free' },
+  unlockedModules: { type: [String], default: [] },
   modules:          { type: [String], default: ['sales'] },
   role:             { type: String, enum: ['user', 'admin'], default: 'user' },
   lastLoginAt:      { type: Date, default: null },
@@ -247,7 +248,7 @@ const User    = mongoose.model('User', userSchema);
 const Sale    = mongoose.model('Sale', saleSchema);
 const Expense = mongoose.model('Expense', expenseSchema);
 
-// â”€â”€ Church/business join-link slugs â”€â”€
+// ── Church/business join-link slugs ──
 // Turns "Grace Community Church" into "gracecommunity", checking for
 // collisions and appending a number if needed. Existing accounts keep
 // working via their raw ObjectId link (see findOwnerByIdentifier below);
@@ -281,7 +282,7 @@ const findOwnerByIdentifier = async (identifier, projection) => {
   return null;
 };
 
-// â”€â”€ Auth middleware â”€â”€
+// ── Auth middleware ──
 const requireAuth = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token      = authHeader && authHeader.split(' ')[1];
@@ -294,7 +295,7 @@ const requireAuth = (req, res, next) => {
   }
 };
 
-// â”€â”€ Paystack verify helper â”€â”€
+// ── Paystack verify helper ──
 const verifyPaystackTransaction = async (reference) => {
   try {
     const { data } = await axios.get(
@@ -310,7 +311,7 @@ const verifyPaystackTransaction = async (reference) => {
   }
 };
 
-// â”€â”€ Disposable email check â”€â”€
+// ── Disposable email check ──
 const DISPOSABLE_EMAIL_DOMAINS = new Set([
   'mailinator.com', 'tempmail.com', 'guerrillamail.com', '10minutemail.com',
   'throwawaymail.com', 'yopmail.com', 'trashmail.com', 'fakeinbox.com',
@@ -322,7 +323,7 @@ const isDisposableEmail = (email) => {
   return domain ? DISPOSABLE_EMAIL_DOMAINS.has(domain) : false;
 };
 
-// â”€â”€ Email sending helper â”€â”€
+// ── Email sending helper ──
 const sendOTPEmail = async (email, otp) => {
   if (!resend) {
     console.log(`[DEV] OTP for ${email}: ${otp}`);
@@ -364,12 +365,12 @@ const formatUserResponse = (user) => ({
   payoutActive:        !!user.paystackSubaccountCode,
 });
 
-// â”€â”€ Health check â”€â”€
+// ── Health check ──
 app.get('/', (req, res) => res.json({ status: 'Flowora API running' }));
 const { sendSMS } = require('./src/utils/termii');
 app.post('/test-sms', async (req, res) => { try { const result = await sendSMS(req.body.phone, req.body.message || 'Test SMS from Flowora'); res.json({ success: true, result }); } catch (err) { console.error('TEST-SMS ERROR:', err.message); res.status(500).json({ error: err.message }); } });
 
-// â”€â”€ REGISTER â”€â”€
+// ── REGISTER ──
 app.post('/api/auth/register', async (req, res) => {
   const { email, businessName, password } = req.body;
   if (!email || !businessName || !password)
@@ -415,7 +416,7 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-// â”€â”€ LOGIN â”€â”€
+// ── LOGIN ──
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
@@ -428,7 +429,7 @@ app.post('/api/auth/login', async (req, res) => {
     const match = await bcrypt.compare(password, user.passwordHash);
     if (!match) return res.status(401).json({ error: 'Invalid email or password' });
 
-    // â”€â”€ Update lastLoginAt â”€â”€
+    // ── Update lastLoginAt ──
     await User.findByIdAndUpdate(user._id, { lastLoginAt: new Date() });
     if (!user.slug) {
       user.slug = await generateUniqueSlug(user.businessName, user._id);
@@ -449,7 +450,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// â”€â”€ VERIFY EMAIL â”€â”€
+// ── VERIFY EMAIL ──
 app.post('/api/auth/verify-email', requireAuth, async (req, res) => {
   const { otp } = req.body;
   if (!otp) return res.status(400).json({ error: 'Verification code is required' });
@@ -476,7 +477,7 @@ app.post('/api/auth/verify-email', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ RESEND OTP â”€â”€
+// ── RESEND OTP ──
 app.post('/api/auth/resend-otp', requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -499,7 +500,7 @@ app.post('/api/auth/resend-otp', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ FORGOT PASSWORD â”€â”€
+// ── FORGOT PASSWORD ──
 app.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -540,7 +541,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   }
 });
 
-// â”€â”€ RESET PASSWORD â”€â”€
+// ── RESET PASSWORD ──
 app.post('/api/auth/reset-password', async (req, res) => {
   const { token, newPassword } = req.body;
   if (!token || !newPassword) return res.status(400).json({ error: 'token and newPassword are required' });
@@ -568,7 +569,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
   }
 });
 
-// â”€â”€ GET ME â”€â”€
+// ── GET ME ──
 app.get('/api/auth/me', requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -584,7 +585,7 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ UPDATE PROFILE â”€â”€
+// ── UPDATE PROFILE ──
 app.patch('/api/auth/profile', requireAuth, async (req, res) => {
   const { businessName, businessType, modules, phone, address, bankAccount, currency, timezone, profileImage, currentPassword, newPassword } = req.body;
 
@@ -619,7 +620,7 @@ app.patch('/api/auth/profile', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ PAYOUTS: List Banks â”€â”€
+// ── PAYOUTS: List Banks ──
 app.get('/api/payouts/banks', requireAuth, async (req, res) => {
   try {
     const { data } = await axios.get(`${PAYSTACK_BASE_URL}/bank?currency=NGN`, {
@@ -632,7 +633,7 @@ app.get('/api/payouts/banks', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ PAYOUTS: Resolve Account Number â”€â”€
+// ── PAYOUTS: Resolve Account Number ──
 app.post('/api/payouts/resolve-account', requireAuth, async (req, res) => {
   const { accountNumber, bankCode } = req.body;
   if (!accountNumber || !bankCode) return res.status(400).json({ error: 'accountNumber and bankCode are required' });
@@ -648,7 +649,7 @@ app.post('/api/payouts/resolve-account', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ PAYOUTS: Create Subaccount â”€â”€
+// ── PAYOUTS: Create Subaccount ──
 app.post('/api/payouts/subaccount', requireAuth, async (req, res) => {
   const { accountNumber, bankCode, bankName } = req.body;
   if (!accountNumber || !bankCode || !bankName) return res.status(400).json({ error: 'accountNumber, bankCode and bankName are required' });
@@ -689,7 +690,7 @@ app.post('/api/payouts/subaccount', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ PAYOUTS: Get Status â”€â”€
+// ── PAYOUTS: Get Status ──
 app.get('/api/payouts/status', requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -709,7 +710,7 @@ app.get('/api/payouts/status', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ ADMIN DASHBOARD â”€â”€
+// ── ADMIN DASHBOARD ──
 app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Access denied. Administrators only.' });
@@ -780,7 +781,7 @@ app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ CREATE SALE â”€â”€
+// ── CREATE SALE ──
 app.post('/api/sales', requireAuth, requireFeature('sales'), async (req, res) => {
   const { items, itemName, total, paymentMethod, reference, status, profit } = req.body;
   if (typeof total !== 'number' || total < 0)
@@ -810,7 +811,7 @@ app.post('/api/sales', requireAuth, requireFeature('sales'), async (req, res) =>
   }
 });
 
-// â”€â”€ SYNC SALES â”€â”€
+// ── SYNC SALES ──
 app.post('/api/sales/sync', requireAuth, requireFeature('sales'), async (req, res) => {
   const { sales } = req.body;
   if (!Array.isArray(sales)) return res.status(400).json({ error: 'sales must be an array' });
@@ -843,7 +844,7 @@ app.post('/api/sales/sync', requireAuth, requireFeature('sales'), async (req, re
   res.json({ success: true, results });
 });
 
-// â”€â”€ GET ALL SALES â”€â”€
+// ── GET ALL SALES ──
 app.get('/api/sales', requireAuth, async (req, res) => {
   try {
     const sales = await Sale.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(500);
@@ -863,7 +864,7 @@ app.delete('/api/sales', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ CREATE EXPENSE â”€â”€
+// ── CREATE EXPENSE ──
 app.post('/api/expenses', requireAuth, async (req, res) => {
   const { description, amount, category } = req.body;
   if (typeof amount !== 'number' || amount <= 0)
@@ -886,7 +887,7 @@ app.post('/api/expenses', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ DELETE EXPENSE â”€â”€
+// ── DELETE EXPENSE ──
 app.delete('/api/expenses/:id', requireAuth, async (req, res) => {
   try {
     await Expense.deleteOne({ id: req.params.id, userId: req.user.id });
@@ -896,7 +897,7 @@ app.delete('/api/expenses/:id', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ SYNC EXPENSES â”€â”€
+// ── SYNC EXPENSES ──
 app.post('/api/expenses/sync', requireAuth, async (req, res) => {
   const { expenses } = req.body;
   if (!Array.isArray(expenses)) return res.status(400).json({ error: 'expenses must be an array' });
@@ -919,7 +920,7 @@ app.post('/api/expenses/sync', requireAuth, async (req, res) => {
   res.json({ success: true, results });
 });
 
-// â”€â”€ GET ALL EXPENSES â”€â”€
+// ── GET ALL EXPENSES ──
 app.get('/api/expenses', requireAuth, async (req, res) => {
   try {
     const expenses = await Expense.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(500);
@@ -929,7 +930,7 @@ app.get('/api/expenses', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ FINANCIAL SUMMARY â”€â”€
+// ── FINANCIAL SUMMARY ──
 const buildFinancialSummary = async (userId) => {
   const monthStart = new Date();
   monthStart.setDate(1);
@@ -977,7 +978,7 @@ app.get('/api/financial-summary', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ DASHBOARD â”€â”€
+// ── DASHBOARD ──
 app.get('/api/dashboard', requireAuth, async (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0];
@@ -998,12 +999,12 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ PLANS â”€â”€
+// ── PLANS ──
 app.get('/api/plans', (req, res) => {
   res.json({ success: true, plans: getPlanList() });
 });
 
-// â”€â”€ SUBSCRIPTION â”€â”€
+// ── SUBSCRIPTION ──
 app.get('/api/subscription', requireAuth, async (req, res) => {
   try {
     const subscription = await buildSubscriptionSummary(req.user.id);
@@ -1059,7 +1060,7 @@ app.post('/api/subscription/upgrade', requireAuth, async (req, res) => {
   }
 });
 
-// â”€â”€ VERIFY SUBSCRIPTION PAYMENT â”€â”€
+// ── VERIFY SUBSCRIPTION PAYMENT ──
 app.get('/api/subscription/verify/:reference', requireAuth, async (req, res) => {
   const { reference } = req.params;
   try {
@@ -1090,7 +1091,7 @@ app.get('/api/subscription/verify/:reference', requireAuth, async (req, res) => 
   }
 });
 
-// â”€â”€ PAYMENTS â”€â”€
+// ── PAYMENTS ──
 app.post('/api/payments/initialize', requireAuth, async (req, res) => {
   const { amount, saleId, callbackUrl } = req.body;
   if (!amount || !saleId) return res.status(400).json({ error: 'amount and saleId are required' });
@@ -1148,7 +1149,7 @@ app.get('/api/payments/verify/:reference', requireAuth, async (req, res) => {
   res.json({ success: isVerified, verified: isVerified, amount, reference });
 });
 
-// â”€â”€ WEBHOOK â”€â”€
+// ── WEBHOOK ──
 app.post('/webhook/paystack', (req, res, next) => {
   const sig = req.headers['x-paystack-signature'];
   if (!sig) return res.status(400).end();
@@ -1209,23 +1210,24 @@ app.post('/webhook/paystack', (req, res, next) => {
   }
 });
 
-// â”€â”€ CONNECT ADDITIONAL DELEGATED ROUTERS â”€â”€
+// ── CONNECT ADDITIONAL DELEGATED ROUTERS ──
 app.use('/api/services',  serviceRoutes);
 app.use('/api/bookings',  bookingRoutes);
 app.use('/api/invoices',  invoiceRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/waitlist',  waitlistRoutes);
 app.use('/api/events',    eventRoutes);
+app.use('/api/subscription', require('./src/routes/subscription'));
 app.use('/api/automations', automationRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// â”€â”€ Sentry error handler â€” must be registered after all routes â”€â”€
+// ── Sentry error handler — must be registered after all routes ──
 if (process.env.SENTRY_DSN) {
   Sentry.setupExpressErrorHandler(app);
 }
 
-// â”€â”€ SCHEDULED REMINDERS â”€â”€
+// ── SCHEDULED REMINDERS ──
 if (process.env.ENABLE_CRON === 'true') {
   cron.schedule('0 * * * *', async () => {
     try {
@@ -1245,7 +1247,7 @@ if (process.env.ENABLE_CRON === 'true') {
     }
   });
 
-  // â”€â”€ Automation scheduler: runs every minute for exact reminder times â”€â”€
+  // ── Automation scheduler: runs every minute for exact reminder times ──
   const automationScheduler = new AutomationScheduler(messagingService);
   cron.schedule('* * * * *', async () => {
     try {
@@ -1258,7 +1260,7 @@ if (process.env.ENABLE_CRON === 'true') {
     }
   });
 
-  // â”€â”€ Event reminders: day-before, hour-before, and post-event thank-you emails â”€â”€
+  // ── Event reminders: day-before, hour-before, and post-event thank-you emails ──
   cron.schedule('*/5 * * * *', async () => {
     try {
       const result = await runEventReminders();
