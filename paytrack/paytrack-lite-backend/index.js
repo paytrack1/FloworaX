@@ -366,6 +366,8 @@ const formatUserResponse = (user) => ({
 
 // â”€â”€ Health check â”€â”€
 app.get('/', (req, res) => res.json({ status: 'Flowora API running' }));
+const { sendSMS } = require('./src/utils/termii');
+app.post('/test-sms', async (req, res) => { try { const result = await sendSMS(req.body.phone, req.body.message || 'Test SMS from Flowora'); res.json({ success: true, result }); } catch (err) { res.status(500).json({ error: err.message }); } });
 
 // â”€â”€ REGISTER â”€â”€
 app.post('/api/auth/register', async (req, res) => {
