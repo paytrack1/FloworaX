@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { apiFetch } from '../utils/apiFetch';
 import FAlert from '../components/FAlert';
@@ -196,7 +196,7 @@ const Communications = () => {
     <div className="pb-10">
       <div className="mb-6">
         <h1 className="text-2xl font-black text-[#0F172A] tracking-tight">Communications</h1>
-        <p className="text-sm text-slate-500 mt-1">Recurring reminders, member welcomes, and message history — all opt-in and auditable.</p>
+        <p className="text-sm text-slate-500 mt-1">Recurring reminders, member welcomes, and message history � all opt-in and auditable.</p>
       </div>
 
       {error && <div className="mb-4"><FAlert type="error" message={error} onDismiss={() => setError('')} /></div>}
@@ -208,7 +208,7 @@ const Communications = () => {
           <Link2 size={16} className="text-[#185FA5]" />
           <p className="font-black text-[#0F172A]">Your join link</p>
         </div>
-        <p className="text-sm text-slate-500 mb-3">Share this with customers or members so they can register themselves — no login needed on their end.</p>
+        <p className="text-sm text-slate-500 mb-3">Share this with customers or members so they can register themselves � no login needed on their end.</p>
         <div className="flex items-center gap-2">
           <input readOnly value={joinLink} className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono text-slate-600 bg-slate-50 truncate" />
           <button
@@ -280,7 +280,7 @@ const Communications = () => {
   );
 };
 
-// â”€â”€ Automations list â”€â”€
+// ── Automations list ──
 const AutomationsTab = ({ automations, onCreate, onEdit, onToggle, onDelete }) => (
   <div>
     <div className="flex justify-between items-center mb-4">
@@ -358,15 +358,15 @@ function audienceLabel(audience) {
     case 'selected': return `${audience.customerIds?.length || 0} selected member(s)`;
     default: return 'All opted-in members';
   }
+}
 
   function formatLeadTime(minutes = 60) {
     if (minutes >= 1440 && minutes % 1440 === 0) return `${minutes / 1440}d before`;
     if (minutes >= 60 && minutes % 60 === 0) return `${minutes / 60}h before`;
     return `${minutes}m before`;
   }
-}
 
-// â”€â”€ Templates tab: quick reference + jump into an automation's message â”€â”€
+// ── Templates tab: quick reference + jump into an automation's message ──
 const TemplatesTab = ({ automations, onEdit }) => (
   <div className="space-y-4">
     <div className="bg-white rounded-2xl border border-slate-100 p-5">
@@ -396,7 +396,7 @@ const TemplatesTab = ({ automations, onEdit }) => (
   </div>
 );
 
-// â”€â”€ Message log tab â”€â”€
+// ── Message log tab ──
 const STATUS_META = {
   sent:                { label: 'Sent',        icon: CheckCircle2, color: 'text-green-600' },
   failed:              { label: 'Failed',      icon: XCircle,      color: 'text-red-500' },
@@ -450,7 +450,7 @@ const MessageLogTab = ({ logs, onRefresh }) => (
   </div>
 );
 
-// â”€â”€ Channels & credits tab â”€â”€
+// ── Channels & credits tab ──
 const ChannelsTab = ({ user }) => (
   <div className="space-y-4">
     <div className="bg-white rounded-2xl border border-slate-100 p-5">
@@ -488,7 +488,7 @@ const ChannelsTab = ({ user }) => (
   </div>
 );
 
-// â”€â”€ Create/Edit automation modal â”€â”€
+// ── Create/Edit automation modal ──
 const AutomationFormModal = ({ form, setForm, editingId, saving, onCancel, onSave }) => {
   const update = (patch) => setForm((f) => ({ ...f, ...patch }));
   const updateReminder = (patch) => setForm((f) => ({ ...f, reminder: { ...f.reminder, ...patch } }));
