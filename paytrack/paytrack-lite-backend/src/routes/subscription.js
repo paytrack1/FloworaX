@@ -7,18 +7,9 @@ const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_BASE_URL = 'https://api.paystack.co';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://floworax.vercel.app';
 
-const MODULE_PRICE = 7000; // ₦7,000 per module per month
+const FLAT_PRICE = 7000; // ₦7,000 flat regardless of modules selected
 
-const MODULE_NAMES = {
-  sales: 'Sales',
-  bookings: 'Bookings',
-  invoices: 'Invoices',
-  events: 'Events',
-  services: 'Services',
-  customers: 'Customers',
-  automations: 'Automations',
-  communications: 'Communications',
-};
+const VALID_MODULES = ['sales', 'bookings', 'invoices', 'events', 'services', 'customers', 'expenses', 'automations', 'communications'];
 
 const requireAuth = (req, res, next) => {
   const jwt = require('jsonwebtoken');
@@ -34,37 +25,39 @@ const requireAuth = (req, res, next) => {
 };
 
 // POST /api/subscription/initialize
-// Initialize Paystack payment for a specific module
 router.post('/initialize', requireAuth, async (req, res) => {
-  const { module } = req.body;
-  if (!module || !MODULE_NAMES[module]) {
-    return res.status(400).json({ error: 'Invalid module' });
+  let { modules, module } = req.body;
+
+  // Support both single module and array of modules
+  if (module && !modules) modules = [module];
+  if (!modules || !Array.isArray(modules) || modules.length === 0) {
+    return res.status(400).json({ error: 'Please select at least one module' });
+  }
+
+  // Validate modules
+  const invalidModules = modules.filter(m => !VALID_MODULES.includes(m));
+  if (invalidModules.length > 0) {
+    return res.status(400).json({ error: `Invalid modules: ${invalidModules.join(', ')}` });
   }
 
   const User = mongoose.model('User');
   const user = await User.findById(req.user.id);
   if (!user) return res.status(404).json({ error: 'User not found' });
 
-  // Check if already unlocked
-  const unlockedModules = user.unlockedModules || [];
-  if (unlockedModules.includes(module)) {
-    return res.status(400).json({ error: `${MODULE_NAMES[module]} is already unlocked` });
-  }
-
   try {
     const { data } = await axios.post(
       `${PAYSTACK_BASE_URL}/transaction/initialize`,
       {
         email: user.email,
-        amount: MODULE_PRICE * 100, // Paystack uses kobo
+        amount: FLAT_PRICE * 100, // Paystack uses kobo
         currency: 'NGN',
-        reference: `floworax_${module}_${user._id}_${Date.now()}`,
+        reference: `floworax_upgrade_${user._id}_${Date.now()}`,
         metadata: {
           userId: user._id.toString(),
-          module,
+          modules: modules,
           businessName: user.businessName,
         },
-        callback_url: `${FRONTEND_URL}/upgrade/verify?module=${module}`,
+        callback_url: `${FRONTEND_URL}/upgrade/verify?modules=${modules.join(',')}`,
       },
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
     );
@@ -73,8 +66,8 @@ router.post('/initialize', requireAuth, async (req, res) => {
       success: true,
       authorization_url: data.data.authorization_url,
       reference: data.data.reference,
-      module,
-      amount: MODULE_PRICE,
+      modules,
+      amount: FLAT_PRICE,
     });
   } catch (err) {
     console.error('Paystack initialize error:', err.message);
@@ -83,11 +76,16 @@ router.post('/initialize', requireAuth, async (req, res) => {
 });
 
 // POST /api/subscription/verify
-// Verify payment and unlock the module
 router.post('/verify', requireAuth, async (req, res) => {
-  const { reference, module } = req.body;
-  if (!reference || !module) {
-    return res.status(400).json({ error: 'reference and module are required' });
+  const { reference, modules: modulesParam, module } = req.body;
+  let modules = modulesParam;
+
+  // Support both string (comma-separated) and array
+  if (typeof modules === 'string') modules = modules.split(',');
+  if (module && !modules) modules = [module];
+
+  if (!reference || !modules || modules.length === 0) {
+    return res.status(400).json({ error: 'reference and modules are required' });
   }
 
   try {
@@ -103,13 +101,13 @@ router.post('/verify', requireAuth, async (req, res) => {
 
     // Validate amount
     const paidAmount = txn.amount / 100;
-    if (paidAmount < MODULE_PRICE) {
+    if (paidAmount < FLAT_PRICE) {
       return res.status(400).json({ error: 'Incorrect payment amount' });
     }
 
     // Validate metadata
     const meta = txn.metadata || {};
-    if (meta.userId !== req.user.id || meta.module !== module) {
+    if (meta.userId !== req.user.id) {
       return res.status(400).json({ error: 'Payment metadata mismatch' });
     }
 
@@ -117,23 +115,20 @@ router.post('/verify', requireAuth, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // Unlock the module
-    const unlockedModules = user.unlockedModules || [];
-    if (!unlockedModules.includes(module)) {
-      unlockedModules.push(module);
-    }
+    // Merge with existing unlocked modules
+    const existing = user.unlockedModules || [];
+    const merged = [...new Set([...existing, ...modules])];
 
-    // Also update plan to 'paid' if not already
     await User.findByIdAndUpdate(req.user.id, {
-      unlockedModules,
+      unlockedModules: merged,
       plan: 'paid',
     });
 
     res.json({
       success: true,
-      message: `${MODULE_NAMES[module]} has been unlocked`,
-      unlockedModules,
-      module,
+      message: `${modules.join(', ')} unlocked successfully`,
+      unlockedModules: merged,
+      modules,
     });
   } catch (err) {
     console.error('Paystack verify error:', err.message);
@@ -142,7 +137,6 @@ router.post('/verify', requireAuth, async (req, res) => {
 });
 
 // GET /api/subscription/status
-// Get user's current unlocked modules
 router.get('/status', requireAuth, async (req, res) => {
   try {
     const User = mongoose.model('User');
@@ -153,7 +147,7 @@ router.get('/status', requireAuth, async (req, res) => {
       success: true,
       plan: user.plan || 'free',
       unlockedModules: user.unlockedModules || [],
-      modulePriceNGN: MODULE_PRICE,
+      priceNGN: FLAT_PRICE,
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to get subscription status' });
