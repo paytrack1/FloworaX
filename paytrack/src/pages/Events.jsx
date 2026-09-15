@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import FSpinner from '../components/FSpinner';
-import UpgradeModal from '../components/UpgradeModal';
 import FAlert from '../components/FAlert';
 import {
   Plus,
@@ -15,7 +14,7 @@ import {
 } from "lucide-react";
 import { useStore } from "../store/useStore";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://api.floworax.com.ng";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 export default function Events() {
   const { token } = useStore();
@@ -26,13 +25,8 @@ export default function Events() {
   const [scanningEventId, setScanningEventId] = useState(null);
   const [scanResult, setScanResult] = useState("");
   const [ticketInput, setTicketInput] = useState("");
-  const [viewingAttendeesEvent, setViewingAttendeesEvent] = useState(null);
-  const [attendees, setAttendees] = useState([]);
-  const [attendeesLoading, setAttendeesLoading] = useState(false);
   const [form, setForm] = useState({ title: "", date: "", time: "", location: "", capacity: "", price: "" });
   const [saving, setSaving] = useState(false);
-  const [upgradeModule, setUpgradeModule] = useState(null);
-  const [upgradeMessage, setUpgradeMessage] = useState('');
 
   const [formError, setFormError] = useState("");
   const [editingEventId, setEditingEventId] = useState(null);
@@ -116,21 +110,8 @@ export default function Events() {
     }
   };
 
-  const handleViewAttendees = async (event) => {
-    setViewingAttendeesEvent(event);
-    setAttendeesLoading(true);
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/events/${event._id}/tickets`, { headers: authHeaders });
-      const data = await res.json();
-      if (data.success) setAttendees(data.tickets);
-    } catch (err) {
-      console.error("Failed to fetch attendees:", err);
-    } finally {
-      setAttendeesLoading(false);
-    }
-  };
-
-  const handleCheckIn = async (eventId) => {    if (!ticketInput.trim()) return;
+  const handleCheckIn = async (eventId) => {
+    if (!ticketInput.trim()) return;
     try {
       const res = await fetch(`${BACKEND_URL}/api/events/${eventId}/checkin`, {
         method: "POST",
@@ -174,14 +155,6 @@ export default function Events() {
     }
   };
   return (
-    <>
-      {upgradeModule && (
-        <UpgradeModal
-          module={upgradeModule}
-          limitMessage={upgradeMessage}
-          onClose={() => { setUpgradeModule(null); setUpgradeMessage(''); }}
-        />
-      )}
     <div className="p-6 max-w-6xl mx-auto space-y-6 bg-slate-50 min-h-screen">
       <div className="flex justify-between items-center">
         <div>
@@ -237,7 +210,7 @@ export default function Events() {
               >
                 <UserCheck size={16} /> Scan Tickets
               </button>
-              <button onClick={() => handleViewAttendees(event)} className="flex-1 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2">
+              <button className="flex-1 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2">
                 <Users size={16} /> Attendee List
               </button>
             </div>
@@ -284,49 +257,6 @@ export default function Events() {
                   <AlertCircle size={14} />
                   {scanResult}
                 </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {viewingAttendeesEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative max-h-[80vh] flex flex-col">
-            <button onClick={() => setViewingAttendeesEvent(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
-              <X size={20} />
-            </button>
-            <h3 className="text-lg font-bold text-[#0A1F44] mb-1">Attendees</h3>
-            <p className="text-xs text-gray-400 mb-4">{viewingAttendeesEvent.title}</p>
-            <div className="overflow-y-auto flex-1 -mx-2 px-2">
-              {attendeesLoading ? (
-                <div className="flex justify-center py-8"><FSpinner size="sm" /></div>
-              ) : attendees.length === 0 ? (
-                <p className="text-center text-sm text-gray-400 py-8">No one has registered yet.</p>
-              ) : (
-                <div className="space-y-2">
-                  {attendees.map((a) => (
-                    <div key={a._id} className="border border-gray-100 rounded-xl p-3">
-                      <div className="flex items-center justify-between">
-                        <p className="font-bold text-sm text-[#0A1F44]">{a.buyerName}</p>
-                        {a.status === 'used' ? (
-                          <span className="text-[10px] font-black uppercase tracking-wide bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <UserCheck size={10} /> Checked in
-                          </span>
-                        ) : a.status === 'cancelled' ? (
-                          <span className="text-[10px] font-black uppercase tracking-wide bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Cancelled</span>
-                        ) : (
-                          <span className="text-[10px] font-black uppercase tracking-wide bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">Registered</span>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500 mt-0.5">{a.buyerEmail}</p>
-                      {a.invitedBy && (
-                        <p className="text-xs text-indigo-500 mt-1">Invited by: {a.invitedBy}</p>
-                      )}
-                      <p className="text-[10px] text-gray-300 mt-1 font-mono">{a.ticketCode}</p>
-                    </div>
-                  ))}
-                </div>
               )}
             </div>
           </div>
