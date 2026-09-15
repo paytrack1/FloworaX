@@ -1,4 +1,4 @@
-import { apiFetch } from '../utils/apiFetch';
+﻿import { apiFetch } from '../utils/apiFetch';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { trackEvent, trackPageView } from '../utils/analytics';
@@ -382,13 +382,17 @@ export const useStore = create(
           const res = await apiFetch(`${BACKEND_URL}/api/subscription/upgrade`, {
             method: 'POST',
             headers: authHeaders(token),
-            body: JSON.stringify({ planId }),
+            body: JSON.stringify({ planId, callbackUrl: window.location.origin + '/?upgrade=1' }),
           });
           const data = await res.json();
-          if (!res.ok) {
-            throw new Error(data.error || 'Failed to upgrade plan');
-          }
-          set({ user: data.user, dashboard: { ...get().dashboard, subscription: data.subscription }, planError: null });
+               if (!res.ok) {
+        throw new Error(data.error || 'Failed to upgrade plan');
+      }
+      if (data.requiresPayment && data.authorizationUrl) {
+        window.location.href = data.authorizationUrl;
+        return data;
+      }
+      set({ user: data.user, dashboard: { ...get().dashboard, subscription: data.subscription }, planError: null });
           trackEvent('subscription_upgrade', { plan_id: planId });
           return data;
         } catch (err) {
