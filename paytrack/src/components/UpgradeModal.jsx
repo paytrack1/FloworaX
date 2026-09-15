@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Zap, Check } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://floworax.vercel.app';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://api.floworax.com.ng';
 
 const ALL_MODULES = [
   { id: 'sales', label: 'Sales', desc: 'Unlimited sales recording' },

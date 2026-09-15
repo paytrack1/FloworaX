@@ -1,97 +1,104 @@
 import React, { useState, useEffect } from 'react';
 import { trackPageView, trackEvent } from '../utils/analytics';
-
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-
 const Shell = ({ children }) => (
-  <div className="min-h-screen bg-[#F0F4FF] flex items-center justify-center px-5 py-12 font-sans">
-    <div className="w-full max-w-md bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-blue-100/50 p-6 sm:p-8">
-      {children}
-    </div>
-  </div>
-);
-
+ <div className="min-h-screen bg-[#F0F4FF] flex items-center justify-center px-5 py-12 font-sans"> <div className="w-full max-w-md bg-white rounded-3xl border border-[#E2E8F0] shadow-xl shadow-blue-100/50 p-6 sm:p-8"> {children} </div> </div> );
 const BookingForm = () => {
-  const serviceId = window.location.pathname.split('/book/')[1]?.split('/')[0];
-  const [service, setService] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [form, setForm] = useState({ clientName: '', clientEmail: '', clientPhone: '', scheduledDate: '', scheduledTime: '', notes: '' });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/services/single/${serviceId}`);
-        const data = await res.json();
-        if (!res.ok || !data.service) { setNotFound(true); return; }
-        setService(data.service);
-        trackPageView(`Booking: ${data.service.title || serviceId}`);
-      } catch {
-        setNotFound(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (serviceId) load(); else { setNotFound(true); setLoading(false); }
-  }, [serviceId]);
-
-  const update = (k) => (e) => { setForm({ ...form, [k]: e.target.value }); setError(''); };
-
-  const submit = async () => {
-    setError('');
-    if (!form.clientName.trim() || !form.clientEmail.trim() || !form.scheduledDate || !form.scheduledTime) {
-      setError('Please fill in your name, email, date and time.');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/bookings/public`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ serviceId, ...form }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Could not create booking');
-      if (data.paymentRequired && data.authorizationUrl) {
-        trackEvent('booking_started_payment', { service_id: serviceId });
-        window.location.href = data.authorizationUrl;
-        return;
-      }
-      trackEvent('booking_completed', { service_id: serviceId, free: true });
-      setDone(true);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  if (loading) return <Shell><p className="text-[#94A3B8] text-sm text-center">Loading...</p></Shell>;
-
-  if (notFound) return (
-    <Shell>
-      <div className="text-center">
-        <p className="text-[#0F172A] font-black text-lg mb-1">Service not available</p>
-        <p className="text-[#94A3B8] text-sm">This booking link is invalid or no longer active.</p>
-      </div>
-    </Shell>
-  );
-
-  if (done) return (
-    <Shell>
-      <div className="text-center">
-        <div className="w-14 h-14 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
-        <p className="text-[#0F172A] font-black text-lg mb-1">Booking confirmed</p>
-        <p className="text-[#94A3B8] text-sm">{service.title} on {form.scheduledDate} at {form.scheduledTime}. A confirmation was sent to {form.clientEmail}.</p>
-      </div>
-    </Shell>
+const serviceId = window.location.pathname.split('/book/')[1]?.split('/')[0];
+const [service, setService] = useState(null);
+const [loading, setLoading] = useState(true);
+const [notFound, setNotFound] = useState(false);
+const [form, setForm] = useState({ clientName: '', clientEmail: '', clientPhone: '', scheduledDate: '', scheduledTime: '', notes: '' });
+const [submitting, setSubmitting] = useState(false);
+const [error, setError] = useState('');
+const [done, setDone] = useState(false);
+const [slots, setSlots] = useState([]);
+const [loadingSlots, setLoadingSlots] = useState(false);
+useEffect(() => {
+const load = async () => {
+try {
+const res = await fetch(`${BACKEND_URL}/api/services/single/${serviceId}`);
+const data = await res.json();
+if (!res.ok || !data.service) { setNotFound(true); return; }
+setService(data.service);
+trackPageView(`Booking: ${data.service.title || serviceId}`);
+} catch {
+setNotFound(true);
+} finally {
+setLoading(false);
+}
+};
+if (serviceId) load(); else { setNotFound(true); setLoading(false); }
+}, [serviceId]);
+useEffect(() => {
+const loadSlots = async () => {
+if (!form.scheduledDate || !serviceId) { setSlots([]); return; }
+setLoadingSlots(true);
+setForm((f) => ({ ...f, scheduledTime: '' }));
+try {
+const res = await fetch(`${BACKEND_URL}/api/availability/public/${serviceId}/slots?date=${form.scheduledDate}`);
+const data = await res.json();
+setSlots(data.success ? data.slots : []);
+} catch {
+setSlots([]);
+} finally {
+setLoadingSlots(false);
+}
+};
+loadSlots();
+}, [form.scheduledDate, serviceId]);
+const update = (k) => (e) => { setForm({ ...form, [k]: e.target.value }); setError(''); };
+const pickTime = (t) => { setForm({ ...form, scheduledTime: t }); setError(''); };
+const submit = async () => {
+setError('');
+if (!form.clientName.trim() || !form.clientEmail.trim() || !form.scheduledDate || !form.scheduledTime) {
+setError('Please fill in your name, email, date and time.');
+return;
+}
+setSubmitting(true);
+try {
+const res = await fetch(`${BACKEND_URL}/api/bookings/public`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ serviceId, ...form }),
+});
+const data = await res.json();
+if (!res.ok) throw new Error(data.error || 'Could not create booking');
+if (data.paymentRequired && data.authorizationUrl) {
+trackEvent('booking_started_payment', { service_id: serviceId });
+window.location.href = data.authorizationUrl;
+return;
+}
+trackEvent('booking_completed', { service_id: serviceId, free: true });
+setDone(true);
+} catch (err) {
+setError(err.message);
+} finally {
+setSubmitting(false);
+}
+};
+if (loading) return <Shell><p className="text-[#94A3B8] text-sm text-center">Loading...</p></Shell>;
+if (notFound) return (
+<Shell>
+<div className="text-center">
+<p className="text-[#0F172A] font-black text-lg mb-1">Service not available</p>
+<p className="text-[#94A3B8] text-sm">This booking link is invalid or no longer active.</p>
+</div>
+</Shell>
   );
 
   const fld = "w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-white text-[#0F172A] text-sm outline-none focus:border-[#2F5FB3]";
   const lbl = "text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.2em] mb-1.5 block";
+
+  if (done) return (
+    <Shell>
+      <div className="text-center">
+        <div className="w-14 h-14 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">&#10003;</div>
+        <p className="text-[#0F172A] font-black text-lg mb-1">Booking confirmed</p>
+        <p className="text-[#94A3B8] text-sm">Check your email for the details.</p>
+      </div>
+    </Shell>
+  );
 
   return (
     <Shell>
@@ -102,7 +109,7 @@ const BookingForm = () => {
         <div className="flex items-center gap-3 mt-3 text-xs text-[#64748B]">
           <span>{service.duration} mins</span>
           <span className="w-1 h-1 rounded-full bg-[#CBD5E1]" />
-          <span className="font-black text-[#0F172A]">{service.isFree ? 'Free' : `₦${Number(service.price).toLocaleString()}`}</span>
+          <span className="font-black text-[#0F172A]">{service.isFree ? 'Free' : `&#8358;${Number(service.price).toLocaleString()}`}</span>
         </div>
       </div>
 
@@ -119,16 +126,37 @@ const BookingForm = () => {
           <label className={lbl}>Phone</label>
           <input className={fld} value={form.clientPhone} onChange={update('clientPhone')} placeholder="Optional" />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={lbl}>Date</label>
-            <input className={fld} type="date" value={form.scheduledDate} onChange={update('scheduledDate')} />
-          </div>
-          <div>
-            <label className={lbl}>Time</label>
-            <input className={fld} type="time" value={form.scheduledTime} onChange={update('scheduledTime')} />
-          </div>
+        <div>
+          <label className={lbl}>Date</label>
+          <input className={fld} type="date" min={new Date().toISOString().split('T')[0]} value={form.scheduledDate} onChange={update('scheduledDate')} />
         </div>
+        {form.scheduledDate && (
+          <div>
+            <label className={lbl}>Available times</label>
+            {loadingSlots && <p className="text-sm text-[#94A3B8]">Loading available times...</p>}
+            {!loadingSlots && slots.length === 0 && (
+              <p className="text-sm text-[#94A3B8]">No available times on this date. Try another date.</p>
+            )}
+            {!loadingSlots && slots.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {slots.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => pickTime(t)}
+                    className={`px-3 py-2 rounded-lg text-sm font-bold border transition-colors ${
+                      form.scheduledTime === t
+                        ? 'bg-[#2F5FB3] text-white border-[#2F5FB3]'
+                        : 'bg-white text-[#0F172A] border-[#E2E8F0] hover:border-[#2F5FB3]'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <div>
           <label className={lbl}>Notes</label>
           <textarea className={fld} rows={3} value={form.notes} onChange={update('notes')} placeholder="Anything the provider should know (optional)" />
@@ -138,7 +166,7 @@ const BookingForm = () => {
 
         <button onClick={submit} disabled={submitting}
           className="w-full bg-[#2F5FB3] text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest active:scale-[0.99] transition-transform disabled:opacity-60">
-          {submitting ? 'Booking...' : service.isFree ? 'Confirm booking' : `Pay ₦${Number(service.price).toLocaleString()} and book`}
+          {submitting ? 'Booking...' : service.isFree ? 'Confirm booking' : `Pay &#8358;${Number(service.price).toLocaleString()} and book`}
         </button>
       </div>
     </Shell>
@@ -170,7 +198,7 @@ const BookingSuccess = () => {
         {state === 'verifying' && <p className="text-[#94A3B8] text-sm">Verifying your payment...</p>}
         {state === 'success' && (
           <>
-            <div className="w-14 h-14 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
+            <div className="w-14 h-14 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">&#10003;</div>
             <p className="text-[#0F172A] font-black text-lg mb-1">Payment confirmed</p>
             <p className="text-[#94A3B8] text-sm">Your booking is confirmed. Check your email for the details.</p>
           </>
