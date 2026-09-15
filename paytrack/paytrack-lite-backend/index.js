@@ -1173,7 +1173,12 @@ app.post('/webhook/paystack', (req, res, next) => {
         await User.findByIdAndUpdate(metadata.userId, { plan: metadata.planId });
         console.log(`Subscription upgraded via webhook: user ${metadata.userId} -> ${metadata.planId}`);
 
-      } else if (metadata?.ticketId || (reference && reference.startsWith('event-ticket-'))) {
+      } else if (metadata?.modules && Array.isArray(metadata.modules) && metadata.userId) {
+        const existing = (await User.findById(metadata.userId))?.unlockedModules || [];
+        const merged = [...new Set([...existing, ...metadata.modules])];
+        await User.findByIdAndUpdate(metadata.userId, { unlockedModules: merged, plan: 'paid' });
+        console.log('Modules unlocked via webhook:', metadata.modules, 'user:', metadata.userId);
+            } else if (metadata?.ticketId || (reference && reference.startsWith('event-ticket-'))) {
         const ticketId = metadata?.ticketId || reference.replace('event-ticket-', '');
         const ticket = await EventTicket.findOneAndUpdate(
           { _id: ticketId, paymentStatus: { $ne: 'paid' } },
