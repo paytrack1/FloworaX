@@ -15,6 +15,8 @@ import Customers from './pages/Customers';
 import Communications from './pages/Communications';
 import MoreMenu from './pages/MoreMenu';
 import TeamManagement from './pages/TeamManagement';
+import Availability from './pages/Availability';
+import Payouts from './pages/Payouts';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import PublicBooking from './pages/PublicBooking';
@@ -120,7 +122,7 @@ const App = () => {
 // routes above never mount this (and never register the popstate listener).
 const VALID_TABS = new Set([
   'home', 'sales', 'reports', 'expenses', 'bookings', 'invoices', 'events',
-  'customers', 'communications', 'more', 'team', 'settings',
+  'customers', 'communications', 'more', 'team', 'settings', 'availability', 'payouts',
 ]);
 
 const AuthenticatedApp = ({ activeTab, setActiveTab, isSaleModalOpen, setSaleModal, user }) => {
@@ -163,6 +165,8 @@ const AuthenticatedApp = ({ activeTab, setActiveTab, isSaleModalOpen, setSaleMod
       case 'more': return <MoreMenu />;
       case 'team': return <TeamManagement />;
       case 'settings':  return <Settings />;
+case 'availability': return <Availability />;
+case 'payouts': return <Payouts />;
       default:          return <Home />;
     }
   };

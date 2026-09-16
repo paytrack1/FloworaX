@@ -3,6 +3,7 @@ const router  = express.Router();
 const Booking = require('../models/Booking');
 const Service = require('../models/Service');
 const axios   = require('axios');
+const mongoose = require('mongoose');
 const requireAuth = require('../middleware/auth');
 const { requireFeature, requireProviderFeature } = require('../middleware/plan');
 const notify = require('../utils/notify');
@@ -109,6 +110,8 @@ router.post('/public', async (req, res) => {
       `${clientName} requested ${service.title || 'a service'} for ${scheduledDate} at ${scheduledTime}. Awaiting payment.`,
       'booking'
     );
+    const owner = await mongoose.model('User').findById(service.userId);
+    const subaccountFields = (owner && owner.paystackSubaccountCode) ? { subaccount: owner.paystackSubaccountCode, bearer: 'subaccount' } : {};
     const { data } = await axios.post(
       `${PAYSTACK_BASE_URL}/transaction/initialize`,
       {
@@ -116,6 +119,7 @@ router.post('/public', async (req, res) => {
         reference: `booking-${booking._id}`,
         callback_url: `${FRONTEND_URL}/booking/success`,
         metadata: { bookingId: booking._id.toString(), serviceId, clientName },
+        ...subaccountFields,
       },
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
     );

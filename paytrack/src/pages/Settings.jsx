@@ -15,7 +15,7 @@ const MODULE_OPTIONS = [
 ];
 
 const Settings = () => {
-  const { logout, user, setProfileImage, sales, dashboard, plans, planError, fetchPlans, upgradePlan, updateBusinessProfile, clearSales } = useStore();
+  const { logout, user, setProfileImage, sales, dashboard, plans, planError, fetchPlans, upgradePlan, updateBusinessProfile, clearSales, setActiveTab } = useStore();
   const [exportStatus, setExportStatus] = useState('');
   const [syncMsg, setSyncMsg] = useState('');
   const [showSupport, setShowSupport] = useState(false);
@@ -530,6 +530,18 @@ const Settings = () => {
         </div>
       )}
 
+      <button
+        onClick={() => setActiveTab('availability')}
+        className="w-full flex items-center justify-between py-4 px-5 bg-white rounded-2xl border border-slate-100 font-bold text-[#0F172A]"
+      >
+        Availability
+      </button>
+      <button
+        onClick={() => setActiveTab('payouts')}
+        className="w-full flex items-center justify-between py-4 px-5 bg-white rounded-2xl border border-slate-100 font-bold text-[#0F172A]"
+      >
+        Payouts
+      </button>
       <button
         onClick={logout}
         className="w-full py-4 text-red-500 font-bold bg-red-50 rounded-2xl border border-red-100 active:scale-95 transition-transform"
