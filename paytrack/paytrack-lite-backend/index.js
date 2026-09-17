@@ -217,36 +217,9 @@ const userSchema = new mongoose.Schema({
   createdAt:        { type: Date, default: Date.now },
 });
 
-const saleSchema = new mongoose.Schema({
-  id:            { type: String, required: true, unique: true },
-  userId:        { type: String, required: true, index: true },
-  items:         { type: Array, default: [] },
-  itemName:      { type: String },
-  total:         { type: Number, required: true },
-  paymentMethod: { type: String, default: 'cash' },
-  reference:     { type: String },
-  status:        { type: String, default: 'pending' },
-  synced:        { type: Number, default: 0 },
-  verified:      { type: Boolean, default: false },
-  provider:      { type: String, default: null },
-  profit:        { type: Number, default: 0 },
-  createdAt:     { type: Date, default: Date.now },
-  syncedAt:      { type: Date, default: null },
-});
-
-const expenseSchema = new mongoose.Schema({
-  id:          { type: String, required: true, unique: true },
-  userId:      { type: String, required: true, index: true },
-  description: { type: String },
-  amount:      { type: Number, required: true },
-  category:    { type: String, default: 'Other' },
-  synced:      { type: Number, default: 0 },
-  createdAt:   { type: Date, default: Date.now },
-});
-
 const User    = mongoose.model('User', userSchema);
-const Sale    = mongoose.model('Sale', saleSchema);
-const Expense = mongoose.model('Expense', expenseSchema);
+const Sale    = require('./src/models/Sale');
+const Expense = require('./src/models/Expense');
 
 // ── Church/business join-link slugs ──
 // Turns "Grace Community Church" into "gracecommunity", checking for
