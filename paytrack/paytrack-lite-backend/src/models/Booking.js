@@ -15,4 +15,9 @@ const bookingSchema = new mongoose.Schema({
   notes:         { type: String },
   createdAt:     { type: Date, default: Date.now },
 });
+
+// Speeds up the dashboard, reminders cron, follow-ups cron, and branch reports —
+// all of which query on this exact combination of fields.
+bookingSchema.index({ providerId: 1, scheduledDate: 1, status: 1 });
+
 module.exports = mongoose.model('Booking', bookingSchema);

@@ -1,30 +1,74 @@
-﻿const express = require('express');
+const express = require('express');
 const router  = express.Router();
 const Booking = require('../models/Booking');
 const Service = require('../models/Service');
 const axios   = require('axios');
-const mongoose = require('mongoose');
 const requireAuth = require('../middleware/auth');
 const { requireFeature, requireProviderFeature } = require('../middleware/plan');
 const notify = require('../utils/notify');
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_BASE_URL   = 'https://api.paystack.co';
-const FRONTEND_URL        = process.env.FRONTEND_URL || 'https://floworax.com.ng';
+const FRONTEND_URL        = process.env.FRONTEND_URL || 'https://floworax.vercel.app';
 const RESEND_API_KEY      = process.env.RESEND_API_KEY;
 const EMAIL_FROM          = process.env.EMAIL_FROM || 'Flowora <onboarding@resend.dev>';
 const REMINDER_SECRET     = process.env.REMINDER_SECRET;
 
-async function sendEmail(to, subject, html) {
-  if (!RESEND_API_KEY) return;
-  try {
-    await axios.post(
-      'https://api.resend.com/emails',
-      { from: EMAIL_FROM, to, subject, html },
-      { headers: { Authorization: `Bearer ${RESEND_API_KEY}` } }
-    );
-  } catch (err) {
-    console.error('Email error:', (err.response && err.response.data) || err.message);
+async function sendEmail(to, subject, html, retries = 2) {
+  if (!RESEND_API_KEY) return { ok: false, skipped: true };
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      await axios.post(
+        'https://api.resend.com/emails',
+        { from: EMAIL_FROM, to, subject, html },
+        { headers: { Authorization: `Bearer ${RESEND_API_KEY}` } }
+      );
+      return { ok: true };
+    } catch (err) {
+      const status = err.response?.status;
+      const isRetryable = status === 429 || (status >= 500 && status < 600) || !status; // network errors have no status
+      const isLastAttempt = attempt === retries;
+      if (!isRetryable || isLastAttempt) {
+        console.error(`Email error (to ${to}, attempt ${attempt + 1}/${retries + 1}):`, err.response?.data || err.message);
+        return { ok: false, error: err.response?.data?.message || err.message };
+      }
+      // Exponential backoff: 500ms, 1000ms, 2000ms... plus jitter, so a burst of
+      // failures doesn't retry in lockstep and hit the rate limit again together.
+      const delay = 500 * Math.pow(2, attempt) + Math.floor(Math.random() * 250);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
   }
+}
+
+// Runs `worker` over `items` with at most `concurrency` in flight at once —
+// fast enough to not take minutes at scale, gentle enough not to trip Resend's
+// rate limits the way a fully-parallel Promise.all(...) would. One item failing
+// never stops the rest; failures are collected and returned instead of just logged.
+async function runBatched(items, worker, concurrency = 5) {
+  const results = { sent: 0, failed: 0, errors: [] };
+  let cursor = 0;
+
+  async function runNext() {
+    while (cursor < items.length) {
+      const index = cursor++;
+      const item = items[index];
+      try {
+        const outcome = await worker(item);
+        if (outcome?.ok === false) {
+          results.failed++;
+          results.errors.push({ item: item?.clientEmail || item?._id, error: outcome.error });
+        } else {
+          results.sent++;
+        }
+      } catch (err) {
+        results.failed++;
+        results.errors.push({ item: item?.clientEmail || item?._id, error: err.message });
+      }
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => runNext());
+  await Promise.all(workers);
+  return results;
 }
 
 function confirmationHtml(booking) {
@@ -76,24 +120,13 @@ router.post('/public', async (req, res) => {
     const providerAllowed = await requireProviderFeature(service.userId, 'bookings');
     if (!providerAllowed.allowed) return res.status(providerAllowed.status).json({ error: providerAllowed.error });
 
-    // Treat as free if explicitly marked free OR price is zero/empty
-    const isFreeService = Boolean(service.isFree) || Number(service.price) <= 0;
-
     const booking = await Booking.create({
-      serviceId,
-      providerId: service.userId,
-      clientName,
-      clientEmail,
-      clientPhone,
-      scheduledDate,
-      scheduledTime,
-      amount: isFreeService ? 0 : service.price,
-      paymentStatus: isFreeService ? 'free' : 'pending',
-      status: isFreeService ? 'confirmed' : 'pending',
-      notes,
+      serviceId, providerId: service.userId, clientName, clientEmail, clientPhone,
+      scheduledDate, scheduledTime, amount: service.price,
+      paymentStatus: service.isFree ? 'free' : 'pending',
+      status: service.isFree ? 'confirmed' : 'pending', notes,
     });
-
-    if (isFreeService) {
+    if (service.isFree) {
       await sendEmail(clientEmail, 'Your booking is confirmed', confirmationHtml(booking));
       await notify(
         service.userId,
@@ -110,8 +143,6 @@ router.post('/public', async (req, res) => {
       `${clientName} requested ${service.title || 'a service'} for ${scheduledDate} at ${scheduledTime}. Awaiting payment.`,
       'booking'
     );
-    const owner = await mongoose.model('User').findById(service.userId);
-    const subaccountFields = (owner && owner.paystackSubaccountCode) ? { subaccount: owner.paystackSubaccountCode, bearer: 'subaccount' } : {};
     const { data } = await axios.post(
       `${PAYSTACK_BASE_URL}/transaction/initialize`,
       {
@@ -119,7 +150,6 @@ router.post('/public', async (req, res) => {
         reference: `booking-${booking._id}`,
         callback_url: `${FRONTEND_URL}/booking/success`,
         metadata: { bookingId: booking._id.toString(), serviceId, clientName },
-        ...subaccountFields,
       },
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
     );
@@ -221,10 +251,13 @@ async function runReminders() {
   t.setUTCDate(t.getUTCDate() + 1);
   const tomorrow = t.toISOString().slice(0, 10);
   const bookings = await Booking.find({ scheduledDate: tomorrow, status: 'confirmed' });
-  for (const b of bookings) {
-    await sendEmail(b.clientEmail, 'Reminder: your booking is tomorrow', reminderHtml(b));
-  }
-  return { sent: bookings.length, date: tomorrow };
+  const { sent, failed, errors } = await runBatched(
+    bookings,
+    (b) => sendEmail(b.clientEmail, 'Reminder: your booking is tomorrow', reminderHtml(b)),
+    5 // concurrency — 5 emails in flight at once
+  );
+  if (failed > 0) console.error(`[reminders] ${failed} failed:`, errors);
+  return { sent, failed, date: tomorrow };
 }
 
 async function runFollowups() {
@@ -232,10 +265,13 @@ async function runFollowups() {
   t.setUTCDate(t.getUTCDate() - 1);
   const yesterday = t.toISOString().slice(0, 10);
   const bookings = await Booking.find({ scheduledDate: yesterday, status: 'confirmed' });
-  for (const b of bookings) {
-    await sendEmail(b.clientEmail, 'Thanks for your booking', followupHtml(b));
-  }
-  return { sent: bookings.length, date: yesterday };
+  const { sent, failed, errors } = await runBatched(
+    bookings,
+    (b) => sendEmail(b.clientEmail, 'Thanks for your booking', followupHtml(b)),
+    5
+  );
+  if (failed > 0) console.error(`[followups] ${failed} failed:`, errors);
+  return { sent, failed, date: yesterday };
 }
 
 router.get('/run-reminders', async (req, res) => {
