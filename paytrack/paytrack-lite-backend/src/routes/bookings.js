@@ -120,6 +120,19 @@ router.post('/public', async (req, res) => {
     const providerAllowed = await requireProviderFeature(service.userId, 'bookings');
     if (!providerAllowed.allowed) return res.status(providerAllowed.status).json({ error: providerAllowed.error });
 
+    // Check if slot is already taken
+    const existingBooking = await Booking.findOne({
+      serviceId,
+      scheduledDate,
+      scheduledTime,
+      status: { $in: ['pending', 'confirmed'] },
+    });
+    if (existingBooking) {
+      return res.status(409).json({
+        error: 'This time slot was just booked by someone else. Please select another time.',
+      });
+    }
+
     const booking = await Booking.create({
       serviceId, providerId: service.userId, clientName, clientEmail, clientPhone,
       scheduledDate, scheduledTime, amount: service.price,
