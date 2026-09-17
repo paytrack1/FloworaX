@@ -129,7 +129,7 @@ router.post('/public', async (req, res) => {
     });
     if (existingBooking) {
       return res.status(409).json({
-        error: 'This time slot was just booked by someone else. Please select another time.',
+        error: 'This time slot has been booked. Please select another time.',
       });
     }
 
