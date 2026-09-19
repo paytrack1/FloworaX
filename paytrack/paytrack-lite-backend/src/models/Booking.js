@@ -13,6 +13,7 @@ const bookingSchema = new mongoose.Schema({
   paymentRef:    { type: String },
   amount:        { type: Number, default: 0 },
   notes:         { type: String },
+  cancelToken:   { type: String, default: null, index: true },
   createdAt:     { type: Date, default: Date.now },
 });
 
