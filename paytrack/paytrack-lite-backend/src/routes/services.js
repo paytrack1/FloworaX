@@ -80,14 +80,27 @@ router.get('/:id/slots', async (req, res) => {
     const service = await Service.findById(req.params.id);
     if (!service || !service.isActive) return res.status(404).json({ error: 'Service not found' });
 
-    // Get day of week for the requested date (0=Sun, 6=Sat)
     const requestedDate = new Date(date + 'T00:00:00');
     const dayOfWeek = requestedDate.getDay();
 
-    // Find availability for this day
-    const dayAvailability = service.availability.find(a => a.day === dayOfWeek);
-    if (!dayAvailability) {
-      return res.json({ slots: [], message: 'No availability on this day' });
+    // Determine availability hours based on mode
+    let startTime, endTime;
+
+    if (service.availabilityMode === 'specific') {
+      const specificDate = service.specificDates?.find(d => d.date === date);
+      if (!specificDate) {
+        return res.json({ slots: [], message: 'No availability on this date' });
+      }
+      startTime = specificDate.startTime;
+      endTime = specificDate.endTime;
+    } else {
+      // Weekly mode
+      const dayAvailability = service.availability.find(a => a.day === dayOfWeek);
+      if (!dayAvailability) {
+        return res.json({ slots: [], message: 'No availability on this day' });
+      }
+      startTime = dayAvailability.startTime;
+      endTime = dayAvailability.endTime;
     }
 
     // Generate all possible slots
