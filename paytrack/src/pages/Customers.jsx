@@ -4,6 +4,7 @@ import { fetchCustomers } from '../api/customers';
 import { getTerminology } from '../utils/terminology';
 import FSpinner from '../components/FSpinner';
 import FAlert   from '../components/FAlert';
+import WhatsAppBroadcast from '../components/WhatsAppBroadcast';
 
 const formatNaira = (amount) =>
   `NGN ${Number(amount || 0).toLocaleString('en-NG', { minimumFractionDigits: 0 })}`;
@@ -15,7 +16,15 @@ const formatDate = (dateStr) => {
   });
 };
 
-const getInitial = (name) => name?.charAt(0)?.toUpperCase() || '?';
+const toggleSelect = (customer) => {
+    setSelectedCustomers(prev =>
+      prev.find(c => c._id === customer._id)
+        ? prev.filter(c => c._id !== customer._id)
+        : [...prev, customer]
+    );
+  };
+
+  const getInitial = (name) => name?.charAt(0)?.toUpperCase() || '?';
 
 const AVATAR_COLORS = [
   'bg-[#185FA5]', 'bg-violet-500', 'bg-emerald-500',
@@ -29,6 +38,14 @@ const CustomerDrawer = ({ customer, onClose }) => {
   if (!customer) return null;
 
   return (
+    <>
+      {showBroadcast && (
+        <WhatsAppBroadcast
+          customers={selectedCustomers}
+          businessName={user?.businessName}
+          onClose={() => setShowBroadcast(false)}
+        />
+      )}
     <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center"
       onClick={onClose}>
       <div
@@ -104,6 +121,9 @@ const CustomerDrawer = ({ customer, onClose }) => {
 // â”€â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const Customers = () => {
   const { token, user } = useStore();
+  const [selectedCustomers, setSelectedCustomers] = useState([]);
+  const [showBroadcast, setShowBroadcast] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
   const terms = getTerminology(user?.businessType);
   const [customers, setCustomers]   = useState([]);
   const [loading, setLoading]       = useState(true);
@@ -150,6 +170,7 @@ const Customers = () => {
       {/* Header */}
       <div className="p-6 bg-white border-b border-[#E2E8F0] shadow-sm">
         <h1 className="text-xl font-black text-[#0F172A]">{terms.customerPlural}</h1>
+          <button onClick={() => { setSelectMode(!selectMode); setSelectedCustomers([]); }} className="text-xs font-bold text-[#185FA5] px-3 py-1.5 rounded-lg border border-[#185FA5]">{selectMode ? 'Done' : 'Select'}</button>
         <p className="text-[#94A3B8] text-xs font-medium mt-0.5">
           Everyone who has booked with you
         </p>
