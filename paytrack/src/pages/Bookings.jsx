@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
+import AvailabilitySetup from '../components/AvailabilitySetup';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
@@ -12,6 +13,7 @@ const Bookings = () => {
   const [showNewService, setShowNewService] = useState(false);
   const [saving, setSaving]       = useState(false);
   const [error, setError]         = useState('');
+  const [availabilityService, setAvailabilityService] = useState(null);
   const [form, setForm]           = useState({
     title: '', description: '', duration: 60,
     price: '', isFree: false, category: 'General', location: 'Online',
@@ -93,6 +95,18 @@ const Bookings = () => {
   const past      = bookings.filter(b => b.status === 'completed' || b.status === 'cancelled');
 
   return (
+    <>
+      {availabilityService && (
+        <AvailabilitySetup
+          service={availabilityService}
+          token={token}
+          onClose={() => setAvailabilityService(null)}
+          onSaved={(updatedService) => {
+            setServices(services.map(s => s._id === updatedService?._id ? updatedService : s));
+            setAvailabilityService(null);
+          }}
+        />
+      )}
     <div className="bg-[#F5F7FA] min-h-screen pb-32">
       {/* Header */}
       <div className="p-6 bg-white border-b border-[#E2E8F0] shadow-sm flex justify-between items-center">
