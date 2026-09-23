@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import FSpinner from '../components/FSpinner';
 import { Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt, MessageCircle } from 'lucide-react';
@@ -21,6 +21,7 @@ const getModulesForBusinessType = (businessType) => {
   if (['health_wellness', 'professional_services'].includes(key)) return ['bookings', 'customers', 'invoices', 'finance', 'reports', 'events', 'communications'];
   if (key === 'church') return ['customers', 'events', 'sales', 'finance', 'reports', 'communications'];
   if (key === 'education_nonprofits') return ['events', 'customers', 'invoices', 'finance', 'reports', 'communications'];
+if (key === 'school') return ['customers', 'events', 'invoices', 'finance', 'reports', 'communications'];
   if (key === 'business_retail') return ['sales', 'customers', 'invoices', 'finance', 'reports', 'communications'];
   if (key === 'complete_business_os') return MODULE_OPTIONS.map((option) => option.key);
   return DEFAULT_MODULES;
@@ -29,24 +30,31 @@ const getModulesForBusinessType = (businessType) => {
 const options = [
   {
     value: 'health_wellness',
-    title: '🩺 Health & Wellness',
+    title: 'ðŸ©º Health & Wellness',
     description: 'Clinics, therapists, dentists, and gyms that need appointments, patients, and payments.',
     categories: ['Clinics', 'Therapists', 'Dentists', 'Gyms'],
     features: ['Appointments', 'Patients', 'Payments'],
   },
   {
     value: 'professional_services',
-    title: '💼 Professional Services',
+    title: 'ðŸ’¼ Professional Services',
     description: 'Consultants, lawyers, agencies, and freelancers focused on clients, invoices, and projects.',
     categories: ['Consultants', 'Lawyers', 'Agencies', 'Freelancers'],
     features: ['Clients', 'Invoices', 'Payments', 'Projects'],
   },
   {
     value: 'education_nonprofits',
-    title: '🎓 Education & Nonprofits',
+    title: 'ðŸŽ“ Education & Nonprofits',
     description: 'Schools and NGOs that manage events, registrations, donations, and reports.',
     categories: ['Schools', 'NGOs'],
     features: ['Events', 'Registrations', 'Donations', 'Reports'],
+  },
+  {
+    value: 'school',
+    title: 'School',
+    description: 'Primary, secondary, and training schools tracking students, classes, attendance, and fees.',
+    categories: ['Primary/Secondary', 'Tertiary', 'Training Centers'],
+    features: ['Students', 'Classes', 'Attendance', 'Fees'],
   },
   {
     value: 'church',
@@ -57,14 +65,14 @@ const options = [
   },
   {
     value: 'business_retail',
-    title: '🏢 Business & Retail',
+    title: 'ðŸ¢ Business & Retail',
     description: 'Stores, SMEs, and companies that need finance, invoices, customers, and reports.',
     categories: ['Stores', 'SMEs', 'Companies'],
     features: ['Finance', 'Invoices', 'Customers', 'Reports'],
   },
   {
     value: 'complete_business_os',
-    title: '⚙️ Complete Business OS ⭐',
+    title: 'âš™ï¸ Complete Business OS â­',
     description: 'Everything enabled: CRM, services, events, appointments, payments, finance, reports, automation.',
     categories: ['CRM', 'Services', 'Events', 'Appointments', 'Payments', 'Finance', 'Reports', 'Automation'],
     recommended: true,
@@ -313,10 +321,10 @@ const BusinessTypeOnboarding = () => {
             <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold mb-4">Why this matters</p>
               <ul className="space-y-3 text-sm text-[#475569]">
-                <li>• Your business profile helps invoices and reports look professional.</li>
-                <li>• Currency and timezone ensure revenue and booking times are accurate.</li>
-                <li>• A bank account improves future payout flows and payment setup.</li>
-                <li>• Business type enables the right modules for your industry.</li>
+                <li>â€¢ Your business profile helps invoices and reports look professional.</li>
+                <li>â€¢ Currency and timezone ensure revenue and booking times are accurate.</li>
+                <li>â€¢ A bank account improves future payout flows and payment setup.</li>
+                <li>â€¢ Business type enables the right modules for your industry.</li>
               </ul>
             </div>
           </div>
