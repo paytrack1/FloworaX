@@ -1,8 +1,51 @@
 import React, { useState } from 'react';
-import { X, Copy, Download, MessageSquare, Check } from 'lucide-react';
+import { X, Copy, Download, MessageSquare, Check, ChevronDown } from 'lucide-react';
+
+const TEMPLATES = [
+  {
+    id: 'appointment',
+    label: '📅 Appointment Reminder',
+    message: `Hi {{name}}, this is a reminder that you have an appointment with {{business}} tomorrow. Please be on time. Reply to this message if you need to reschedule.`,
+  },
+  {
+    id: 'payment',
+    label: '💰 Payment Reminder',
+    message: `Hi {{name}}, this is a gentle reminder from {{business}} that your payment is due. Kindly make payment at your earliest convenience. Thank you.`,
+  },
+  {
+    id: 'event',
+    label: '🎉 Event Reminder',
+    message: `Hi {{name}}, just a reminder that our upcoming event is happening soon! We look forward to seeing you there. Contact us if you have any questions.`,
+  },
+  {
+    id: 'thankyou',
+    label: '🙏 Thank You',
+    message: `Hi {{name}}, thank you for choosing {{business}}. We truly appreciate your support and look forward to serving you again soon.`,
+  },
+  {
+    id: 'offer',
+    label: '🎁 Special Offer',
+    message: `Hi {{name}}, we have a special offer just for you at {{business}}! Contact us today to find out more. Limited time only.`,
+  },
+  {
+    id: 'followup',
+    label: '✅ Follow Up',
+    message: `Hi {{name}}, we just wanted to check in after your recent visit to {{business}}. We hope everything went well. Feel free to reach out anytime.`,
+  },
+  {
+    id: 'custom',
+    label: '✏️ Custom Message',
+    message: '',
+  },
+];
 
 const WhatsAppBroadcast = ({ customers, onClose, businessName }) => {
-  const [message, setMessage] = useState(`Hi {{name}}, this is a reminder from ${businessName || 'us'}. Please reply if you have any questions.`);
+  const [selectedTemplate, setSelectedTemplate] = useState(TEMPLATES[0]);
+  const [message, setMessage] = useState(
+    TEMPLATES[0].message
+      .replace(/{{business}}/g, businessName || 'us')
+  );
+  const [showTemplates, setShowTemplates] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedNumbers, setCopiedNumbers] = useState(false);
 
@@ -18,8 +61,18 @@ const WhatsAppBroadcast = ({ customers, onClose, businessName }) => {
 
   const noPhone = customers.filter(c => !c.phone);
 
+  const pickTemplate = (template) => {
+    setSelectedTemplate(template);
+    if (template.id !== 'custom') {
+      setMessage(template.message.replace(/{{business}}/g, businessName || 'us'));
+    } else {
+      setMessage('');
+    }
+    setShowTemplates(false);
+  };
+
   const copyMessage = () => {
-    navigator.clipboard.writeText(message.replace('{{name}}', 'Customer'));
+    navigator.clipboard.writeText(message.replace(/{{name}}/g, 'Customer'));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -46,7 +99,7 @@ const WhatsAppBroadcast = ({ customers, onClose, businessName }) => {
   };
 
   const openWhatsApp = () => {
-    const text = encodeURIComponent(message.replace('{{name}}', 'Customer'));
+    const text = encodeURIComponent(message.replace(/{{name}}/g, 'Customer'));
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
 
@@ -80,32 +133,64 @@ const WhatsAppBroadcast = ({ customers, onClose, businessName }) => {
             </div>
           </div>
 
+          {/* Template picker */}
+          <div className="mb-4 relative">
+            <p className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">Message Template</p>
+            <button
+              onClick={() => setShowTemplates(!showTemplates)}
+              className="w-full flex items-center justify-between px-4 py-3 border-2 border-slate-200 rounded-xl text-sm font-semibold text-[#0F172A] hover:border-[#185FA5] transition-all"
+            >
+              <span>{selectedTemplate.label}</span>
+              <ChevronDown size={16} className={`text-slate-400 transition-transform ${showTemplates ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showTemplates && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-10 overflow-hidden">
+                {TEMPLATES.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => pickTemplate(t)}
+                    className={`w-full text-left px-4 py-3 text-sm font-semibold hover:bg-slate-50 transition-all border-b border-slate-50 last:border-0 ${
+                      selectedTemplate.id === t.id ? 'text-[#185FA5] bg-[#EEF4FF]' : 'text-[#0F172A]'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Message editor */}
-          <div className="mb-4">
+          <div className="mb-5">
             <p className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">Your Message</p>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={4}
               className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
-              placeholder="Type your message here..."
+              placeholder="Type your message or pick a template above..."
             />
-            <p className="text-xs text-slate-400 mt-1">Use {'{{name}}'} to personalize — it shows as "Customer" in WhatsApp</p>
+            <p className="text-xs text-slate-400 mt-1">
+              {'{{name}}'} = customer name · {'{{business}}'} = your business name
+            </p>
           </div>
 
           {/* Phone numbers preview */}
           {phones.length > 0 && (
             <div className="mb-5">
               <p className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">Phone Numbers ({phones.length})</p>
-              <div className="bg-slate-50 rounded-xl p-3 max-h-28 overflow-y-auto">
-                <p className="text-xs text-slate-600 font-mono leading-relaxed">{phones.slice(0, 10).join(', ')}{phones.length > 10 ? ` ... +${phones.length - 10} more` : ''}</p>
+              <div className="bg-slate-50 rounded-xl p-3 max-h-24 overflow-y-auto">
+                <p className="text-xs text-slate-600 font-mono leading-relaxed">
+                  {phones.slice(0, 8).join(', ')}{phones.length > 8 ? ` ... +${phones.length - 8} more` : ''}
+                </p>
               </div>
             </div>
           )}
 
           {/* How to use */}
           <div className="bg-blue-50 rounded-2xl p-4 mb-5">
-            <p className="text-xs font-black text-[#185FA5] mb-2">How to broadcast:</p>
+            <p className="text-xs font-black text-[#185FA5] mb-2">How to broadcast on WhatsApp:</p>
             <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
               <li>Copy your message below</li>
               <li>Copy or export phone numbers</li>
