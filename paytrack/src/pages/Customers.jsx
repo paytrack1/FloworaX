@@ -115,6 +115,7 @@ const CustomerDrawer = ({ customer, onClose }) => {
         </div>
       </div>
     </div>
+ </>
   );
 };
 
