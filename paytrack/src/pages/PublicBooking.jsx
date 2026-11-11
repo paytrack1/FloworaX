@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { trackPageView, trackEvent } from '../utils/analytics';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://api.floworax.com.ng';
 
 const Shell = ({ children }) => (
   <div className="min-h-screen bg-[#F0F4FF] flex items-center justify-center px-5 py-12 font-sans">

@@ -31,6 +31,7 @@ import ResetPassword from './pages/ResetPassword';
 import EventRegistration from './pages/EventRegistration';
 import AdminDashboard from './pages/AdminDashboard';
 import NotificationBell from './components/NotificationBell';
+import { Plus } from 'lucide-react';
 import { useEffect } from 'react';
 
 const App = () => {
@@ -119,9 +120,9 @@ const App = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F0F4FF] font-sans">
+    <div className="flex min-h-screen min-w-0 overflow-x-hidden bg-[#F0F4FF] font-sans">
       <Sidebar />
-      <main className="flex-1 lg:ml-64 min-h-screen relative">
+      <main className="min-w-0 flex-1 lg:ml-64 min-h-screen relative">
 
         {/* Desktop header */}
         <div className="hidden lg:flex max-w-5xl mx-auto px-8 pt-12 pb-8 justify-between items-center">
@@ -172,8 +173,15 @@ const App = () => {
           <div className="max-w-5xl mx-auto">{renderContent()}</div>
         </div>
 
-        {/* Mobile FAB */}
-        
+        <button
+          type="button"
+          onClick={() => setSaleModal(true)}
+          className="lg:hidden fixed right-5 bottom-24 z-30 inline-flex items-center gap-2 rounded-full bg-[#185FA5] px-4 py-3 text-sm font-black text-white shadow-lg shadow-blue-900/30 active:scale-95 transition-transform"
+        >
+          <Plus size={18} strokeWidth={3} />
+          New sale
+        </button>
+
       </main>
       <BottomNav />
     </div>

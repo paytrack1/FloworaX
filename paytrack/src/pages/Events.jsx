@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useStore } from "../store/useStore";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://api.floworax.com.ng";
 
 export default function Events() {
   const { token } = useStore();
@@ -27,10 +27,10 @@ export default function Events() {
   const [ticketInput, setTicketInput] = useState("");
   const [form, setForm] = useState({ title: "", date: "", time: "", location: "", capacity: "", price: "" });
   const [saving, setSaving] = useState(false);
-
   const [formError, setFormError] = useState("");
   const [editingEventId, setEditingEventId] = useState(null);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
+
   useEffect(() => { fetchEvents(); }, []);
 
   const fetchEvents = async () => {
@@ -134,7 +134,6 @@ export default function Events() {
     setTicketInput("");
   };
 
-
   const handleShare = async (event) => {
     const url = `${window.location.origin}/events/${event._id}`;
     const text = `You are invited to ${event.title}! Register here: ${url}`;
@@ -154,6 +153,7 @@ export default function Events() {
       }
     }
   };
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6 bg-slate-50 min-h-screen">
       <div className="flex justify-between items-center">
@@ -176,7 +176,7 @@ export default function Events() {
             <div>
               <div className="flex justify-between items-start">
                 <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700">
-                  {event.price === 0 ? "Free" : `?${event.price}`}
+                  {event.price === 0 ? "Free" : `₦${event.price}`}
                 </span>
                 <span className="text-xs text-gray-400 flex items-center gap-1">
                   <Calendar size={12} /> {event.date} at {event.time}
@@ -192,7 +192,7 @@ export default function Events() {
                   <p className="text-xs text-gray-400 uppercase font-semibold flex items-center gap-1">
                     <Ticket size={12} /> Tickets Issued
                   </p>
-                  <p className="text-2xl font-bold text-[#0A1F44] mt-1">{event.ticketCount || 0} <span className="text-xs text-gray-400">/ {event.capacity || "8"}</span></p>
+                  <p className="text-2xl font-bold text-[#0A1F44] mt-1">{event.ticketCount || 0} <span className="text-xs text-gray-400">/ {event.capacity || "∞"}</span></p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 uppercase font-semibold flex items-center gap-1">
@@ -272,7 +272,7 @@ export default function Events() {
               </div>
               <h3 className="text-lg font-bold text-[#0A1F44]">Cancel this event?</h3>
             </div>
-            <p className="text-sm text-gray-500 mb-6">Attendees will no longer be able to register, and this can't be undone.</p>
+            <p className="text-sm text-gray-500 mb-6">Attendees will no longer be able to register, and this cannot be undone.</p>
             <div className="flex gap-3">
               <button onClick={() => setConfirmingDeleteId(null)} className="flex-1 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm font-bold transition-all">
                 Keep Event

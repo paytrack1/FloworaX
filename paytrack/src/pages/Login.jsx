@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
+import { Button, Input } from '../components/ui';
+import { Mail, Store, Lock, ArrowLeft } from 'lucide-react';
 
 const Login = ({ mode: initialMode = 'login' }) => {
   const { login, register, forgotPassword, authError, clearAuthError } = useStore();
   const [mode, setMode] = useState(initialMode === 'register' ? 'register' : 'login');
   const [loading, setLoading] = useState(false);
-  const [form, setForm]       = useState({ email: '', businessName: '', password: '' });
+  const [form, setForm] = useState({ email: '', businessName: '', password: '' });
   const [resetSent, setResetSent] = useState(false);
 
   const handleChange = (e) => {
@@ -26,7 +28,8 @@ const Login = ({ mode: initialMode = 'login' }) => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (!form.email || !form.password) return;
     if (mode === 'register' && !form.businessName.trim()) return;
     setLoading(true);
@@ -49,115 +52,150 @@ const Login = ({ mode: initialMode = 'login' }) => {
     setMode(mode === 'login' ? 'register' : 'login');
   };
 
+  const titles = {
+    login: { eyebrow: 'Welcome back', heading: 'Sign in to Flowora' },
+    register: { eyebrow: 'Get started', heading: 'Create your account' },
+    forgot: { eyebrow: 'Password help', heading: 'Reset your password' },
+  };
+  const t = titles[mode] || titles.login;
+
   return (
-    <div className="min-h-screen bg-[#F5F7FA] flex flex-col justify-center px-6">
-      <div className="mb-10 text-center">
-        <div className="w-16 h-16 bg-[#185FA5] rounded-2xl flex items-center justify-center text-white font-black text-2xl mx-auto mb-4 shadow-lg shadow-blue-200">
-          FL
+    <div className="min-h-screen bg-surface-muted flex flex-col justify-center px-6 py-10">
+      <div className="w-full max-w-md mx-auto animate-fade-in">
+
+        {/* Brand */}
+        <div className="mb-8 text-center">
+          <div className="w-14 h-14 bg-brand-500 rounded-card flex items-center justify-center text-white font-black text-xl mx-auto mb-4 shadow-md">
+            FL
+          </div>
+          <p className="text-micro font-bold uppercase tracking-widest text-ink-muted mb-1">{t.eyebrow}</p>
+          <h1 className="text-display text-ink">{t.heading}</h1>
         </div>
-        <h1 className="text-2xl font-black text-[#0F172A]">Flowora</h1>
-        <p className="text-[#94A3B8] text-sm font-medium mt-1">
-          {mode === 'login' ? 'Sign in to your store' : mode === 'register' ? 'Create your store account' : 'Reset your password'}
+
+        <form
+          onSubmit={handleSubmit}
+          className="bg-surface rounded-card border border-slate-200/80 shadow-md p-6 sm:p-8 flex flex-col gap-5"
+          noValidate
+        >
+          {mode === 'forgot' ? (
+            <>
+              {resetSent ? (
+                <div className="px-4 py-3 rounded-field bg-positive-soft border border-emerald-200">
+                  <p className="text-body text-positive font-medium">
+                    If an account exists for this email, a reset link has been sent. Check your inbox.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-body text-ink-secondary -mt-1">
+                  Enter your email and we'll send you a reset link.
+                </p>
+              )}
+              <Input
+                label="Email address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                icon={Mail}
+                placeholder="you@store.com"
+                value={form.email}
+                onChange={handleChange}
+              />
+              <Button type="button" size="lg" onClick={handleForgotPassword} loading={loading} disabled={!form.email || resetSent}>
+                {resetSent ? 'Link sent' : 'Send reset link'}
+              </Button>
+              <button
+                type="button"
+                onClick={() => { clearAuthError(); setResetSent(false); setMode('login'); }}
+                className="inline-flex items-center justify-center gap-1.5 text-caption font-bold text-ink-muted hover:text-ink transition-colors"
+              >
+                <ArrowLeft size={14} strokeWidth={2.5} /> Back to sign in
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Mode switch */}
+              <div className="flex bg-surface-sunken rounded-field p-1">
+                <button
+                  type="button"
+                  onClick={() => { if (mode !== 'login') switchMode(); }}
+                  className={`flex-1 h-9 rounded-[0.5rem] text-caption font-bold transition-all
+                    ${mode === 'login' ? 'bg-surface shadow-sm text-brand-600' : 'text-ink-muted hover:text-ink-secondary'}`}
+                >
+                  Sign in
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { if (mode !== 'register') switchMode(); }}
+                  className={`flex-1 h-9 rounded-[0.5rem] text-caption font-bold transition-all
+                    ${mode === 'register' ? 'bg-surface shadow-sm text-brand-600' : 'text-ink-muted hover:text-ink-secondary'}`}
+                >
+                  Create account
+                </button>
+              </div>
+
+              <Input
+                label="Email address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                icon={Mail}
+                placeholder="you@store.com"
+                value={form.email}
+                onChange={handleChange}
+              />
+
+              {mode === 'register' && (
+                <Input
+                  label="Business name"
+                  name="businessName"
+                  type="text"
+                  autoComplete="organization"
+                  icon={Store}
+                  placeholder="Your store name"
+                  value={form.businessName}
+                  onChange={handleChange}
+                />
+              )}
+
+              <Input
+                label="Password"
+                name="password"
+                type="password"
+                autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                icon={Lock}
+                placeholder="••••••••"
+                value={form.password}
+                onChange={handleChange}
+                hint={mode === 'register' ? 'Minimum 8 characters' : undefined}
+              />
+
+              {authError && (
+                <div className="px-4 py-3 rounded-field bg-negative-soft border border-red-200" role="alert">
+                  <p className="text-body text-negative font-medium">{authError}</p>
+                </div>
+              )}
+
+              <Button type="submit" size="lg" loading={loading} disabled={!form.email || !form.password || (mode === 'register' && !form.businessName)}>
+                {mode === 'login' ? 'Sign in' : 'Create account'}
+              </Button>
+
+              {mode === 'login' && (
+                <button
+                  type="button"
+                  onClick={() => { clearAuthError(); setResetSent(false); setMode('forgot'); }}
+                  className="text-caption font-bold text-brand-600 hover:text-brand-700 transition-colors"
+                >
+                  Forgot password?
+                </button>
+              )}
+            </>
+          )}
+        </form>
+
+        <p className="text-center text-micro font-bold uppercase tracking-widest text-ink-faint mt-8">
+          Flowora · Secure payments via Paystack
         </p>
       </div>
-
-      {mode === 'forgot' ? null : (
-      <div className="flex bg-[#F1F5F9] rounded-2xl p-1 mb-6">
-        <button
-          onClick={() => { if (mode !== 'login') switchMode(); }}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${mode === 'login' ? 'bg-white text-[#185FA5] shadow-sm' : 'text-[#94A3B8]'}`}
-        >
-          Sign In
-        </button>
-        <button
-          onClick={() => { if (mode !== 'register') switchMode(); }}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${mode === 'register' ? 'bg-white text-[#185FA5] shadow-sm' : 'text-[#94A3B8]'}`}
-        >
-          Create Account
-        </button>
-      </div>
-      )}
-
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm flex flex-col gap-4">
-        <div>
-          <label className="text-[#0F172A] text-xs font-bold uppercase tracking-wide mb-1.5 block">Email Address</label>
-          <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="you@store.com"
-            className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm text-[#0F172A] outline-none focus:border-[#185FA5] transition-colors" />
-        </div>
-
-        {mode === 'forgot' && (
-          resetSent ? (
-            <div className="px-4 py-3 bg-green-50 border border-green-200 rounded-xl">
-              <p className="text-green-700 text-sm font-medium">If an account exists for this email, a reset link has been sent. Check your inbox.</p>
-            </div>
-          ) : (
-            <p className="text-[#94A3B8] text-sm -mt-2 mb-1">Enter your email and we'll send you a reset link.</p>
-          )
-        )}
-
-        {mode === 'register' && (
-          <div>
-            <label className="text-[#0F172A] text-xs font-bold uppercase tracking-wide mb-1.5 block">Business Name</label>
-            <input name="businessName" type="text" value={form.businessName} onChange={handleChange} placeholder="Your store name"
-              className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm text-[#0F172A] outline-none focus:border-[#185FA5] transition-colors" />
-          </div>
-        )}
-
-        {mode !== 'forgot' && (
-        <div>
-          <label className="text-[#0F172A] text-xs font-bold uppercase tracking-wide mb-1.5 block">Password</label>
-          <input name="password" type="password" value={form.password} onChange={handleChange} placeholder="••••••••"
-            className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm text-[#0F172A] outline-none focus:border-[#185FA5] transition-colors" />
-          {mode === 'register' && <p className="text-[#94A3B8] text-xs mt-1 ml-1">Minimum 4 characters</p>}
-        </div>
-        )}
-
-        {authError && (
-          <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
-            <p className="text-red-600 text-sm font-medium">⚠️ {authError}</p>
-          </div>
-        )}
-
-        {mode === 'forgot' ? (
-          <button
-            onClick={handleForgotPassword}
-            disabled={loading || !form.email || resetSent}
-            className="w-full bg-[#185FA5] text-white py-4 rounded-2xl font-bold disabled:opacity-60 active:scale-95 transition-all mt-1"
-          >
-            {loading ? 'Sending…' : resetSent ? 'Link Sent' : 'Send Reset Link'}
-          </button>
-        ) : (
-          <button
-            onClick={handleSubmit}
-            disabled={loading || !form.email || !form.password || (mode === 'register' && !form.businessName)}
-            className="w-full bg-[#185FA5] text-white py-4 rounded-2xl font-bold disabled:opacity-60 active:scale-95 transition-all mt-1"
-          >
-            {loading ? (mode === 'login' ? 'Signing in…' : 'Creating account…') : (mode === 'login' ? 'Sign In' : 'Create Account')}
-          </button>
-        )}
-
-        {mode === 'login' && (
-          <button
-            onClick={() => { clearAuthError(); setResetSent(false); setMode('forgot'); }}
-            className="text-center text-[#185FA5] text-sm font-bold mt-1"
-          >
-            Forgot password?
-          </button>
-        )}
-
-        {mode === 'forgot' && (
-          <button
-            onClick={() => { clearAuthError(); setResetSent(false); setMode('login'); }}
-            className="text-center text-[#94A3B8] text-sm font-bold mt-1"
-          >
-            Back to Sign In
-          </button>
-        )}
-      </div>
-
-      <p className="text-center text-[#CBD5E1] text-[10px] font-bold uppercase tracking-widest mt-8">
-        Flowora · Secure payments via Paystack
-      </p>
     </div>
   );
 };

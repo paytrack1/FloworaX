@@ -5,7 +5,7 @@ import FAlert from '../components/FAlert';
 import FSpinner from '../components/FSpinner';
 import {
   MessageSquare, Plus, Pause, Play, Trash2, X, ChevronRight,
-  Mail, Smartphone, CheckCircle2, XCircle, Clock, Coins,
+  Mail, Smartphone, CheckCircle2, XCircle, Clock, Coins, Link2, Copy, Check,
 } from 'lucide-react';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://flowora-backend-only.pxxl.run';
@@ -26,7 +26,7 @@ const EMPTY_FORM = {
   startTime: '09:00',
   endTime: '',
   timezone: 'Africa/Lagos',
-  reminder: { daysBefore: 1, atTime: '10:00' },
+  reminder: { leadMinutes: 60 },
   audience: { mode: 'all', newWithinDays: 30, tag: '', customerIds: [] },
   channel: 'whatsapp',
   messageTemplate: 'Hello {{firstName}}, this is a reminder that {{serviceName}} is tomorrow at {{startTime}}. See you there!',
@@ -41,7 +41,10 @@ const TABS = [
 
 const Communications = () => {
   const { token, user, setActiveTab } = useStore();
-  const authHeaders = useMemo(() => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }), [token]);
+  const authHeaders = useMemo(
+    () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }),
+    [token]
+  );
 
   const [tab, setTab] = useState('automations');
   const [automations, setAutomations] = useState([]);
@@ -54,6 +57,17 @@ const Communications = () => {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const joinLink = user?.slug
+    ? `${window.location.origin}/join/${user.slug}`
+    : (user?.id ? `${window.location.origin}/join/${user.id}` : '');
+  const copyJoinLink = async () => {
+    if (!joinLink) return;
+    await navigator.clipboard.writeText(joinLink);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
 
   const isPaidPlan = user?.plan === 'paid';
 
@@ -104,7 +118,7 @@ const Communications = () => {
       startTime: a.startTime || '09:00',
       endTime: a.endTime || '',
       timezone: a.timezone || user?.timezone || 'Africa/Lagos',
-      reminder: { daysBefore: a.reminder?.daysBefore ?? 1, atTime: a.reminder?.atTime || '10:00' },
+      reminder: { leadMinutes: a.reminder?.leadMinutes ?? 60 },
       audience: {
         mode: a.audience?.mode || 'all',
         newWithinDays: a.audience?.newWithinDays || 30,
@@ -182,11 +196,29 @@ const Communications = () => {
     <div className="pb-10">
       <div className="mb-6">
         <h1 className="text-2xl font-black text-[#0F172A] tracking-tight">Communications</h1>
-        <p className="text-sm text-slate-500 mt-1">Recurring reminders, member welcomes, and message history â€” all opt-in and auditable.</p>
+        <p className="text-sm text-slate-500 mt-1">Recurring reminders, member welcomes, and message history — all opt-in and auditable.</p>
       </div>
 
       {error && <div className="mb-4"><FAlert type="error" message={error} onDismiss={() => setError('')} /></div>}
       {success && <div className="mb-4"><FAlert type="success" message={success} onDismiss={() => setSuccess('')} autoDismiss={4000} /></div>}
+
+      {/* Join link */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-5 mb-6">
+        <div className="flex items-center gap-2 mb-1">
+          <Link2 size={16} className="text-[#185FA5]" />
+          <p className="font-black text-[#0F172A]">Your join link</p>
+        </div>
+        <p className="text-sm text-slate-500 mb-3">Share this with customers or members so they can register themselves — no login needed on their end.</p>
+        <div className="flex items-center gap-2">
+          <input readOnly value={joinLink} className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono text-slate-600 bg-slate-50 truncate" />
+          <button
+            onClick={copyJoinLink}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-black text-white bg-[#185FA5] active:scale-95 transition-transform flex-shrink-0"
+          >
+            {linkCopied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy</>}
+          </button>
+        </div>
+      </div>
 
       {!isPaidPlan && (
         <div className="mb-4 bg-white rounded-2xl border border-[#185FA5]/20 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -284,11 +316,11 @@ const AutomationsTab = ({ automations, onCreate, onEdit, onToggle, onDelete }) =
                     <p className="text-xs text-slate-500 mt-0.5">
                       {a.trigger === 'new_member'
                         ? 'Fires once, when a new member registers'
-                        : `Every ${DAY_NAMES[a.dayOfWeek]} at ${a.startTime} (${a.timezone}) Â· reminder ${a.reminder?.daysBefore ?? 1}d before at ${a.reminder?.atTime}`}
+                        : `Every ${DAY_NAMES[a.dayOfWeek]} at ${a.startTime} (${a.timezone}) | reminder ${formatLeadTime(a.reminder?.leadMinutes)}`}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Audience: {audienceLabel(a.audience)} Â· {meta.label}
-                      {a.nextRunDisplay ? ` Â· Next: ${a.nextRunDisplay}` : ''}
+                      Audience: {audienceLabel(a.audience)} | {meta.label}
+                      {a.nextRunDisplay ? ` | Next: ${a.nextRunDisplay}` : ''}
                     </p>
                   </div>
                 </div>
@@ -301,11 +333,11 @@ const AutomationsTab = ({ automations, onCreate, onEdit, onToggle, onDelete }) =
 
               <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-50">
                 <button onClick={() => onEdit(a)} className="text-xs font-bold text-[#185FA5] hover:underline">Edit</button>
-                <span className="text-slate-200">Â·</span>
+                <span className="text-slate-200">|</span>
                 <button onClick={() => onToggle(a)} className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:underline">
                   {a.status === 'active' ? <><Pause size={12} /> Pause</> : <><Play size={12} /> Resume</>}
                 </button>
-                <span className="text-slate-200">Â·</span>
+                <span className="text-slate-200">|</span>
                 <button onClick={() => onDelete(a)} className="flex items-center gap-1 text-xs font-bold text-red-500 hover:underline">
                   <Trash2 size={12} /> Delete
                 </button>
@@ -322,9 +354,15 @@ function audienceLabel(audience) {
   if (!audience) return 'All opted-in members';
   switch (audience.mode) {
     case 'new': return `New members (last ${audience.newWithinDays || 30}d)`;
-    case 'group': return `Group: ${audience.tag || 'â€”'}`;
+    case 'group': return `Group: ${audience.tag || '-'}`;
     case 'selected': return `${audience.customerIds?.length || 0} selected member(s)`;
     default: return 'All opted-in members';
+  }
+
+  function formatLeadTime(minutes = 60) {
+    if (minutes >= 1440 && minutes % 1440 === 0) return `${minutes / 1440}d before`;
+    if (minutes >= 60 && minutes % 60 === 0) return `${minutes / 60}h before`;
+    return `${minutes}m before`;
   }
 }
 
@@ -333,7 +371,7 @@ const TemplatesTab = ({ automations, onEdit }) => (
   <div className="space-y-4">
     <div className="bg-white rounded-2xl border border-slate-100 p-5">
       <p className="font-black text-[#0F172A] mb-2">Available variables</p>
-      <p className="text-xs text-slate-500 mb-3">Use these in any automation's message. Unknown variables are left blank â€” there's no code execution, just safe substitution.</p>
+      <p className="text-xs text-slate-500 mb-3">Use these in any automation's message. Unknown variables are left blank - there is no code execution, just safe substitution.</p>
       <div className="flex flex-wrap gap-2">
         {ALLOWED_VARS.map((v) => (
           <code key={v} className="text-xs font-mono bg-[#EEF4FF] text-[#185FA5] px-2 py-1 rounded-lg">{'{{' + v + '}}'}</code>
@@ -378,7 +416,7 @@ const MessageLogTab = ({ logs, onRefresh }) => (
       <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
         <Clock className="mx-auto text-slate-300 mb-3" size={36} />
         <p className="font-bold text-[#0F172A]">No messages sent yet</p>
-        <p className="text-sm text-slate-500 mt-1">Once an automation runs, every attempt shows up here â€” sent, failed, or skipped.</p>
+        <p className="text-sm text-slate-500 mt-1">Once an automation runs, every attempt shows up here - sent, failed, or skipped.</p>
       </div>
     ) : (
       <div className="bg-white rounded-2xl border border-slate-100 divide-y divide-slate-50 overflow-hidden">
@@ -392,11 +430,11 @@ const MessageLogTab = ({ logs, onRefresh }) => (
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-[#0F172A] truncate">
                     {log.customerId?.name || 'Unknown member'}
-                    <span className="text-slate-400 font-medium"> Â· {log.automationId?.name || log.messageType}</span>
+                    <span className="text-slate-400 font-medium"> | {log.automationId?.name || log.messageType}</span>
                   </p>
                   <p className="text-xs text-slate-400">
-                    {CHANNEL_META[log.channel]?.label || log.channel} Â· {log.recipient || 'no contact'}
-                    {log.failureReason ? ` Â· ${log.failureReason}` : ''}
+                    {CHANNEL_META[log.channel]?.label || log.channel} | {log.recipient || 'no contact'}
+                    {log.failureReason ? ` | ${log.failureReason}` : ''}
                   </p>
                 </div>
               </div>
@@ -437,7 +475,7 @@ const ChannelsTab = ({ user }) => (
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${meta.bg}`}>
                 <Icon size={16} className={meta.color} />
               </div>
-              <p className="font-bold text-[#0F172A] text-sm">{meta.label}</p>
+              <p className="font-bold text-[#0F172A] text-sm">{meta.label}{key === 'sms' ? ' (Coming soon)' : ''}</p>
             </div>
             <p className="text-xs text-slate-400">Provider status shown when you send your first {meta.label} message</p>
           </div>
@@ -445,7 +483,7 @@ const ChannelsTab = ({ user }) => (
       })}
     </div>
     <p className="text-xs text-slate-400 px-1">
-      Email sends through Resend. SMS and WhatsApp currently use mock/test providers for development. Configure real provider credentials on the backend for production delivery.
+      Email sends through Resend. SMS messaging is coming soon.
     </p>
   </div>
 );
@@ -498,11 +536,12 @@ const AutomationFormModal = ({ form, setForm, editingId, saving, onCancel, onSav
               </Field>
 
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Remind (days before)">
-                  <input type="number" min={0} value={form.reminder.daysBefore} onChange={(e) => updateReminder({ daysBefore: Number(e.target.value) })} className={inputCls} />
-                </Field>
-                <Field label="Reminder send time">
-                  <input type="time" value={form.reminder.atTime} onChange={(e) => updateReminder({ atTime: e.target.value })} className={inputCls} />
+                <Field label="Reminder lead time">
+                  <select value={form.reminder.leadMinutes} onChange={(e) => updateReminder({ leadMinutes: Number(e.target.value) })} className={inputCls}>
+                    <option value={60}>1 hour before</option>
+                    <option value={1440}>1 day before</option>
+                    <option value={15}>15 minutes before</option>
+                  </select>
                 </Field>
               </div>
             </>
@@ -526,7 +565,7 @@ const AutomationFormModal = ({ form, setForm, editingId, saving, onCancel, onSav
             <select value={form.channel} onChange={(e) => update({ channel: e.target.value })} className={inputCls}>
               <option value="email">Email</option>
               <option value="whatsapp">WhatsApp (mock)</option>
-              <option value="sms">SMS (mock)</option>
+              <option value="sms" disabled>SMS (Coming soon)</option>
             </select>
           </Field>
 
@@ -549,7 +588,7 @@ const AutomationFormModal = ({ form, setForm, editingId, saving, onCancel, onSav
             disabled={saving || !form.name.trim() || !form.messageTemplate.trim()}
             className="flex-1 py-3 rounded-xl font-black text-white bg-[#185FA5] disabled:opacity-50"
           >
-            {saving ? 'Savingâ€¦' : editingId ? 'Save Changes' : 'Create Automation'}
+            {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Create Automation'}
           </button>
         </div>
       </div>

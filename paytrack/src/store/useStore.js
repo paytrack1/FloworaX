@@ -23,7 +23,7 @@ export const useStore = create(
       transactions: [],
 
       register: async (email, businessName, password) => {
-        set({ authError: null });
+        set({ authError: null, isAuthenticated: false, user: null, token: null, pendingEmail: null });
         try {
           const res = await apiFetch(`${BACKEND_URL}/api/auth/register`, {
             method: 'POST',
@@ -32,11 +32,20 @@ export const useStore = create(
           });
           const data = await res.json();
           if (!res.ok) { set({ authError: data.error || 'Registration failed' }); throw new Error(data.error); }
-          if (data.requiresVerification) {
-            set({ pendingEmail: data.email, authError: null });
+
+          const shouldVerifyEmail = data.requiresVerification === true || data.user?.emailVerified === false;
+          if (shouldVerifyEmail) {
+            set({
+              isAuthenticated: true,
+              user: data.user,
+              token: data.token,
+              pendingEmail: data.email || data.user?.email || email,
+              authError: null,
+            });
             trackEvent('sign_up', { method: 'email' });
             return data;
           }
+
           set({ isAuthenticated: true, user: data.user, token: data.token, authError: null });
           trackEvent('sign_up', { method: 'email' });
           await get().init();
@@ -45,7 +54,7 @@ export const useStore = create(
       },
 
       login: async (email, password) => {
-        set({ authError: null });
+        set({ authError: null, isAuthenticated: false, user: null, token: null, pendingEmail: null });
         try {
           const res = await apiFetch(`${BACKEND_URL}/api/auth/login`, {
             method: 'POST',
@@ -54,7 +63,7 @@ export const useStore = create(
           });
           const data = await res.json();
           if (!res.ok) { set({ authError: data.error || 'Login failed' }); throw new Error(data.error); }
-          set({ isAuthenticated: true, user: data.user, token: data.token, authError: null });
+          set({ isAuthenticated: true, user: data.user, token: data.token, authError: null, pendingEmail: null });
           await get().init();
           return data;
         } catch (err) { set({ authError: err.message }); throw err; }
@@ -70,7 +79,8 @@ export const useStore = create(
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || 'Verification failed');
-        set({ isAuthenticated: true, user: data.user, token: data.token, pendingEmail: null, authError: null });
+        // Backend does not issue a new token here; keep the existing one.
+        set({ isAuthenticated: true, user: data.user, pendingEmail: null, authError: null });
         await get().init();
         return data;
       },
@@ -236,6 +246,20 @@ export const useStore = create(
         }
       },
 
+      clearSales: async () => {
+        const { token } = get();
+        if (!token) throw new Error('Authentication required');
+        const res = await apiFetch(`${BACKEND_URL}/api/sales`, {
+          method: 'DELETE',
+          headers: authHeaders(token),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Failed to clear sales');
+        set({ sales: [], transactions: [] });
+        await get().fetchDashboard();
+        return data;
+      },
+
       
 
       fetchAdminDashboard: async () => {
@@ -243,7 +267,7 @@ export const useStore = create(
         if (!token) return;
         set({ adminError: null });
         try {
-          const res = await apiFetch(`${BACKEND_URL}/api/auth/reset-password`, {
+          const res = await apiFetch(`${BACKEND_URL}/api/admin/dashboard`, {
             headers: authHeaders(token),
           });
           const data = await res.json();

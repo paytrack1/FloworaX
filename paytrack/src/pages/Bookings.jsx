@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://api.floworax.com.ng';
 
 const Bookings = () => {
   const { token } = useStore();
