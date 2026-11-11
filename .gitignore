@@ -8,3 +8,12 @@ build/
 
 extracted/
 floworax.zip
+
+# backend lives in its own repo (flowora-backend-only), keep out of the app repo
+paytrack/paytrack-lite-backend/
+# duplicate/junk artifacts
+extracted/
+floworax.zip
+*.zip
+diff-review.txt
+.push-worktree/
