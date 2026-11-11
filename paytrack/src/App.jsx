@@ -17,6 +17,7 @@ import MoreMenu from './pages/MoreMenu';
 import TeamManagement from './pages/TeamManagement';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
+import { getEnabledModules } from './store/modules';
 import PublicBooking from './pages/PublicBooking';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
@@ -102,6 +103,13 @@ const App = () => {
   // â”€â”€ Page renderer â”€â”€
   const renderContent = () => {
     if (isSaleModalOpen) return <NewSale onBack={() => setSaleModal(false)} />;
+    // Route guard: hidden-at-launch or not-enabled modules fall back to Home.
+    // 'reports' is always accessible (Sidebar force-shows it).
+    const enabled = getEnabledModules(user);
+    const alwaysVisible = ['home', 'reports'];
+    if (activeTab !== 'home' && !alwaysVisible.includes(activeTab) && !enabled.includes(activeTab)) {
+      return <Home />;
+    }
     switch (activeTab) {
       case 'home':      return <Home />;
       case 'sales':     return <SalesHistory />;

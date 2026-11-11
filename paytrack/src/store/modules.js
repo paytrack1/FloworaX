@@ -56,6 +56,20 @@
 const ALWAYS_ON_MODULES = ['home', 'expenses', 'settings'];
 
 /**
+ * Modules hidden for launch (feature-flagged, code untouched).
+ * Rationale: launch with the money loop (sales/expenses/reports/customers/
+ * bookings/invoices); higher-cost or higher-risk surfaces stay dark until
+ * they are individually validated.
+ *
+ * To re-enable one: remove its id from this array — nav, MoreMenu and the
+ * route guard all derive from getEnabledModules().
+ */
+export const LAUNCH_HIDDEN_MODULES = [
+  'events',          // ticketing niche; enable per-vertical later
+  'communications',  // WhatsApp/SMS/Email blasts cost money + carrier compliance
+];
+
+/**
  * The real source of truth for what's enabled for a given user: their own
  * saved module selection from onboarding/Settings (`user.modules`), unioned
  * with the always-on modules that were never part of that picker. Falls
@@ -71,5 +85,6 @@ export const getEnabledModules = (user) => {
   const churchModules = isChurch
     ? ['customers', 'events', 'sales', 'finance', 'reports', 'communications']
     : [];
-  return [...new Set([...ALWAYS_ON_MODULES, ...picked, ...churchModules])];
+  const all = [...new Set([...ALWAYS_ON_MODULES, ...picked, ...churchModules])];
+  return all.filter((m) => !LAUNCH_HIDDEN_MODULES.includes(m));
 };

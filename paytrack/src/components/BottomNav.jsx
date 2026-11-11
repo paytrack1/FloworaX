@@ -1,7 +1,7 @@
 import React from 'react';
 import { Home, BarChart2, FileText, Settings, TrendingDown, Calendar,Receipt, Users, Ticket, MessageSquare } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { getModulesForBusinessType } from '../store/modules';
+import { getEnabledModules } from '../store/modules';
 const tabs = [
   { id: 'home',      label: 'Home',      icon: Home },
   { id: 'sales',     label: 'Sales',     icon: BarChart2 },
@@ -15,7 +15,7 @@ const tabs = [
 ];
 const BottomNav = () => {
   const { activeTab, setActiveTab, user } = useStore();
-  const enabledModules = getModulesForBusinessType(user?.businessType);
+  const enabledModules = getEnabledModules(user);
   const visibleTabs = tabs.filter(({ id }) => enabledModules.includes(id));
 
   return (
