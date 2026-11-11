@@ -321,10 +321,17 @@ const BusinessTypeOnboarding = () => {
             <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold mb-4">Why this matters</p>
               <ul className="space-y-3 text-sm text-[#475569]">
-                <li>â€¢ Your business profile helps invoices and reports look professional.</li>
-                <li>â€¢ Currency and timezone ensure revenue and booking times are accurate.</li>
-                <li>â€¢ A bank account improves future payout flows and payment setup.</li>
-                <li>â€¢ Business type enables the right modules for your industry.</li>
+                {[
+                  'Your business profile helps invoices and reports look professional.',
+                  'Currency and timezone ensure revenue and booking times are accurate.',
+                  'A bank account improves future payout flows and payment setup.',
+                  'Business type enables the right modules for your industry.',
+                ].map((text) => (
+                  <li key={text} className="flex items-start gap-2.5">
+                    <span className="mt-1.5 w-1.5 h-1.5 shrink-0 rounded-full bg-[#185FA5]" aria-hidden />
+                    <span>{text}</span>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
