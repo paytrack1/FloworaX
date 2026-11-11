@@ -10,16 +10,7 @@ import { useStore } from '../store/useStore';
 import { Card, StatCard, Button, Badge, EmptyState, SectionHeader } from './ui';
 import FSpinner from './FSpinner';
 
-// ── Fallback sample series (only used when the backend has no history) ──
-const SAMPLE_TREND = [
-  { month: 'Jun', revenue: 42000, expenses: 21000 },
-  { month: 'Jul', revenue: 58000, expenses: 24000 },
-  { month: 'Aug', revenue: 46000, expenses: 19500 },
-  { month: 'Sep', revenue: 71000, expenses: 30500 },
-  { month: 'Oct', revenue: 64000, expenses: 26000 },
-  { month: 'Nov', revenue: 88500, expenses: 31000 },
-];
-
+// ── Formatting ──
 const formatNaira = (n) => `₦${Number(n || 0).toLocaleString()}`;
 
 const ChartTooltip = ({ active, payload, label }) => {
@@ -49,7 +40,6 @@ const Dashboard = ({ onNewSale, onNewExpense, onOpenReports }) => {
   };
 
   const s = dashboard?.summary || {};
-  const hasData = (s.totalRevenue || 0) > 0 || (s.totalExpenses || 0) > 0 || (s.transactionCount || 0) > 0;
 
   const trend = useMemo(() => {
     if (Array.isArray(dashboard?.monthlyTrend) && dashboard.monthlyTrend.length) {
@@ -59,7 +49,7 @@ const Dashboard = ({ onNewSale, onNewExpense, onOpenReports }) => {
         expenses: m.expenses || 0,
       }));
     }
-    return SAMPLE_TREND; // sample data, clearly labelled below
+    return []; // no invented data — empty state is rendered instead
   }, [dashboard]);
 
   const profitMargin = s.totalRevenue > 0
@@ -137,10 +127,16 @@ const Dashboard = ({ onNewSale, onNewExpense, onOpenReports }) => {
       {/* ── Revenue chart + breakdown ── */}
       <div className="grid gap-4 lg:grid-cols-3 mb-8">
         <Card className="lg:col-span-2 p-5">
-          <SectionHeader
-            title="Revenue overview"
-            subtitle={!hasData && dashboard == null ? 'Showing sample data — connect data by recording sales' : 'Revenue vs expenses, last 6 months'}
-          />
+          <SectionHeader title="Revenue overview" subtitle="Revenue vs expenses, last 6 months" />
+          {trend.length === 0 ? (
+            <EmptyState
+              icon={TrendingUp}
+              title="No data yet"
+              description="Your revenue chart appears here as soon as you record your first sales."
+              actionLabel="Record a sale"
+              onAction={onNewSale}
+            />
+          ) : (
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trend} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
@@ -166,6 +162,7 @@ const Dashboard = ({ onNewSale, onNewExpense, onOpenReports }) => {
               </AreaChart>
             </ResponsiveContainer>
           </div>
+          )}
         </Card>
 
         {/* Quick actions */}
