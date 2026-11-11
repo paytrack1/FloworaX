@@ -1,8 +1,8 @@
-﻿import { apiFetch } from '../utils/apiFetch';
+import { apiFetch } from '../utils/apiFetch';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { trackEvent, trackPageView } from '../utils/analytics';
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://api.floworax.com.ng';
+import { trackEvent } from '../utils/analytics';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://flowora-backend-only.pxxl.run';
 
 const authHeaders = (token) => ({
   'Content-Type': 'application/json',
@@ -18,13 +18,12 @@ export const useStore = create(
       pendingEmail: null,
       authError: null,
       activeTab: 'home',
-      previousTab: 'home',
       isSaleModalOpen: false,
       sales: [],
       transactions: [],
 
       register: async (email, businessName, password) => {
-        set({ authError: null });
+        set({ authError: null, isAuthenticated: false, user: null, token: null, pendingEmail: null });
         try {
           const res = await apiFetch(`${BACKEND_URL}/api/auth/register`, {
             method: 'POST',
@@ -33,11 +32,20 @@ export const useStore = create(
           });
           const data = await res.json();
           if (!res.ok) { set({ authError: data.error || 'Registration failed' }); throw new Error(data.error); }
-          if (data.requiresVerification) {
-            set({ pendingEmail: data.email, authError: null });
+
+          const shouldVerifyEmail = data.requiresVerification === true || data.user?.emailVerified === false;
+          if (shouldVerifyEmail) {
+            set({
+              isAuthenticated: true,
+              user: data.user,
+              token: data.token,
+              pendingEmail: data.email || data.user?.email || email,
+              authError: null,
+            });
             trackEvent('sign_up', { method: 'email' });
             return data;
           }
+
           set({ isAuthenticated: true, user: data.user, token: data.token, authError: null });
           trackEvent('sign_up', { method: 'email' });
           await get().init();
@@ -46,7 +54,7 @@ export const useStore = create(
       },
 
       login: async (email, password) => {
-        set({ authError: null });
+        set({ authError: null, isAuthenticated: false, user: null, token: null, pendingEmail: null });
         try {
           const res = await apiFetch(`${BACKEND_URL}/api/auth/login`, {
             method: 'POST',
@@ -55,7 +63,7 @@ export const useStore = create(
           });
           const data = await res.json();
           if (!res.ok) { set({ authError: data.error || 'Login failed' }); throw new Error(data.error); }
-          set({ isAuthenticated: true, user: data.user, token: data.token, authError: null });
+          set({ isAuthenticated: true, user: data.user, token: data.token, authError: null, pendingEmail: null });
           await get().init();
           return data;
         } catch (err) { set({ authError: err.message }); throw err; }
@@ -71,7 +79,8 @@ export const useStore = create(
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || 'Verification failed');
-        set({ isAuthenticated: true, user: data.user, token: data.token, pendingEmail: null, authError: null });
+        // Backend does not issue a new token here; keep the existing one.
+        set({ isAuthenticated: true, user: data.user, pendingEmail: null, authError: null });
         await get().init();
         return data;
       },
@@ -124,26 +133,7 @@ export const useStore = create(
       },
 
       clearAuthError: () => set({ authError: null }),
-      setActiveTab: (tab, options = {}) => {
-        const { activeTab } = get();
-        // Remember where we were before opening "more", so it can be cancelled back to that tab.
-        const updates = { activeTab: tab };
-        if (tab === 'more' && activeTab !== 'more') {
-          updates.previousTab = activeTab;
-        }
-        set(updates);
-        trackPageView(tab);
-
-        // Keep the URL bar in sync, but never push a new history entry when
-        // this call originated FROM a URL/back-forward change (options.skipHistory) -
-        // doing so would create a loop / break the browser's back button.
-        if (!options.skipHistory && typeof window !== 'undefined') {
-          const newPath = tab === 'home' ? '/' : `/${tab}`;
-          if (window.location.pathname !== newPath) {
-            window.history.pushState({}, '', newPath);
-          }
-        }
-      },
+      setActiveTab: (tab) => set({ activeTab: tab }),
       setSaleModal: (open) => set({ isSaleModalOpen: open }),
       dashboard: null,
       adminData: null,
@@ -291,56 +281,6 @@ export const useStore = create(
           set({ adminError: err.message });
         }
       },
-
-      adminUpdateUserPlan: async (userId, plan) => {
-        const { token, adminData } = get();
-        if (!token) return { success: false, error: 'Not authenticated' };
-        try {
-          const res = await apiFetch(`${BACKEND_URL}/api/admin/users/${userId}/plan`, {
-            method: 'PATCH',
-            headers: authHeaders(token),
-            body: JSON.stringify({ plan }),
-          });
-          const data = await res.json();
-          if (!res.ok) return { success: false, error: data.error || 'Failed to update plan.' };
-          if (adminData) {
-            set({
-              adminData: {
-                ...adminData,
-                users: adminData.users.map((u) => (u._id === userId ? { ...u, plan } : u)),
-              },
-            });
-          }
-          return { success: true };
-        } catch (err) {
-          return { success: false, error: err.message };
-        }
-      },
-
-      adminSetUserSuspended: async (userId, suspended) => {
-        const { token, adminData } = get();
-        if (!token) return { success: false, error: 'Not authenticated' };
-        try {
-          const res = await apiFetch(`${BACKEND_URL}/api/admin/users/${userId}/suspend`, {
-            method: 'PATCH',
-            headers: authHeaders(token),
-            body: JSON.stringify({ suspended }),
-          });
-          const data = await res.json();
-          if (!res.ok) return { success: false, error: data.error || 'Failed to update account status.' };
-          if (adminData) {
-            set({
-              adminData: {
-                ...adminData,
-                users: adminData.users.map((u) => (u._id === userId ? { ...u, suspended } : u)),
-              },
-            });
-          }
-          return { success: true };
-        } catch (err) {
-          return { success: false, error: err.message };
-        }
-      },
       fetchDashboard: async () => {
         const { token } = get();
         if (!token) return;
@@ -382,17 +322,13 @@ export const useStore = create(
           const res = await apiFetch(`${BACKEND_URL}/api/subscription/upgrade`, {
             method: 'POST',
             headers: authHeaders(token),
-            body: JSON.stringify({ planId, callbackUrl: window.location.origin + '/?upgrade=1' }),
+            body: JSON.stringify({ planId }),
           });
           const data = await res.json();
-               if (!res.ok) {
-        throw new Error(data.error || 'Failed to upgrade plan');
-      }
-      if (data.requiresPayment && data.authorizationUrl) {
-        window.location.href = data.authorizationUrl;
-        return data;
-      }
-      set({ user: data.user, dashboard: { ...get().dashboard, subscription: data.subscription }, planError: null });
+          if (!res.ok) {
+            throw new Error(data.error || 'Failed to upgrade plan');
+          }
+          set({ user: data.user, dashboard: { ...get().dashboard, subscription: data.subscription }, planError: null });
           trackEvent('subscription_upgrade', { plan_id: planId });
           return data;
         } catch (err) {

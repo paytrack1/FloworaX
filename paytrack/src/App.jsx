@@ -15,8 +15,6 @@ import Customers from './pages/Customers';
 import Communications from './pages/Communications';
 import MoreMenu from './pages/MoreMenu';
 import TeamManagement from './pages/TeamManagement';
-import Availability from './pages/Availability';
-import Payouts from './pages/Payouts';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import PublicBooking from './pages/PublicBooking';
@@ -27,7 +25,6 @@ import Contact from './pages/Contact';
 import Waitlist from './pages/Waitlist';
 import NotFound from './pages/NotFound';
 import BusinessTypeOnboarding from './pages/BusinessTypeOnboarding';
-import JoinChurch from './pages/JoinChurch';
 import BulkOffering from './pages/BulkOffering';
 import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
@@ -36,7 +33,6 @@ import AdminDashboard from './pages/AdminDashboard';
 import NotificationBell from './components/NotificationBell';
 import { Plus } from 'lucide-react';
 import { useEffect } from 'react';
-import { getTerminology } from './utils/terminology';
 
 const App = () => {
   const [screen, setScreen] = React.useState('welcome');
@@ -54,7 +50,7 @@ const App = () => {
     if (isAuthenticated) init();
   }, [isAuthenticated, init]);
 
-  // --- Public routes ---
+  // â”€â”€ Public routes â”€â”€
   const path = window.location.pathname;
 
   if (path.startsWith('/book/') || path.startsWith('/booking/')) {
@@ -63,10 +59,6 @@ const App = () => {
 
   if (path.startsWith('/events/')) {
     return <EventRegistration />;
-  }
-
-  if (path.startsWith('/join/')) {
-    return <JoinChurch />;
   }
 
   if (path === '/terms') return <Terms />;
@@ -80,7 +72,7 @@ const App = () => {
     if (token) return <ResetPassword token={token} />;
   }
 
-  // --- Not logged in ---
+  // â”€â”€ Not logged in â”€â”€
   if (!isAuthenticated) {
     if (screen === 'welcome') {
       return (
@@ -93,12 +85,12 @@ const App = () => {
     return <Login mode={screen} />;
   }
 
-  // --- Email not verified ---
+  // â”€â”€ Email not verified â”€â”€
   if (user && !user.emailVerified) {
     return <VerifyEmail />;
   }
 
-  // --- Business type not set (only this check, not phone or address) ---
+  // â”€â”€ Business type not set (ONLY this check â€” not phone/address etc) â”€â”€
   if (user && !user.businessType) {
     return <BusinessTypeOnboarding />;
   }
@@ -107,49 +99,7 @@ const App = () => {
     return <AdminDashboard />;
   }
 
-  return (
-    <AuthenticatedApp
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-      isSaleModalOpen={isSaleModalOpen}
-      setSaleModal={setSaleModal}
-      user={user}
-    />
-  );
-};
-
-// URL <-> tab syncing lives in its own component so the early-return public
-// routes above never mount this (and never register the popstate listener).
-const VALID_TABS = new Set([
-  'home', 'sales', 'reports', 'expenses', 'bookings', 'invoices', 'events',
-  'customers', 'communications', 'more', 'team', 'settings', 'availability', 'payouts',
-]);
-
-const AuthenticatedApp = ({ activeTab, setActiveTab, isSaleModalOpen, setSaleModal, user }) => {
-  const terms = getTerminology(user?.businessType);
-  // On first mount, if the URL already points at a valid tab (e.g. the person
-  // bookmarked /settings or hit back/forward before a reload), honor it.
-  useEffect(() => {
-    const initialPath = window.location.pathname.replace(/^\//, '');
-    // Only honor an explicit deep link (e.g. /settings) - a bare "/" should
-    // preserve whatever tab was last active, not force everyone to Home.
-    if (initialPath && VALID_TABS.has(initialPath) && initialPath !== activeTab) {
-      setActiveTab(initialPath, { skipHistory: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Keep the tab in sync with browser back/forward navigation.
-  useEffect(() => {
-    const onPopState = () => {
-      const tabFromPath = window.location.pathname.replace(/^\//, '') || 'home';
-      if (VALID_TABS.has(tabFromPath)) setActiveTab(tabFromPath, { skipHistory: true });
-    };
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, [setActiveTab]);
-
-  // --- Page renderer ---
+  // â”€â”€ Page renderer â”€â”€
   const renderContent = () => {
     if (isSaleModalOpen) return <NewSale onBack={() => setSaleModal(false)} />;
     switch (activeTab) {
@@ -165,8 +115,6 @@ const AuthenticatedApp = ({ activeTab, setActiveTab, isSaleModalOpen, setSaleMod
       case 'more': return <MoreMenu />;
       case 'team': return <TeamManagement />;
       case 'settings':  return <Settings />;
-case 'availability': return <Availability />;
-case 'payouts': return <Payouts />;
       default:          return <Home />;
     }
   };
@@ -231,7 +179,7 @@ case 'payouts': return <Payouts />;
           className="lg:hidden fixed right-5 bottom-24 z-30 inline-flex items-center gap-2 rounded-full bg-[#185FA5] px-4 py-3 text-sm font-black text-white shadow-lg shadow-blue-900/30 active:scale-95 transition-transform"
         >
           <Plus size={18} strokeWidth={3} />
-          {terms.transactionAction}
+          New sale
         </button>
 
       </main>

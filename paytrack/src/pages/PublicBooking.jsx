@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { trackPageView, trackEvent } from '../utils/analytics';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://api.floworax.com.ng';
 
 const Shell = ({ children }) => (
   <div className="min-h-screen bg-[#F0F4FF] flex items-center justify-center px-5 py-12 font-sans">
@@ -11,44 +11,15 @@ const Shell = ({ children }) => (
   </div>
 );
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-function getNext30Days() {
-  const days = [];
-  const today = new Date();
-  for (let i = 0; i < 30; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    days.push(d);
-  }
-  return days;
-}
-
-function formatDate(d) {
-  return d.toISOString().split('T')[0];
-}
-
-function formatDisplayDate(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-NG', { weekday: 'short', day: 'numeric', month: 'short' });
-}
-
 const BookingForm = () => {
   const serviceId = window.location.pathname.split('/book/')[1]?.split('/')[0];
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('');
-  const [slots, setSlots] = useState([]);
-  const [slotsLoading, setSlotsLoading] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState('');
-  const [form, setForm] = useState({ clientName: '', clientEmail: '', clientPhone: '', notes: '' });
+  const [form, setForm] = useState({ clientName: '', clientEmail: '', clientPhone: '', scheduledDate: '', scheduledTime: '', notes: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
-
-  // Available days from service
-  const availableDays = new Set(service?.availability?.map(a => a.day) || []);
 
   useEffect(() => {
     const load = async () => {
@@ -67,41 +38,20 @@ const BookingForm = () => {
     if (serviceId) load(); else { setNotFound(true); setLoading(false); }
   }, [serviceId]);
 
-  // Load slots when date selected
-  useEffect(() => {
-    if (!selectedDate || !service) return;
-    setSlotsLoading(true);
-    setSlots([]);
-    setSelectedSlot('');
-    fetch(`${BACKEND_URL}/api/services/${service._id}/slots?date=${selectedDate}`)
-      .then(r => r.json())
-      .then(data => setSlots(data.slots || []))
-      .catch(() => setSlots([]))
-      .finally(() => setSlotsLoading(false));
-  }, [selectedDate, service]);
-
   const update = (k) => (e) => { setForm({ ...form, [k]: e.target.value }); setError(''); };
 
   const submit = async () => {
     setError('');
-    if (!form.clientName.trim() || !form.clientEmail.trim()) {
-      setError('Please fill in your name and email.');
+    if (!form.clientName.trim() || !form.clientEmail.trim() || !form.scheduledDate || !form.scheduledTime) {
+      setError('Please fill in your name, email, date and time.');
       return;
     }
-    if (!selectedDate) { setError('Please select a date.'); return; }
-    if (!selectedSlot) { setError('Please select a time slot.'); return; }
-
     setSubmitting(true);
     try {
       const res = await fetch(`${BACKEND_URL}/api/bookings/public`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          serviceId,
-          ...form,
-          scheduledDate: selectedDate,
-          scheduledTime: selectedSlot,
-        }),
+        body: JSON.stringify({ serviceId, ...form }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not create booking');
@@ -133,166 +83,113 @@ const BookingForm = () => {
   if (done) return (
     <Shell>
       <div className="text-center">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span className="text-3xl">✅</span>
-        </div>
-        <p className="text-[#0F172A] font-black text-xl mb-2">Booking Confirmed!</p>
-        <p className="text-[#94A3B8] text-sm mb-1">{service?.title}</p>
-        <p className="text-[#185FA5] font-bold text-sm">{formatDisplayDate(selectedDate)} at {selectedSlot}</p>
-        <p className="text-[#94A3B8] text-xs mt-3">Check your email for confirmation details.</p>
+        <div className="w-14 h-14 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
+        <p className="text-[#0F172A] font-black text-lg mb-1">Booking confirmed</p>
+        <p className="text-[#94A3B8] text-sm">{service.title} on {form.scheduledDate} at {form.scheduledTime}. A confirmation was sent to {form.clientEmail}.</p>
       </div>
     </Shell>
   );
 
-  const next30Days = getNext30Days();
-  const hasAvailability = service?.availability?.length > 0;
+  const fld = "w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-white text-[#0F172A] text-sm outline-none focus:border-[#2F5FB3]";
+  const lbl = "text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.2em] mb-1.5 block";
 
   return (
     <Shell>
-      {/* Header */}
       <div className="mb-6">
-        <p className="text-xs font-bold text-[#185FA5] uppercase tracking-wider mb-1">Book a Session</p>
-        <h1 className="text-2xl font-black text-[#0F172A]">{service.title}</h1>
-        {service.description && <p className="text-sm text-[#94A3B8] mt-1">{service.description}</p>}
-        <div className="flex items-center gap-3 mt-3">
-          <span className="text-xs bg-[#EEF4FF] text-[#185FA5] font-bold px-3 py-1 rounded-full">
-            {service.duration} min
-          </span>
-          {service.isFree || service.price === 0 ? (
-            <span className="text-xs bg-green-50 text-green-700 font-bold px-3 py-1 rounded-full">Free</span>
-          ) : (
-            <span className="text-xs bg-[#EEF4FF] text-[#185FA5] font-bold px-3 py-1 rounded-full">
-              ₦{Number(service.price).toLocaleString()}
-            </span>
-          )}
-          <span className="text-xs bg-slate-50 text-slate-500 font-bold px-3 py-1 rounded-full">
-            {service.location}
-          </span>
+        <p className="text-[10px] font-black text-[#2F5FB3] uppercase tracking-[0.3em] mb-2">Book a session</p>
+        <h1 className="text-2xl font-black text-[#0F172A] tracking-tight">{service.title}</h1>
+        {service.description && <p className="text-[#64748B] text-sm mt-2">{service.description}</p>}
+        <div className="flex items-center gap-3 mt-3 text-xs text-[#64748B]">
+          <span>{service.duration} mins</span>
+          <span className="w-1 h-1 rounded-full bg-[#CBD5E1]" />
+          <span className="font-black text-[#0F172A]">{service.isFree ? 'Free' : `₦${Number(service.price).toLocaleString()}`}</span>
         </div>
       </div>
 
-      {!hasAvailability ? (
-        <div className="bg-amber-50 rounded-2xl p-4 text-center mb-4">
-          <p className="text-amber-700 font-semibold text-sm">This service has no availability set up yet. Please check back later.</p>
+      <div className="space-y-4">
+        <div>
+          <label className={lbl}>Your name</label>
+          <input className={fld} value={form.clientName} onChange={update('clientName')} placeholder="Full name" />
         </div>
-      ) : (
-        <>
-          {/* Date picker */}
-          <div className="mb-5">
-            <p className="text-xs font-black uppercase tracking-wider text-slate-400 mb-3">Select a Date</p>
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {next30Days.map((d) => {
-                const dayStr = formatDate(d);
-                const isAvailable = availableDays.has(d.getDay());
-                const isSelected = selectedDate === dayStr;
-                if (!isAvailable) return null;
-                return (
-                  <button
-                    key={dayStr}
-                    onClick={() => setSelectedDate(dayStr)}
-                    className={`flex-shrink-0 flex flex-col items-center px-3 py-2 rounded-xl border-2 transition-all ${
-                      isSelected
-                        ? 'border-[#185FA5] bg-[#185FA5] text-white'
-                        : 'border-slate-100 hover:border-[#185FA5] text-slate-700'
-                    }`}
-                  >
-                    <span className={`text-[10px] font-bold ${isSelected ? 'text-blue-100' : 'text-slate-400'}`}>
-                      {DAYS[d.getDay()]}
-                    </span>
-                    <span className="text-lg font-black leading-tight">{d.getDate()}</span>
-                    <span className={`text-[10px] font-bold ${isSelected ? 'text-blue-100' : 'text-slate-400'}`}>
-                      {d.toLocaleDateString('en-NG', { month: 'short' })}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Time slots */}
-          {selectedDate && (
-            <div className="mb-5">
-              <p className="text-xs font-black uppercase tracking-wider text-slate-400 mb-3">
-                Available Times — {formatDisplayDate(selectedDate)}
-              </p>
-              {slotsLoading ? (
-                <p className="text-sm text-slate-400 text-center py-4">Loading slots...</p>
-              ) : slots.length === 0 ? (
-                <div className="bg-slate-50 rounded-xl p-4 text-center">
-                  <p className="text-sm text-slate-500">No available slots on this date. Try another day.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-2">
-                  {slots.map((slot) => (
-                    <button
-                      key={slot}
-                      onClick={() => setSelectedSlot(slot)}
-                      className={`py-2.5 rounded-xl text-sm font-bold transition-all border-2 ${
-                        selectedSlot === slot
-                          ? 'border-[#185FA5] bg-[#185FA5] text-white'
-                          : 'border-slate-100 hover:border-[#185FA5] text-slate-700'
-                      }`}
-                    >
-                      {slot}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Client details */}
-      {selectedSlot && (
-        <div className="flex flex-col gap-3 mb-5">
-          <p className="text-xs font-black uppercase tracking-wider text-slate-400">Your Details</p>
-          {[
-            { key: 'clientName', label: 'Full Name', type: 'text', required: true },
-            { key: 'clientEmail', label: 'Email Address', type: 'email', required: true },
-            { key: 'clientPhone', label: 'Phone Number', type: 'tel', required: false },
-          ].map(({ key, label, type, required }) => (
-            <div key={key}>
-              <label className="text-xs font-semibold text-slate-500 block mb-1">
-                {label}{required && <span className="text-red-400 ml-0.5">*</span>}
-              </label>
-              <input
-                type={type}
-                value={form[key]}
-                onChange={update(key)}
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#185FA5]"
-              />
-            </div>
-          ))}
+        <div>
+          <label className={lbl}>Email</label>
+          <input className={fld} type="email" value={form.clientEmail} onChange={update('clientEmail')} placeholder="you@email.com" />
+        </div>
+        <div>
+          <label className={lbl}>Phone</label>
+          <input className={fld} value={form.clientPhone} onChange={update('clientPhone')} placeholder="Optional" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-semibold text-slate-500 block mb-1">Notes (optional)</label>
-            <textarea
-              value={form.notes}
-              onChange={update('notes')}
-              rows={2}
-              className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#185FA5] resize-none"
-            />
+            <label className={lbl}>Date</label>
+            <input className={fld} type="date" value={form.scheduledDate} onChange={update('scheduledDate')} />
+          </div>
+          <div>
+            <label className={lbl}>Time</label>
+            <input className={fld} type="time" value={form.scheduledTime} onChange={update('scheduledTime')} />
           </div>
         </div>
-      )}
-
-      {error && (
-        <div className="bg-red-50 border border-red-100 rounded-xl p-3 mb-4">
-          <p className="text-sm text-red-600">{error}</p>
+        <div>
+          <label className={lbl}>Notes</label>
+          <textarea className={fld} rows={3} value={form.notes} onChange={update('notes')} placeholder="Anything the provider should know (optional)" />
         </div>
-      )}
 
-      {selectedSlot && (
-        <button
-          onClick={submit}
-          disabled={submitting}
-          className="w-full py-4 bg-[#185FA5] text-white font-black rounded-2xl disabled:opacity-60 transition-all"
-        >
-          {submitting ? 'Booking...' : `Confirm — ${formatDisplayDate(selectedDate)} at ${selectedSlot}`}
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+
+        <button onClick={submit} disabled={submitting}
+          className="w-full bg-[#2F5FB3] text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest active:scale-[0.99] transition-transform disabled:opacity-60">
+          {submitting ? 'Booking...' : service.isFree ? 'Confirm booking' : `Pay ₦${Number(service.price).toLocaleString()} and book`}
         </button>
-      )}
+      </div>
     </Shell>
   );
 };
 
-export default BookingForm;
+const BookingSuccess = () => {
+  const params = new URLSearchParams(window.location.search);
+  const reference = params.get('reference') || params.get('trxref');
+  const [state, setState] = useState('verifying');
+
+  useEffect(() => {
+    const verify = async () => {
+      if (!reference) { setState('failed'); return; }
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/bookings/verify/${reference}`);
+        const data = await res.json();
+        setState(data.success ? 'success' : 'failed');
+      } catch {
+        setState('failed');
+      }
+    };
+    verify();
+  }, [reference]);
+
+  return (
+    <Shell>
+      <div className="text-center">
+        {state === 'verifying' && <p className="text-[#94A3B8] text-sm">Verifying your payment...</p>}
+        {state === 'success' && (
+          <>
+            <div className="w-14 h-14 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
+            <p className="text-[#0F172A] font-black text-lg mb-1">Payment confirmed</p>
+            <p className="text-[#94A3B8] text-sm">Your booking is confirmed. Check your email for the details.</p>
+          </>
+        )}
+        {state === 'failed' && (
+          <>
+            <p className="text-[#0F172A] font-black text-lg mb-1">We could not confirm payment</p>
+            <p className="text-[#94A3B8] text-sm">If you were charged, contact the provider and they can confirm your booking.</p>
+          </>
+        )}
+      </div>
+    </Shell>
+  );
+};
+
+const PublicBooking = () => {
+  const path = window.location.pathname;
+  if (path.startsWith('/booking/')) return <BookingSuccess />;
+  return <BookingForm />;
+};
+
+export default PublicBooking;

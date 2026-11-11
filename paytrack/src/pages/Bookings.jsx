@@ -1,8 +1,7 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
-import AvailabilitySetup from '../components/AvailabilitySetup';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://api.floworax.com.ng';
 
 const Bookings = () => {
   const { token } = useStore();
@@ -13,7 +12,6 @@ const Bookings = () => {
   const [showNewService, setShowNewService] = useState(false);
   const [saving, setSaving]       = useState(false);
   const [error, setError]         = useState('');
-  const [availabilityService, setAvailabilityService] = useState(null);
   const [form, setForm]           = useState({
     title: '', description: '', duration: 60,
     price: '', isFree: false, category: 'General', location: 'Online',
@@ -95,18 +93,6 @@ const Bookings = () => {
   const past      = bookings.filter(b => b.status === 'completed' || b.status === 'cancelled');
 
   return (
-    <>
-      {availabilityService && (
-        <AvailabilitySetup
-          service={availabilityService}
-          token={token}
-          onClose={() => setAvailabilityService(null)}
-          onSaved={(updatedService) => {
-            setServices(services.map(s => s._id === updatedService?._id ? updatedService : s));
-            setAvailabilityService(null);
-          }}
-        />
-      )}
     <div className="bg-[#F5F7FA] min-h-screen pb-32">
       {/* Header */}
       <div className="p-6 bg-white border-b border-[#E2E8F0] shadow-sm flex justify-between items-center">
@@ -184,7 +170,7 @@ const Bookings = () => {
             </div>
             {!form.isFree && (
               <div>
-                <label className="text-[#0F172A] text-xs font-bold uppercase tracking-wide mb-1.5 block">Price (â‚¦)</label>
+                <label className="text-[#0F172A] text-xs font-bold uppercase tracking-wide mb-1.5 block">Price (₦)</label>
                 <input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} placeholder="0.00"
                   className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#185FA5]" />
               </div>
@@ -194,13 +180,13 @@ const Bookings = () => {
               <input value={form.location} onChange={e => setForm({...form, location: e.target.value})} placeholder="Online or physical address"
                 className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#185FA5]" />
             </div>
-            {error && <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl"><p className="text-red-600 text-sm">âš ï¸ {error}</p></div>}
+            {error && <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl"><p className="text-red-600 text-sm">⚠️ {error}</p></div>}
             <div className="flex gap-3">
               <button onClick={() => { setShowNewService(false); setError(''); }}
                 className="flex-1 py-3 border border-[#E2E8F0] rounded-xl font-bold text-[#64748B] text-sm">Cancel</button>
               <button onClick={handleCreateService} disabled={saving}
                 className="flex-1 py-3 bg-[#185FA5] text-white rounded-xl font-bold text-sm disabled:opacity-60">
-                {saving ? 'Savingâ€¦' : 'Create Service'}
+                {saving ? 'Saving…' : 'Create Service'}
               </button>
             </div>
           </div>
@@ -213,7 +199,7 @@ const Bookings = () => {
           <div className="flex flex-col gap-3">
             {services.length === 0 ? (
               <div className="flex flex-col items-center py-16 gap-3">
-                <div className="w-14 h-14 rounded-2xl bg-[#EEF4FF] flex items-center justify-center text-2xl">ðŸ“…</div>
+                <div className="w-14 h-14 rounded-2xl bg-[#EEF4FF] flex items-center justify-center text-2xl">📅</div>
                 <p className="text-[#94A3B8] text-sm font-medium">No services yet.</p>
                 <p className="text-[#CBD5E1] text-xs">Tap "+ Service" to create your first service</p>
               </div>
@@ -222,10 +208,10 @@ const Bookings = () => {
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <p className="text-[#0F172A] font-bold text-sm">{service.title}</p>
-                    <p className="text-[#94A3B8] text-xs mt-0.5">{service.duration} mins Â· {service.category} Â· {service.location}</p>
+                    <p className="text-[#94A3B8] text-xs mt-0.5">{service.duration} mins · {service.category} · {service.location}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[#185FA5] font-black text-sm">{service.isFree ? 'Free' : `â‚¦${service.price?.toLocaleString()}`}</p>
+                    <p className="text-[#185FA5] font-black text-sm">{service.isFree ? 'Free' : `₦${service.price?.toLocaleString()}`}</p>
                     <button onClick={() => handleDeleteService(service._id)} className="text-red-400 text-xs mt-1">Delete</button>
                   </div>
                 </div>
@@ -245,7 +231,7 @@ const Bookings = () => {
               <div className="text-center py-16 text-[#94A3B8] text-sm">Loading bookings...</div>
             ) : bookings.length === 0 ? (
               <div className="flex flex-col items-center py-16 gap-3">
-                <div className="w-14 h-14 rounded-2xl bg-[#EEF4FF] flex items-center justify-center text-2xl">ðŸ“‹</div>
+                <div className="w-14 h-14 rounded-2xl bg-[#EEF4FF] flex items-center justify-center text-2xl">📋</div>
                 <p className="text-[#94A3B8] text-sm font-medium">No bookings yet.</p>
                 <p className="text-[#CBD5E1] text-xs">Share your service link to get bookings</p>
               </div>
@@ -254,7 +240,7 @@ const Bookings = () => {
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <p className="text-[#0F172A] font-bold text-sm">{booking.clientName}</p>
-                    <p className="text-[#94A3B8] text-xs mt-0.5">{booking.clientEmail} Â· {booking.clientPhone}</p>
+                    <p className="text-[#94A3B8] text-xs mt-0.5">{booking.clientEmail} · {booking.clientPhone}</p>
                   </div>
                   <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${getStatusColor(booking.status)}`}>
                     {booking.status}
@@ -271,7 +257,7 @@ const Bookings = () => {
                   </div>
                   <div>
                     <p className="text-[#94A3B8] text-[10px] uppercase font-semibold">Amount</p>
-                    <p className="text-[#0F172A] text-sm font-bold">{booking.amount === 0 ? 'Free' : `â‚¦${booking.amount?.toLocaleString()}`}</p>
+                    <p className="text-[#0F172A] text-sm font-bold">{booking.amount === 0 ? 'Free' : `₦${booking.amount?.toLocaleString()}`}</p>
                   </div>
                 </div>
                 {booking.serviceId && (
@@ -295,7 +281,6 @@ const Bookings = () => {
         )}
       </div>
     </div>
- </>
   );
 };
 
