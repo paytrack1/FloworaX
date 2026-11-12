@@ -3,7 +3,8 @@ import FAlert   from '../components/FAlert';
 import FSpinner from '../components/FSpinner';
 import ReferralCard from '../components/ReferralCard';
 import { useStore } from '../store/useStore';
-import { Camera, ChevronRight, Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt, Store, CreditCard, RefreshCw, Download, HelpCircle, Trash2 } from 'lucide-react';
+import { Button, Card, Input, Badge, SectionHeader } from '../components/ui';
+import { Camera, ChevronRight, Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt, Store, CreditCard, RefreshCw, Download, HelpCircle, Trash2, X } from 'lucide-react';
 
 const MODULE_OPTIONS = [
   { key: 'customers', label: 'Customers', icon: Users, description: 'Manage your clients' },
@@ -149,45 +150,31 @@ const Settings = () => {
   // until/unless annual pricing is actually added to the backend plan data.
   const getPrice = (plan) => (billing === 'annual' && plan.annualPrice ? plan.annualPrice : plan.price);
   const getLabel = (plan) => {
-    if (plan.price === 0) return 'Free (Limited)';
+    if (plan.price === 0) return 'Free';
     if (billing === 'annual' && plan.annualPrice) return `₦${plan.annualPrice.toLocaleString()}/year`;
     return `₦${plan.price.toLocaleString()}/month`;
   };
   const getOriginal = (plan) =>
     billing === 'annual' && plan.annualPrice ? `₦${(plan.price * 12).toLocaleString()}` : null;
 
+  const planName = dashboard?.subscription?.plan?.name || (user?.plan === 'paid' ? 'Paid' : 'Free');
+  const isPaidUser = ['paid', 'pro', 'business'].includes(user?.plan);
+
   const settingsOptions = [
-    {
-      label: 'Store Profile',
-      sub: user?.businessName || 'My Store',
-      iconBg: '#EEF4FF',
-      action: 'profile',
-    },
-    {
-      label: 'Subscription',
-      sub: dashboard?.subscription?.plan?.name ? `${dashboard.subscription.plan.name} plan` : 'Free plan',
-      iconBg: '#FEF3C7',
-      action: 'plans',
-    },
-    {
-      label: 'Sync Settings',
-      sub: 'Auto-sync every 30 seconds',
-      iconBg: '#F0FDF4',
-      action: 'sync',
-    },
-    {
-      label: 'Export Data',
-      sub: 'Download all sales as CSV',
-      iconBg: '#F5F3FF',
-      action: 'export',
-    },
-    {
-      label: 'Help & Support',
-      sub: 'floworax2@gmail.com',
-      iconBg: '#FFF7ED',
-      action: 'support',
-    },
+    { label: 'Store Profile',  sub: user?.businessName || 'My Store',   tone: 'brand',    icon: Store,       action: 'profile' },
+    { label: 'Subscription',   sub: `${planName} plan`,                 tone: 'warning',  icon: CreditCard,  action: 'plans' },
+    { label: 'Sync Settings',  sub: 'Auto-sync every 30 seconds',       tone: 'success',  icon: RefreshCw,   action: 'sync' },
+    { label: 'Export Data',    sub: 'Download all sales as CSV',        tone: 'info',     icon: Download,    action: 'export' },
+    { label: 'Help & Support', sub: 'floworax2@gmail.com',              tone: 'neutral',  icon: HelpCircle,  action: 'support' },
   ];
+
+  const OPTION_TONES = {
+    brand:    'bg-brand-50 text-brand-600',
+    warning:  'bg-warning-soft text-warning',
+    success:  'bg-positive-soft text-positive',
+    info:     'bg-info-soft text-info',
+    neutral:  'bg-surface-sunken text-ink-secondary',
+  };
 
   const handleOption = (action) => {
     if (action === 'export') handleExportCSV();
@@ -204,134 +191,137 @@ const Settings = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-black text-[#0F172A]">Settings</h2>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div>
+        <h2 className="text-display text-ink">Settings</h2>
+        <p className="text-body text-ink-muted mt-0.5">Manage your business profile, plan and data.</p>
+      </div>
 
       {/* REFERRALS */}
       <ReferralCard />
 
       {/* PROFILE */}
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm">
-        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Profile</p>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="w-16 h-16 rounded-2xl bg-[#185FA5] flex items-center justify-center overflow-hidden flex-shrink-0">
-              {user?.profileImage ? (
-                <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-white font-black text-2xl">
-                  {user?.businessName?.charAt(0).toUpperCase() || 'M'}
-                </span>
-              )}
+      <Card className="p-5">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="relative shrink-0">
+              <div className="w-14 h-14 rounded-card bg-brand-500 flex items-center justify-center overflow-hidden">
+                {user?.profileImage ? (
+                  <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white font-black text-xl">
+                    {user?.businessName?.charAt(0).toUpperCase() || 'M'}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Change profile photo"
+                className="absolute -bottom-1 -right-1 w-6 h-6 bg-brand-500 rounded-full flex items-center justify-center shadow-md ring-2 ring-white hover:bg-brand-600 transition-colors"
+              >
+                <Camera size={12} className="text-white" />
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
             </div>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#185FA5] rounded-full flex items-center justify-center shadow-lg"
-            >
-              <Camera size={12} className="text-white" />
-            </button>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-heading text-ink truncate">{user?.businessName || 'My Store'}</p>
+                <Badge tone={isPaidUser ? 'brand' : 'neutral'} dot>{planName} plan</Badge>
+              </div>
+              <p className="text-caption text-ink-muted truncate">{user?.email || ''}</p>
+            </div>
           </div>
-          <div>
-            <p className="font-black text-[#0F172A] text-lg">{user?.businessName || 'My Store'}</p>
-            <p className="text-slate-400 text-xs font-medium">{user?.email || ''}</p>
-            <button onClick={() => fileInputRef.current?.click()} className="text-[#185FA5] text-xs font-bold mt-1">
-              Tap to change photo
-            </button>
-          </div>
+          <Button variant="secondary" size="sm" onClick={() => setShowEditProfile(true)}>Edit details</Button>
         </div>
-      </div>
+      </Card>
 
       {/* OPTIONS */}
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden shadow-sm">
+      <Card className="overflow-hidden">
         {settingsOptions.map((opt, i) => (
           <button
-            key={i}
+            key={opt.action}
             onClick={() => handleOption(opt.action)}
-            className={`w-full p-4 flex items-center justify-between active:bg-[#F8F9FB] transition-colors text-left ${
-              i !== settingsOptions.length - 1 ? 'border-b border-[#F1F5F9]' : ''
+            className={`w-full p-4 flex items-center justify-between gap-3 hover:bg-surface-muted active:bg-surface-sunken transition-colors text-left ${
+              i !== settingsOptions.length - 1 ? 'border-b border-slate-100' : ''
             }`}
           >
-            <div className="flex items-center gap-4">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-black"
-                style={{ backgroundColor: opt.iconBg }}
-              >
-                {opt.action === 'profile' && <Store size={18} className="text-[#185FA5]" />}
-                {opt.action === 'plans' && <CreditCard size={18} className="text-amber-600" />}
-                {opt.action === 'sync' && <RefreshCw size={18} className="text-green-600" />}
-                {opt.action === 'export' && <Download size={18} className="text-purple-600" />}
-                {opt.action === 'support' && <HelpCircle size={18} className="text-orange-600" />}
-              </div>
-              <div>
-                <p className="text-[#0F172A] font-bold text-sm">{opt.label}</p>
-                <p className="text-[#94A3B8] text-[11px] font-medium">{opt.sub}</p>
-              </div>
-            </div>
-            <ChevronRight size={16} className="text-slate-300" />
+            <span className="flex items-center gap-3.5 min-w-0">
+              <span className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${OPTION_TONES[opt.tone]}`}>
+                <opt.icon size={17} strokeWidth={2.2} aria-hidden />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-body font-semibold text-ink">{opt.label}</span>
+                <span className="block text-caption text-ink-muted truncate">{opt.sub}</span>
+              </span>
+            </span>
+            <ChevronRight size={16} className="text-ink-faint shrink-0" aria-hidden />
           </button>
         ))}
-      </div>
+      </Card>
 
-      {/* SYNC MESSAGE */}
+      {/* SYNC / EXPORT MESSAGES */}
       {syncMsg && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
-          <p className="text-blue-700 text-sm font-medium text-center">{syncMsg}</p>
+        <div className="px-4 py-3 rounded-field bg-info-soft border border-sky-200">
+          <p className="text-info text-body text-center">{syncMsg}</p>
         </div>
       )}
-
-      <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
-        <p className="text-red-800 font-bold text-sm">Test data</p>
-        <p className="text-red-600 text-xs mt-1 mb-3">Clear only your recorded sales to start testing from a clean account.</p>
-        <button
-          onClick={handleClearSales}
-          className="inline-flex items-center gap-2 bg-red-600 text-white text-sm font-bold px-4 py-2.5 rounded-xl"
-        >
-          <Trash2 size={16} />
-          Clear sales data
-        </button>
-        {clearSalesStatus && <p className="text-red-700 text-xs font-semibold mt-2">{clearSalesStatus}</p>}
-      </div>
+      {exportStatus && (
+        <div className="px-4 py-3 rounded-field bg-positive-soft border border-emerald-200">
+          <p className="text-positive text-body text-center">{exportStatus}</p>
+        </div>
+      )}
 
       {/* SUPPORT */}
       {showSupport && (
-        <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
-          <p className="text-orange-800 font-bold text-sm mb-1">Contact Support</p>
-          <p className="text-orange-600 text-xs mb-3">Send us an email and we will respond within 24 hours.</p>
-          <a href="mailto:floworax2@gmail.com" className="bg-orange-500 text-white text-sm font-bold px-4 py-2 rounded-xl inline-block">
+        <Card className="p-5">
+          <SectionHeader title="Contact support" subtitle="Send us an email and we will respond within 24 hours." />
+          <Button variant="secondary" size="sm" icon={HelpCircle} onClick={() => window.location.href = 'mailto:floworax2@gmail.com'}>
             floworax2@gmail.com
-          </a>
-        </div>
+          </Button>
+        </Card>
       )}
 
-      {/* EDIT PROFILE */}
+      {/* DANGER ZONE */}
+      <Card className="p-5 border-negative/20">
+        <SectionHeader
+          title="Test data"
+          subtitle="Clear only your recorded sales to start testing from a clean account."
+        />
+        <Button variant="danger" size="sm" icon={Trash2} onClick={handleClearSales}>
+          Clear sales data
+        </Button>
+        {clearSalesStatus && <p className="text-caption text-negative font-semibold mt-2">{clearSalesStatus}</p>}
+      </Card>
+
+      {/* EDIT PROFILE MODAL */}
       {showEditProfile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-          <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-start justify-between mb-6">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink/50 backdrop-blur-sm sm:p-6 overflow-y-auto" role="dialog" aria-modal="true">
+          <div className="w-full max-w-xl bg-surface rounded-t-card sm:rounded-card shadow-lg p-6 max-h-[92vh] overflow-y-auto animate-fade-in">
+            <div className="flex items-start justify-between mb-5">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Store Profile</p>
-                <h2 className="text-xl font-black text-[#0F172A] mt-2">Edit business details</h2>
+                <p className="text-micro font-bold uppercase tracking-widest text-ink-muted">Store profile</p>
+                <h2 className="text-title text-ink mt-1">Edit business details</h2>
               </div>
-              <button type="button" onClick={() => setShowEditProfile(false)} className="text-sm text-slate-500">Close</button>
+              <button type="button" onClick={() => setShowEditProfile(false)} aria-label="Close"
+                className="p-2 rounded-full hover:bg-surface-sunken text-ink-muted transition-colors">
+                <X size={16} strokeWidth={2.5} />
+              </button>
             </div>
 
             <div className="space-y-4">
-              <label className="block">
-                <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Business Name</span>
-                <input
-                  value={profileForm.businessName}
-                  onChange={(e) => handleProfileFieldChange('businessName', e.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
-                />
-              </label>
+              <Input
+                label="Business name"
+                value={profileForm.businessName}
+                onChange={(e) => handleProfileFieldChange('businessName', e.target.value)}
+              />
 
-              <label className="block">
-                <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Business Type</span>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-micro font-bold uppercase tracking-wide text-ink-secondary">Business type</span>
                 <select
                   value={profileForm.businessType}
                   onChange={(e) => handleProfileFieldChange('businessType', e.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
+                  className="w-full h-11 rounded-field bg-surface border border-slate-200 hover:border-slate-300 px-3.5 text-body text-ink outline-none transition-all duration-150 focus:border-brand-400 focus:shadow-ring"
                 >
                   <option value="">Select a type</option>
                   {businessTypes.map((type) => (
@@ -340,45 +330,54 @@ const Settings = () => {
                 </select>
               </label>
 
-              <label className="block">
-                <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Phone</span>
-                <input
-                  value={profileForm.phone}
-                  onChange={(e) => handleProfileFieldChange('phone', e.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
-                  placeholder="+234 800 000 0000"
-                />
-              </label>
+              <Input
+                label="Phone"
+                value={profileForm.phone}
+                onChange={(e) => handleProfileFieldChange('phone', e.target.value)}
+                placeholder="+234 800 000 0000"
+              />
 
-              <label className="block">
-                <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Address</span>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-micro font-bold uppercase tracking-wide text-ink-secondary">Address</span>
                 <textarea
                   value={profileForm.address}
                   onChange={(e) => handleProfileFieldChange('address', e.target.value)}
                   rows={2}
-                  className="mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
+                  className="w-full rounded-field bg-surface border border-slate-200 hover:border-slate-300 px-3.5 py-2.5 text-body text-ink placeholder:text-ink-faint outline-none transition-all duration-150 focus:border-brand-400 focus:shadow-ring"
                 />
               </label>
 
-              <label className="block">
-                <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Bank Account</span>
-                <input
-                  value={profileForm.bankAccount}
-                  onChange={(e) => handleProfileFieldChange('bankAccount', e.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
-                  placeholder="Account name / number"
-                />
-              </label>
+              <Input
+                label="Bank account"
+                value={profileForm.bankAccount}
+                onChange={(e) => handleProfileFieldChange('bankAccount', e.target.value)}
+                placeholder="Account name / number"
+              />
 
-              <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFF] p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Modules</p>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {/* Modules */}
+              <div className="rounded-field border border-slate-200 bg-surface-muted p-4">
+                <p className="text-micro font-bold uppercase tracking-wide text-ink-secondary mb-3">Modules</p>
+                <div className="grid gap-2 sm:grid-cols-2">
                   {MODULE_OPTIONS.map((module) => {
                     const checked = selectedModules.includes(module.key);
                     return (
-                      <label key={module.key} className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${checked ? 'border-[#185FA5] bg-white' : 'border-[#E2E8F0] bg-transparent'}`}>
-                        <module.icon size={18} className="mr-2 text-[#185FA5] flex-shrink-0" /><span className="font-semibold text-[#0F172A]">{module.label}<br/><span className="text-xs font-normal text-[#64748B]">{module.description}</span></span>
-                        <input type="checkbox" checked={checked} onChange={() => setSelectedModules((prev) => prev.includes(module.key) ? prev.filter((item) => item !== module.key) : [...prev, module.key])} className="h-4 w-4 rounded border-slate-300 text-[#185FA5] focus:ring-[#185FA5]" />
+                      <label
+                        key={module.key}
+                        className={`flex items-center gap-3 rounded-field border px-3 py-2.5 cursor-pointer transition-all ${
+                          checked ? 'border-brand-300 bg-brand-50' : 'border-slate-200 bg-surface hover:border-slate-300'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => setSelectedModules((prev) => prev.includes(module.key) ? prev.filter((item) => item !== module.key) : [...prev, module.key])}
+                          className="h-4 w-4 rounded border-slate-300 text-brand-500 focus:ring-brand-400 flex-shrink-0"
+                        />
+                        <module.icon size={16} className={`flex-shrink-0 ${checked ? 'text-brand-600' : 'text-ink-muted'}`} aria-hidden />
+                        <span className="min-w-0">
+                          <span className="block text-caption font-bold text-ink">{module.label}</span>
+                          <span className="block text-micro text-ink-muted truncate">{module.description}</span>
+                        </span>
                       </label>
                     );
                   })}
@@ -386,34 +385,23 @@ const Settings = () => {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Currency</span>
-                  <p className="mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFF] px-4 py-3 text-sm text-slate-500">NGN &mdash; Nigerian Naira</p>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-micro font-bold uppercase tracking-wide text-ink-secondary">Currency</span>
+                  <p className="w-full h-11 rounded-field border border-slate-200 bg-surface-sunken px-3.5 text-body text-ink-secondary flex items-center">NGN — Nigerian Naira</p>
                 </div>
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Timezone</span>
-                  <p className="mt-2 w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFF] px-4 py-3 text-sm text-slate-500">Africa/Lagos</p>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-micro font-bold uppercase tracking-wide text-ink-secondary">Timezone</span>
+                  <p className="w-full h-11 rounded-field border border-slate-200 bg-surface-sunken px-3.5 text-body text-ink-secondary flex items-center">Africa/Lagos</p>
                 </div>
               </div>
 
               {profileError && <FAlert type="error" message={profileError} onDismiss={() => setProfileError('')} />}
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowEditProfile(false)}
-                  className="flex-1 py-3 border border-[#E2E8F0] rounded-2xl font-bold text-[#64748B] text-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveProfile}
-                  disabled={savingProfile}
-                  className="flex-1 py-3 bg-[#185FA5] text-white rounded-2xl font-bold text-sm disabled:opacity-60"
-                >
-                  {savingProfile ? 'Saving…' : 'Save Changes'}
-                </button>
+              <div className="flex gap-3 pt-2 sticky bottom-0 bg-surface pb-1">
+                <Button variant="secondary" className="flex-1" onClick={() => setShowEditProfile(false)}>Cancel</Button>
+                <Button className="flex-1" onClick={handleSaveProfile} loading={savingProfile}>
+                  {savingProfile ? 'Saving…' : 'Save changes'}
+                </Button>
               </div>
             </div>
           </div>
@@ -422,26 +410,25 @@ const Settings = () => {
 
       {/* PLANS */}
       {showPlans && (
-        <div className="bg-white rounded-3xl border border-[#E2E8F0] p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Subscription plans</p>
-              <h2 className="text-lg font-black text-[#0F172A]">Choose a plan</h2>
-            </div>
-            <button onClick={() => setShowPlans(false)} className="text-sm text-[#64748B]">Close</button>
-          </div>
+        <Card className="p-5">
+          <SectionHeader
+            title="Choose a plan"
+            subtitle="Upgrade when your business outgrows the free limits."
+            actionLabel="Close"
+            onAction={() => setShowPlans(false)}
+          />
 
-          {/* Annual toggle */}
-          <div className="flex items-center justify-center mb-5">
-            <div className="flex bg-[#F1F5F9] rounded-2xl p-1 gap-1">
+          {/* Billing toggle */}
+          <div className="flex justify-center mb-5">
+            <div className="flex bg-surface-sunken rounded-field p-1 gap-1">
               <button onClick={() => setBilling('monthly')}
-                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${billing === 'monthly' ? 'bg-white text-[#185FA5] shadow-sm' : 'text-[#94A3B8]'}`}>
+                className={`px-4 h-9 rounded-[0.5rem] text-caption font-bold transition-all ${billing === 'monthly' ? 'bg-surface shadow-sm text-brand-600' : 'text-ink-muted hover:text-ink-secondary'}`}>
                 Monthly
               </button>
               <button onClick={() => setBilling('annual')}
-                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${billing === 'annual' ? 'bg-white text-[#185FA5] shadow-sm' : 'text-[#94A3B8]'}`}>
+                className={`px-4 h-9 rounded-[0.5rem] text-caption font-bold transition-all flex items-center gap-2 ${billing === 'annual' ? 'bg-surface shadow-sm text-brand-600' : 'text-ink-muted hover:text-ink-secondary'}`}>
                 Annual
-                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${billing === 'annual' ? 'bg-[#DCFCE7] text-green-700' : 'bg-[#F1F5F9] text-[#94A3B8]'}`}>Save 17%</span>
+                <span className={`text-micro font-black px-1.5 py-0.5 rounded-full ${billing === 'annual' ? 'bg-positive-soft text-positive' : 'bg-surface-sunken text-ink-muted'}`}>Save 17%</span>
               </button>
             </div>
           </div>
@@ -454,96 +441,86 @@ const Settings = () => {
               const struck = getOriginal(plan);
               const isCurrent = plan.id === user?.plan;
               return (
-              <button key={plan.id} type="button" onClick={() => openConfirmUpgrade({ ...plan, selectedPrice: price, billing })}
-                className={`rounded-3xl border p-4 text-left transition relative ${isCurrent ? 'border-[#185FA5] bg-[#EEF4FF]' : 'border-[#E2E8F0] bg-white hover:border-[#185FA5]'}`}>
-                {plan.badge === 'Most popular' && (
-                  <span className="absolute -top-2 left-4 bg-[#185FA5] text-white text-[10px] font-black px-3 py-0.5 rounded-full">Most popular</span>
-                )}
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <p className="text-sm font-black text-[#0F172A]">{plan.name}</p>
-                  {isCurrent && <span className="text-xs font-bold text-[#185FA5]">Current</span>}
-                </div>
-                <div className="mb-2">
-                  {struck && <p className="text-xs text-[#94A3B8] line-through">{struck}</p>}
-                  <p className="text-2xl font-black text-[#0F172A]">{label}</p>
-                  {billing === 'annual' && plan.annualPrice && (
-                    <p className="text-[10px] text-green-600 font-bold mt-0.5">2 months free 🎉</p>
+                <button key={plan.id} type="button" onClick={() => openConfirmUpgrade({ ...plan, selectedPrice: price, billing })}
+                  className={`rounded-card border p-5 text-left transition-all relative hover:-translate-y-0.5 hover:shadow-md ${
+                    isCurrent ? 'border-brand-400 bg-brand-50 shadow-ring' : 'border-slate-200 bg-surface hover:border-brand-300'
+                  }`}>
+                  {plan.badge && !isCurrent && (
+                    <span className="absolute -top-2 left-4 bg-brand-500 text-white text-micro font-black px-2.5 py-0.5 rounded-full">{plan.badge}</span>
                   )}
-                </div>
-                <p className="text-xs text-[#94A3B8]">{plan.description}</p>
-              </button>
+                  {isCurrent && (
+                    <span className="absolute -top-2 left-4 bg-positive text-white text-micro font-black px-2.5 py-0.5 rounded-full">Current plan</span>
+                  )}
+                  <p className="text-heading text-ink">{plan.name}</p>
+                  <div className="mt-2 mb-3">
+                    {struck && <p className="text-caption text-ink-muted line-through">{struck}</p>}
+                    <p className="text-display text-ink">{label}</p>
+                    {billing === 'annual' && plan.annualPrice && (
+                      <p className="text-caption text-positive font-bold mt-0.5">2 months free 🎉</p>
+                    )}
+                  </div>
+                  <p className="text-caption text-ink-muted">{plan.description}</p>
+                </button>
               );
             })}
           </div>
           {planMessage && <FAlert type="info" message={planMessage} />}
-        </div>
+        </Card>
       )}
 
       {/* CONFIRM UPGRADE MODAL */}
       {selectedPlan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-          <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl border border-slate-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink/50 backdrop-blur-sm sm:p-6 overflow-y-auto" role="dialog" aria-modal="true">
+          <div className="w-full max-w-xl bg-surface rounded-t-card sm:rounded-card shadow-lg p-6 max-h-[92vh] overflow-y-auto animate-fade-in">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Confirm plan upgrade</p>
-                <h2 className="text-xl font-black text-[#0F172A] mt-2">Upgrade to {selectedPlan.name}</h2>
+                <p className="text-micro font-bold uppercase tracking-widest text-ink-muted">Confirm plan upgrade</p>
+                <h2 className="text-title text-ink mt-1">Upgrade to {selectedPlan.name}</h2>
               </div>
-              <button type="button" onClick={() => setSelectedPlan(null)} className="text-sm text-slate-500">Cancel</button>
+              <button type="button" onClick={() => setSelectedPlan(null)} aria-label="Cancel"
+                className="p-2 rounded-full hover:bg-surface-sunken text-ink-muted transition-colors">
+                <X size={16} strokeWidth={2.5} />
+              </button>
             </div>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-3xl border border-[#E2E8F0] p-4 bg-[#F8FAFF]">
-                <p className="text-xs text-slate-400 uppercase tracking-[0.3em] font-bold">
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-field border border-slate-200 p-4 bg-surface-muted">
+                <p className="text-micro font-bold uppercase tracking-wide text-ink-muted">
                   {selectedPlan.billing === 'annual' ? 'Annual cost' : 'Monthly cost'}
                 </p>
                 {selectedPlan.billing === 'annual' && selectedPlan.annualPrice && (
-                  <p className="text-xs text-[#94A3B8] line-through mt-2">₦{(selectedPlan.price * 12).toLocaleString()}</p>
+                  <p className="text-caption text-ink-muted line-through mt-2">₦{(selectedPlan.price * 12).toLocaleString()}</p>
                 )}
-                <p className="mt-1 text-2xl font-black text-[#0F172A]">₦{(selectedPlan.selectedPrice || selectedPlan.price)?.toLocaleString()}</p>
+                <p className="mt-1 text-display text-ink">₦{(selectedPlan.selectedPrice || selectedPlan.price)?.toLocaleString()}</p>
                 {selectedPlan.billing === 'annual' && selectedPlan.annualPrice && (
-                  <p className="text-xs text-green-600 font-bold mt-1">You save ₦{((selectedPlan.price * 12) - selectedPlan.annualPrice).toLocaleString()} annually</p>
+                  <p className="text-caption text-positive font-bold mt-1">You save ₦{((selectedPlan.price * 12) - selectedPlan.annualPrice).toLocaleString()} annually</p>
                 )}
-                <p className="text-xs text-[#64748B] mt-2">Billed {selectedPlan.billing || 'monthly'}</p>
+                <p className="text-caption text-ink-muted mt-2">Billed {selectedPlan.billing || 'monthly'}</p>
               </div>
-              <div className="rounded-3xl border border-[#E2E8F0] p-4">
-                <p className="text-xs text-slate-400 uppercase tracking-[0.3em] font-bold">Plan benefits</p>
-                <ul className="mt-3 space-y-2 text-sm text-[#475569]">
+              <div className="rounded-field border border-slate-200 p-4">
+                <p className="text-micro font-bold uppercase tracking-wide text-ink-muted">Plan benefits</p>
+                <ul className="mt-3 space-y-2 text-body text-ink-secondary">
                   {(selectedPlan.features || []).map((feature) => (
                     <li key={feature} className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-[#185FA5] flex-shrink-0" />
-                      {feature}
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand-500 flex-shrink-0" aria-hidden />
+                      <span className="capitalize">{feature}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button type="button" onClick={() => setSelectedPlan(null)}
-                className="rounded-3xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 transition">
-                Cancel
-              </button>
-              <button type="button" onClick={confirmUpgrade} disabled={isUpgrading}
-                className="rounded-3xl bg-[#185FA5] px-5 py-3 text-sm font-bold text-white transition disabled:opacity-50">
-                {isUpgrading ? <FSpinner size="sm" /> : `Confirm upgrade to ${selectedPlan.name}`}
-              </button>
+              <Button variant="secondary" onClick={() => setSelectedPlan(null)}>Cancel</Button>
+              <Button onClick={confirmUpgrade} loading={isUpgrading}>
+                {isUpgrading ? 'Upgrading…' : `Upgrade to ${selectedPlan.name}`}
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* EXPORT STATUS */}
-      {exportStatus && (
-        <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-          <p className="text-green-700 text-sm font-medium text-center">{exportStatus}</p>
-        </div>
-      )}
-
-      <button
-        onClick={logout}
-        className="w-full py-4 text-red-500 font-bold bg-red-50 rounded-2xl border border-red-100 active:scale-95 transition-transform"
-      >
-        Log Out
-      </button>
-      <p className="text-center text-[#CBD5E1] text-[10px] font-bold uppercase tracking-widest">
+      {/* LOGOUT */}
+      <Button variant="danger" className="w-full" onClick={logout}>Log out</Button>
+      <p className="text-center text-micro font-bold uppercase tracking-widest text-ink-faint">
         Flowora v1.0.4
       </p>
     </div>
