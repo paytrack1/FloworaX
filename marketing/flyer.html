@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FloworaX Flyer — Export PNG</title>
+<style>
+  body { background:#111; color:#9DB8D9; font-family: Arial, sans-serif; display:flex; flex-direction:column; align-items:center; gap:16px; padding:24px; }
+  canvas { max-width: 360px; height:auto; border:1px solid #333; border-radius:12px; }
+  button { background:#185FA5; color:#fff; border:0; padding:12px 28px; border-radius:999px; font-weight:700; font-size:15px; cursor:pointer; }
+  button:hover { background:#124E89; }
+  p { max-width:560px; text-align:center; line-height:1.5; }
+</style>
+</head>
+<body>
+  <h2>FloworaX Flyer (1:1)</h2>
+  <canvas id="c" width="1080" height="1080"></canvas>
+  <button id="dl">⬇ Download as PNG (1080×1080)</button>
+  <p>Use this as your WhatsApp Status Day-1 image, Instagram post, or Facebook group post.</p>
+
+<script>
+const svg = new Image();
+svg.src = 'flyer.svg';
+svg.onload = () => {
+  const c = document.getElementById('c');
+  c.getContext('2d').drawImage(svg, 0, 0, 1080, 1080);
+};
+document.getElementById('dl').onclick = () => {
+  const a = document.createElement('a');
+  a.download = 'floworax-flyer-1080x1080.png';
+  a.href = document.getElementById('c').toDataURL('image/png');
+  a.click();
+};
+</script>
+</body>
+</html>
