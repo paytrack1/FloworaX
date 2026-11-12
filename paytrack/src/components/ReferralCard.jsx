@@ -64,7 +64,7 @@ const ReferralCard = () => {
     <Card className="p-5">
       <SectionHeader
         title="Refer & earn"
-        subtitle={`Give the link, get ${formatNaira(referral.reward)} when they make their first payment`}
+        subtitle={`Share your link — earn ${referral.rewardPercent}% of their first subscription payment`}
       />
 
       {/* Link box */}
@@ -134,7 +134,7 @@ const ReferralCard = () => {
                 <p className="text-caption text-ink-muted">{r.email}</p>
               </div>
               <Badge tone={r.status === 'earned' ? 'success' : 'neutral'} dot>
-                {r.status === 'earned' ? `+${formatNaira(r.earned)}` : r.status}
+                {r.status === 'earned' ? `+${referral.rewardPercent}% earned` : r.status}
               </Badge>
             </li>
           ))}
@@ -142,8 +142,8 @@ const ReferralCard = () => {
       )}
 
       <p className="text-caption text-ink-muted mt-4">
-        How it works: share your link → they sign up → the moment they make their first card payment
-        or subscription, {formatNaira(referral.reward)} lands in your balance. Withdraw anytime above
+        How it works: share your link → they sign up → the moment they subscribe to a paid plan,
+        you earn {referral.rewardPercent}% of that first subscription payment. Withdraw anytime above
         the {formatNaira(referral.minWithdrawal)} minimum.
       </p>
     </Card>
