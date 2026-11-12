@@ -1,6 +1,7 @@
 ﻿import React, { useState, useRef } from 'react';
 import FAlert   from '../components/FAlert';
 import FSpinner from '../components/FSpinner';
+import ReferralCard from '../components/ReferralCard';
 import { useStore } from '../store/useStore';
 import { Camera, ChevronRight, Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt, Store, CreditCard, RefreshCw, Download, HelpCircle, Trash2 } from 'lucide-react';
 
@@ -205,6 +206,9 @@ const Settings = () => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-black text-[#0F172A]">Settings</h2>
+
+      {/* REFERRALS */}
+      <ReferralCard />
 
       {/* PROFILE */}
       <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm">

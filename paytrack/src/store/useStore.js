@@ -17,18 +17,20 @@ export const useStore = create(
       token: null,
       pendingEmail: null,
       authError: null,
+      referral: null,
+      referralError: null,
       activeTab: 'home',
       isSaleModalOpen: false,
       sales: [],
       transactions: [],
 
-      register: async (email, businessName, password) => {
+      register: async (email, businessName, password, ref = null) => {
         set({ authError: null, isAuthenticated: false, user: null, token: null, pendingEmail: null });
         try {
           const res = await apiFetch(`${BACKEND_URL}/api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, businessName, password }),
+            body: JSON.stringify({ email, businessName, password, ...(ref ? { ref } : {}) }),
           });
           const data = await res.json();
           if (!res.ok) { set({ authError: data.error || 'Registration failed' }); throw new Error(data.error); }
@@ -125,7 +127,47 @@ export const useStore = create(
       },
 
       logout: () => {
-        set({ isAuthenticated: false, user: null, token: null, sales: [], transactions: [], activeTab: 'home', isSaleModalOpen: false, authError: null });
+        set({ isAuthenticated: false, user: null, token: null, sales: [], transactions: [], activeTab: 'home', isSaleModalOpen: false, authError: null, referral: null });
+      },
+
+      referral: null,
+      referralError: null,
+
+      fetchReferrals: async () => {
+        const { token } = get();
+        if (!token) return;
+        set({ referralError: null });
+        try {
+          const res = await apiFetch(`${BACKEND_URL}/api/referrals`, {
+            headers: authHeaders(token),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok) {
+            set({ referral: data, referralError: null });
+          } else {
+            set({ referralError: data.error || 'Failed to load referral data' });
+          }
+        } catch (err) {
+          console.error('Failed to load referrals:', err);
+          set({ referralError: err.message });
+        }
+      },
+
+      requestWithdrawal: async () => {
+        const { token } = get();
+        if (!token) throw new Error('Authentication required');
+        try {
+          const res = await apiFetch(`${BACKEND_URL}/api/referrals/withdraw`, {
+            method: 'POST',
+            headers: authHeaders(token),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || 'Failed to request withdrawal');
+          await get().fetchReferrals();
+          return data;
+        } catch (err) {
+          throw err;
+        }
       },
 
       setProfileImage: (imageUrl) => {

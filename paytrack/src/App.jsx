@@ -75,6 +75,11 @@ const App = () => {
 
   // â”€â”€ Not logged in â”€â”€
   if (!isAuthenticated) {
+    // Referral signup links: /register?ref=CODE
+    if (path === '/register') {
+      const ref = new URLSearchParams(window.location.search).get('ref');
+      return <Login mode="register" referralCode={ref} />;
+    }
     if (screen === 'welcome') {
       return (
         <Welcome

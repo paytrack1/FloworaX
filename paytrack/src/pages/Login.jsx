@@ -3,7 +3,7 @@ import { useStore } from '../store/useStore';
 import { Button, Input } from '../components/ui';
 import { Mail, Store, Lock, ArrowLeft } from 'lucide-react';
 
-const Login = ({ mode: initialMode = 'login' }) => {
+const Login = ({ mode: initialMode = 'login', referralCode = null }) => {
   const { login, register, forgotPassword, authError, clearAuthError } = useStore();
   const [mode, setMode] = useState(initialMode === 'register' ? 'register' : 'login');
   const [loading, setLoading] = useState(false);
@@ -35,7 +35,7 @@ const Login = ({ mode: initialMode = 'login' }) => {
     setLoading(true);
     try {
       if (mode === 'register') {
-        await register(form.email, form.businessName, form.password);
+        await register(form.email, form.businessName, form.password, referralCode);
       } else {
         await login(form.email, form.password);
       }
@@ -70,6 +70,11 @@ const Login = ({ mode: initialMode = 'login' }) => {
           </div>
           <p className="text-micro font-bold uppercase tracking-widest text-ink-muted mb-1">{t.eyebrow}</p>
           <h1 className="text-display text-ink">{t.heading}</h1>
+          {referralCode && mode === 'register' && (
+            <p className="text-caption text-brand-600 font-semibold mt-2 bg-brand-50 inline-block px-3 py-1 rounded-full">
+              Invited with code {referralCode} — you'll help a friend earn when you make your first payment
+            </p>
+          )}
         </div>
 
         <form
