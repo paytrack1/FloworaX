@@ -1,8 +1,9 @@
-﻿import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import FAlert   from '../components/FAlert';
 import FSpinner from '../components/FSpinner';
 import ReferralCard from '../components/ReferralCard';
 import { useStore } from '../store/useStore';
+import { readSimpleMode, writeSimpleMode, SIMPLE_MODE_EVENT } from '../store/simpleMode';
 import { Button, Card, Input, Badge, SectionHeader } from '../components/ui';
 import { Camera, ChevronRight, Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt, Store, CreditCard, RefreshCw, Download, HelpCircle, Trash2, X } from 'lucide-react';
 
@@ -30,6 +31,12 @@ const Settings = () => {
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileError, setProfileError] = useState('');
   const [clearSalesStatus, setClearSalesStatus] = useState('');
+  const [simpleMode, setSimpleMode] = useState(readSimpleMode());
+  useEffect(() => {
+    const handler = () => setSimpleMode(readSimpleMode());
+    window.addEventListener(SIMPLE_MODE_EVENT, handler);
+    return () => window.removeEventListener(SIMPLE_MODE_EVENT, handler);
+  }, []);
   const [profileForm, setProfileForm] = useState({
     businessName: user?.businessName || '',
     businessType: user?.businessType || '',
@@ -234,6 +241,30 @@ const Settings = () => {
           </div>
           <Button variant="secondary" size="sm" onClick={() => setShowEditProfile(true)}>Edit details</Button>
         </div>
+      </Card>
+
+      {/* SIMPLE MODE */}
+      <Card className="p-4 flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-body font-semibold text-ink">Simple mode</p>
+          <p className="text-caption text-ink-muted">Big buttons and numbers only — for anyone who finds reading hard.</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={simpleMode}
+          aria-label="Toggle simple mode"
+          onClick={() => {
+            const next = !simpleMode;
+            writeSimpleMode(next);
+            setSimpleMode(next);
+          }}
+          className={`relative w-12 h-7 rounded-full shrink-0 transition-colors ${simpleMode ? 'bg-brand-500' : 'bg-slate-300'}`}
+        >
+          <span
+            className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all ${simpleMode ? 'left-[1.375rem]' : 'left-0.5'}`}
+          />
+        </button>
       </Card>
 
       {/* OPTIONS */}

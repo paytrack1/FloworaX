@@ -1,11 +1,19 @@
 ﻿import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import Dashboard from '../components/Dashboard';
+import SimpleModeHome from '../components/SimpleModeHome';
 import BulkOffering from './BulkOffering';
+import { readSimpleMode } from '../store/simpleMode';
 
 const Home = () => {
   const [showBulk, setShowBulk] = useState(false);
   const { user, setActiveTab, setSaleModal } = useStore();
+
+  // Market Mode: the icon-and-number home for low-literacy users replaces
+  // the standard dashboard entirely while it's on.
+  if (readSimpleMode()) {
+    return <SimpleModeHome />;
+  }
 
   if (showBulk) return <BulkOffering onBack={() => setShowBulk(false)} />;
 
