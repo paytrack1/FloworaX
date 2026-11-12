@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0A1A2E"/>
+      <stop offset="55%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#071A2E"/>
+    </linearGradient>
+    <linearGradient id="icon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1E6BB8"/>
+      <stop offset="100%" stop-color="#124E89"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="14" stdDeviation="28" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <rect width="1080" height="1920" fill="url(#bg)"/>
+
+  <!-- faint decorative ring -->
+  <circle cx="540" cy="640" r="460" fill="none" stroke="#185FA5" stroke-opacity="0.10" stroke-width="2"/>
+  <circle cx="540" cy="640" r="330" fill="none" stroke="#185FA5" stroke-opacity="0.07" stroke-width="2"/>
+
+  <!-- App icon -->
+  <rect x="410" y="500" width="260" height="260" rx="62" fill="url(#icon)" filter="url(#soft)"/>
+  <text x="540" y="672" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="104" fill="#FFFFFF" letter-spacing="2">FL</text>
+
+  <!-- Headline -->
+  <text x="540" y="960" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="88" fill="#FFFFFF">Free to start.</text>
+  <text x="540" y="1070" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="64" fill="#9DB8D9">You keep every naira.</text>
+
+  <!-- CTA pill -->
+  <rect x="360" y="1180" width="360" height="110" rx="55" fill="#185FA5" filter="url(#soft)"/>
+  <text x="540" y="1250" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="42" fill="#FFFFFF" letter-spacing="1">Link for bio</text>
+
+  <!-- Trust line -->
+  <text x="540" y="1840" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="30" fill="#4A5E7A" letter-spacing="4">SECURE PAYMENTS VIA PAYSTACK</text>
+</svg>

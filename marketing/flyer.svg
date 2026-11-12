@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0A1A2E"/>
+      <stop offset="60%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#071A2E"/>
+    </linearGradient>
+    <linearGradient id="icon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1E6BB8"/>
+      <stop offset="100%" stop-color="#124E89"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="20" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+  <circle cx="540" cy="380" r="330" fill="none" stroke="#185FA5" stroke-opacity="0.08" stroke-width="2"/>
+
+  <!-- Header: icon + name -->
+  <rect x="80" y="64" width="76" height="76" rx="20" fill="url(#icon)" filter="url(#soft)"/>
+  <text x="118" y="118" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="34" fill="#FFFFFF">FL</text>
+  <text x="176" y="112" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="34" fill="#FFFFFF">FloworaX</text>
+
+  <!-- Hook -->
+  <text x="80" y="300" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="76" fill="#FFFFFF">You dey sell every day.</text>
+  <text x="80" y="392" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="76" fill="#F5C242">But you know your profit?</text>
+
+  <!-- Bullets -->
+  <g font-family="Arial, Helvetica, sans-serif" font-size="38" fill="#D7E3F4" font-weight="600">
+    <text x="80" y="540">✓  Money in, money out, what you kept — one screen</text>
+    <text x="80" y="620">✓  Record sales in 10 seconds — even without data</text>
+    <text x="80" y="700">✓  Customers book you &amp; pay by card</text>
+    <text x="80" y="780">✓  Your money goes straight to YOUR bank</text>
+  </g>
+
+  <!-- CTA -->
+  <rect x="80" y="860" width="520" height="110" rx="55" fill="#185FA5" filter="url(#soft)"/>
+  <text x="340" y="930" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="42" fill="#FFFFFF">FREE to start — no card needed</text>
+
+  <!-- Trust -->
+  <text x="80" y="1030" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="28" fill="#4A5E7A" letter-spacing="3">SECURE PAYMENTS VIA PAYSTACK</text>
+</svg>
