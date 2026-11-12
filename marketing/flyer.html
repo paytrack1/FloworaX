@@ -2,33 +2,91 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>FloworaX Flyer — Export PNG</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FloworaX Flyer — Download PNG</title>
 <style>
   body { background:#111; color:#9DB8D9; font-family: Arial, sans-serif; display:flex; flex-direction:column; align-items:center; gap:16px; padding:24px; }
-  canvas { max-width: 360px; height:auto; border:1px solid #333; border-radius:12px; }
+  h1 { font-size:18px; }
+  #stage { max-width:360px; width:100%; border-radius:12px; overflow:hidden; border:1px solid #333; }
+  #stage svg { display:block; width:100%; height:auto; }
   button { background:#185FA5; color:#fff; border:0; padding:12px 28px; border-radius:999px; font-weight:700; font-size:15px; cursor:pointer; }
   button:hover { background:#124E89; }
-  p { max-width:560px; text-align:center; line-height:1.5; }
+  p { max-width:560px; text-align:center; line-height:1.5; font-size:14px; }
 </style>
 </head>
 <body>
-  <h2>FloworaX Flyer (1:1)</h2>
-  <canvas id="c" width="1080" height="1080"></canvas>
+  <h1>FloworaX Flyer (1:1) — WhatsApp Status / Instagram</h1>
+
+  <div id="stage">
+    <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0A1A2E"/>
+          <stop offset="60%" stop-color="#0F172A"/>
+          <stop offset="100%" stop-color="#071A2E"/>
+        </linearGradient>
+        <linearGradient id="icon" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1E6BB8"/>
+          <stop offset="100%" stop-color="#124E89"/>
+        </linearGradient>
+        <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+          <feDropShadow dx="0" dy="10" stdDeviation="20" flood-color="#000000" flood-opacity="0.35"/>
+        </filter>
+      </defs>
+
+      <rect width="1080" height="1080" fill="url(#bg)"/>
+      <circle cx="540" cy="380" r="330" fill="none" stroke="#185FA5" stroke-opacity="0.08" stroke-width="2"/>
+
+      <!-- Header: icon + name -->
+      <rect x="80" y="64" width="76" height="76" rx="20" fill="url(#icon)" filter="url(#soft)"/>
+      <text x="118" y="118" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="34" fill="#FFFFFF">FL</text>
+      <text x="176" y="112" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="34" fill="#FFFFFF">FloworaX</text>
+
+      <!-- Hook -->
+      <text x="80" y="300" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="76" fill="#FFFFFF">You dey sell every day.</text>
+      <text x="80" y="392" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="76" fill="#F5C242">But you know your profit?</text>
+
+      <!-- Bullets -->
+      <g font-family="Arial, Helvetica, sans-serif" font-size="38" fill="#D7E3F4" font-weight="600">
+        <text x="80" y="540">Money in, money out, what you kept — one screen</text>
+        <text x="80" y="620">Record sales in 10 seconds — even without data</text>
+        <text x="80" y="700">Customers book you and pay by card</text>
+        <text x="80" y="780">Your money goes straight to YOUR bank</text>
+      </g>
+      <g font-family="Arial, Helvetica, sans-serif" font-size="38" fill="#F5C242" font-weight="800">
+        <text x="80" y="540" dx="-52">✓</text>
+        <text x="80" y="620" dx="-52">✓</text>
+        <text x="80" y="700" dx="-52">✓</text>
+        <text x="80" y="780" dx="-52">✓</text>
+      </g>
+
+      <!-- CTA -->
+      <rect x="80" y="860" width="520" height="110" rx="55" fill="#185FA5" filter="url(#soft)"/>
+      <text x="340" y="930" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="42" fill="#FFFFFF">FREE to start — no card needed</text>
+
+      <!-- Trust -->
+      <text x="80" y="1030" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="28" fill="#4A5E7A" letter-spacing="3">SECURE PAYMENTS VIA PAYSTACK</text>
+    </svg>
+  </div>
+
   <button id="dl">⬇ Download as PNG (1080×1080)</button>
-  <p>Use this as your WhatsApp Status Day-1 image, Instagram post, or Facebook group post.</p>
+  <p>If this page shows the design above, the download button will work. If it's blank here too, you're not opening this file in a browser — right-click the file → <b>Open with</b> → <b>Chrome</b> or <b>Edge</b>.</p>
 
 <script>
-const svg = new Image();
-svg.src = 'flyer.svg';
-svg.onload = () => {
-  const c = document.getElementById('c');
-  c.getContext('2d').drawImage(svg, 0, 0, 1080, 1080);
-};
 document.getElementById('dl').onclick = () => {
-  const a = document.createElement('a');
-  a.download = 'floworax-flyer-1080x1080.png';
-  a.href = document.getElementById('c').toDataURL('image/png');
-  a.click();
+  const svgEl  = document.querySelector('#stage svg');
+  const xml    = new XMLSerializer().serializeToString(svgEl);
+  const img    = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = 1080; c.height = 1080;
+    c.getContext('2d').drawImage(img, 0, 0, 1080, 1080);
+    const a = document.createElement('a');
+    a.download = 'floworax-flyer-1080x1080.png';
+    a.href = c.toDataURL('image/png');
+    a.click();
+  };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
 };
 </script>
 </body>
