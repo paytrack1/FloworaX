@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import FSpinner from '../components/FSpinner';
+import { getTerminology } from '../utils/terminology';
 import { Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt, MessageCircle } from 'lucide-react';
 
 const MODULE_OPTIONS = [
@@ -95,6 +96,7 @@ const BusinessTypeOnboarding = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedModules, setSelectedModules] = useState(() => getModulesForBusinessType(user?.businessType || ''));
+  const terminology = getTerminology(form.businessType || user?.businessType);
 
   const businessTypes = [
     'Consultant',
@@ -177,12 +179,12 @@ const BusinessTypeOnboarding = () => {
           <div className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Business Name</span>
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">{terminology.orgNameLabel}</span>
                 <input
                   value={form.businessName}
                   onChange={(e) => handleChange('businessName', e.target.value)}
                   className="mt-2 w-full rounded-3xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#185FA5]"
-                  placeholder="My Business"
+                  placeholder={terminology.orgNamePlaceholder}
                 />
               </label>
 

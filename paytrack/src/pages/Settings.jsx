@@ -3,6 +3,7 @@ import FAlert   from '../components/FAlert';
 import FSpinner from '../components/FSpinner';
 import ReferralCard from '../components/ReferralCard';
 import { useStore } from '../store/useStore';
+import { getTerminology } from '../utils/terminology';
 import { readSimpleMode, writeSimpleMode, SIMPLE_MODE_EVENT } from '../store/simpleMode';
 import { Button, Card, Input, Badge, SectionHeader } from '../components/ui';
 import { Camera, ChevronRight, Users, DollarSign, Calendar, Ticket, Wallet, BarChart2, Receipt, Store, CreditCard, RefreshCw, Download, HelpCircle, Trash2, X } from 'lucide-react';
@@ -48,6 +49,7 @@ const Settings = () => {
   });
   const [selectedModules, setSelectedModules] = useState(user?.modules || []);
   const businessTypes = ['Consultant', 'Church', 'Clinic', 'School', 'Agency', 'Freelancer', 'Other'];
+  const terminology = getTerminology(user?.businessType);
   const fileInputRef = useRef(null);
 
   const handleProfileFieldChange = (field, value) => {
@@ -342,9 +344,10 @@ const Settings = () => {
 
             <div className="space-y-4">
               <Input
-                label="Business name"
+                label={terminology.orgNameLabel}
                 value={profileForm.businessName}
                 onChange={(e) => handleProfileFieldChange('businessName', e.target.value)}
+                placeholder={terminology.orgNamePlaceholder}
               />
 
               <label className="flex flex-col gap-1.5">

@@ -151,12 +151,12 @@ const Login = ({ mode: initialMode = 'login', referralCode = null }) => {
 
               {mode === 'register' && (
                 <Input
-                  label="Business name"
+                  label="Business or ministry name"
                   name="businessName"
                   type="text"
                   autoComplete="organization"
                   icon={Store}
-                  placeholder="Your store name"
+                  placeholder="e.g. Grace Assembly or Blessing Salon"
                   value={form.businessName}
                   onChange={handleChange}
                 />

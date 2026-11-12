@@ -15,6 +15,8 @@ const TERMINOLOGY = {
     transactionAction: 'Record Offering',
     transactionTitle: 'New Offering',
     transactionItem: 'Offering type',
+    orgNameLabel: 'Church or ministry name',
+    orgNamePlaceholder: 'e.g. Grace Assembly Ministries',
   },
 };
 
@@ -26,6 +28,8 @@ const DEFAULT_TERMINOLOGY = {
   transactionAction: 'New Sale',
   transactionTitle: 'New Transaction',
   transactionItem: 'Item name',
+  orgNameLabel: 'Business name',
+  orgNamePlaceholder: 'e.g. Blessing Hair Salon',
 };
 
 export function getTerminology(businessType) {
