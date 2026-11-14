@@ -2,6 +2,7 @@ import React from 'react';
 import { Home, BarChart2, FileText, Settings, TrendingDown, Calendar,Receipt, Users, Ticket, MessageSquare } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { getEnabledModules } from '../store/modules';
+import { getTerminology } from '../utils/terminology';
 const tabs = [
   { id: 'home',      label: 'Home',      icon: Home },
   { id: 'sales',     label: 'Sales',     icon: BarChart2 },
@@ -9,19 +10,20 @@ const tabs = [
   { id: 'bookings',  label: 'Bookings',  icon: Calendar },
   { id: 'invoices',  label: 'Invoices',  icon: Receipt },
   { id: 'events',    label: 'Events',    icon: Ticket },
-  { id: 'customers', label: 'Customers', icon: Users },
+  { id: 'customers', label: 'Customers', icon: Users, labelKey: 'customerPlural' },
   { id: 'communications', label: 'Communications', icon: MessageSquare },
   { id: 'settings',  label: 'Settings',  icon: Settings },
 ];
 const BottomNav = () => {
   const { activeTab, setActiveTab, user } = useStore();
   const enabledModules = getEnabledModules(user);
+  const terms = getTerminology(user?.businessType);
   const visibleTabs = tabs.filter(({ id }) => enabledModules.includes(id));
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 max-w-full overflow-x-auto bg-white border-t border-[#E2E8F0] z-40">
       <div className="flex min-w-max items-center justify-start gap-1 px-2 py-2 pb-6">
-        {visibleTabs.map(({ id, label, icon: Icon }) => {
+        {visibleTabs.map(({ id, label, labelKey, icon: Icon }) => {
           const isActive = activeTab === id;
           return (
             <button
@@ -37,7 +39,7 @@ const BottomNav = () => {
                 />
               </div>
               <span className={`text-[10px] font-bold ${isActive ? "text-[#185FA5]" : "text-slate-400"}`}>
-                {label}
+                {labelKey ? terms[labelKey] : label}
               </span>
             </button>
           );
